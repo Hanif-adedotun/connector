@@ -1,0 +1,48 @@
+"use client";
+
+import Link from "next/link";
+import { FeedList } from "@/components/feed/FeedList";
+import { useFeed } from "@/hooks/useFeed";
+
+export default function DashboardPage() {
+  const { data, loading, error, reload } = useFeed();
+
+  return (
+    <main className="mx-auto min-h-screen max-w-3xl px-6 py-16">
+      <header className="flex items-center justify-between">
+        <div>
+          <p className="font-mono text-xs uppercase tracking-widest text-neutral-500">
+            Today
+          </p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight">
+            {data?.date ?? "Daily feed"}
+          </h1>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={reload}
+            className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-900"
+          >
+            Refresh
+          </button>
+          <Link
+            href="/integrations"
+            className="rounded-md bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
+          >
+            Integrations
+          </Link>
+        </div>
+      </header>
+
+      <section className="mt-10">
+        {loading && (
+          <p className="py-12 text-center text-sm text-neutral-500">Loading...</p>
+        )}
+        {error && (
+          <p className="py-12 text-center text-sm text-red-600">{error}</p>
+        )}
+        {!loading && !error && data && <FeedList items={data.items} />}
+      </section>
+    </main>
+  );
+}
