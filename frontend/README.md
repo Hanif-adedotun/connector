@@ -7,29 +7,32 @@ Next.js 15 App Router UI for Connector. Talks only to the backend at `NEXT_PUBLI
 - Next.js (App Router)
 - React 18
 - Tailwind CSS
-- `@supabase/supabase-js` (Auth)
+- `@supabase/ssr` + `@supabase/supabase-js` (cookie-based auth)
+
+## Auth flow
+
+- Sign up / sign in at `/login` (first name + email magic link)
+- Magic link redirects to `/auth/callback` then `/dashboard`
+- Middleware protects `/dashboard` and `/integrations`
+- Signed-in users visiting `/` or `/login` are redirected to `/dashboard`
+
+In Supabase **Authentication → URL configuration**, add:
+
+- Site URL: `http://localhost:3000`
+- Redirect URLs: `http://localhost:3000/auth/callback`
 
 ## Layout
 
 ```
 src/
+├── middleware.ts
 ├── app/
-│   ├── layout.tsx
-│   ├── globals.css
-│   ├── page.tsx                landing
-│   ├── (auth)/login/page.tsx
-│   ├── dashboard/page.tsx      daily feed
-│   └── integrations/page.tsx
-├── components/
-│   ├── ui/
-│   ├── feed/
-│   └── integrations/
-├── lib/
-│   ├── api-client.ts           fetch wrapper for the backend
-│   ├── supabase.ts             browser Supabase client
-│   └── utils.ts
-├── hooks/
-└── types/
+│   ├── (public)/page.tsx, login/page.tsx
+│   ├── (protected)/dashboard, integrations
+│   └── auth/callback/route.ts
+├── lib/supabase/     client, server, middleware helpers
+├── hooks/            useFeed, useUser
+└── components/
 ```
 
 ## Scripts

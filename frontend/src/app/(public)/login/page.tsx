@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
+  const [firstName, setFirstName] = useState("");
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">(
     "idle",
@@ -14,15 +15,21 @@ export default function LoginPage() {
     e.preventDefault();
     setStatus("sending");
     setError(null);
+
+    const origin =
+      typeof window !== "undefined" ? window.location.origin : "";
+    const supabase = createClient();
+
     const { error: err } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo:
-          typeof window !== "undefined"
-            ? `${window.location.origin}/dashboard`
-            : undefined,
+        emailRedirectTo: `${origin}/auth/callback?next=/dashboard`,
+        data: {
+          first_name: firstName.trim(),
+        },
       },
     });
+
     if (err) {
       setStatus("error");
       setError(err.message);
@@ -33,12 +40,23 @@ export default function LoginPage() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-24">
-      <h1 className="text-2xl font-semibold tracking-tight">Sign in</h1>
+      <h1 className="text-2xl font-semibold tracking-tight">
+        Sign up / Sign in
+      </h1>
       <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
-        We will send a magic link to your email.
+        Enter your name and email. We will send a magic link to continue.
       </p>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-3">
+        <input
+          type="text"
+          required
+          autoComplete="given-name"
+          placeholder="First name"
+          value={firstName}
+          onChange={(e) => setFirstName(e.target.value)}
+          className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-neutral-900 focus:outline-none dark:border-neutral-700 dark:bg-neutral-900"
+        />
         <input
           type="email"
           required

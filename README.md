@@ -28,6 +28,7 @@ cd backend
 cp .env.example .env       # fill in your secrets
 bun install
 bun run prisma:generate
+bun run prisma:migrate     # apply schema (first_name, Supabase user id)
 bun run dev                # starts API + workers + scheduler
 
 # Frontend (in a separate terminal)

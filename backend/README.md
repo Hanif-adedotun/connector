@@ -41,3 +41,20 @@ cp .env.example .env
 bun run prisma:generate
 bun run dev          # API + workers + scheduler
 ```
+
+## Dev-only polling debug
+
+When `NODE_ENV=development`, unauthenticated endpoints trigger polling on demand:
+
+```bash
+# Enqueue jobs for all active integrations (BullMQ workers process them)
+curl http://localhost:4000/api/polling/test
+
+# Run polls inline (no queue) — useful when debugging pollers
+curl "http://localhost:4000/api/polling/test?sync=true"
+
+# Single integration
+curl -X POST http://localhost:4000/api/polling/test/<integration-uuid>
+```
+
+These routes are not registered in production.

@@ -1,24 +1,43 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { FeedList } from "@/components/feed/FeedList";
 import { useFeed } from "@/hooks/useFeed";
+import { displayFirstName, useUser } from "@/hooks/useUser";
+import { createClient } from "@/lib/supabase/client";
 
 export default function DashboardPage() {
+  const router = useRouter();
+  const { user, loading: userLoading } = useUser();
   const { data, loading, error, reload } = useFeed();
+
+  async function signOut() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/login");
+    router.refresh();
+  }
+
+  const welcomeName = displayFirstName(user);
 
   return (
     <main className="mx-auto min-h-screen max-w-3xl px-6 py-16">
-      <header className="flex items-center justify-between">
+      <header className="flex items-start justify-between gap-4">
         <div>
           <p className="font-mono text-xs uppercase tracking-widest text-neutral-500">
             Today
           </p>
+          {!userLoading && (
+            <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+              Welcome, {welcomeName}
+            </p>
+          )}
           <h1 className="mt-1 text-2xl font-semibold tracking-tight">
             {data?.date ?? "Daily feed"}
           </h1>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex shrink-0 items-center gap-3">
           <button
             onClick={reload}
             className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-900"
@@ -31,6 +50,12 @@ export default function DashboardPage() {
           >
             Integrations
           </Link>
+          <button
+            onClick={() => void signOut()}
+            className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-900"
+          >
+            Sign out
+          </button>
         </div>
       </header>
 

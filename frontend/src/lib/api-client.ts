@@ -1,5 +1,5 @@
+import { createClient } from "@/lib/supabase/client";
 import { env } from "./env";
-import { supabase } from "./supabase";
 
 export interface ApiError {
   code: string;
@@ -8,6 +8,7 @@ export interface ApiError {
 }
 
 async function authHeader(): Promise<Record<string, string>> {
+  const supabase = createClient();
   const { data } = await supabase.auth.getSession();
   const token = data.session?.access_token;
   return token ? { Authorization: `Bearer ${token}` } : {};
@@ -39,4 +40,33 @@ export async function api<T>(
   }
 
   return body as T;
+}
+
+/** Starts OAuth with Bearer JWT; returns the provider authorization URL. */
+export async function getOAuthStartUrl(
+  provider: "google" | "slack" | "jira" | "discord",
+): Promise<string> {
+  const res = await fetch(`${env.API_URL}/api/oauth/${provider}/start`, {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+      ...(await authHeader()),
+    },
+    credentials: "include",
+  });
+
+  const text = await res.text();
+  const body = text ? (JSON.parse(text) as unknown) : undefined;
+
+  if (!res.ok) {
+    const err = (body as { error?: ApiError } | undefined)?.error ?? {
+      code: "UNKNOWN",
+      message: res.statusText,
+    };
+    throw err;
+  }
+
+  const url = (body as { url?: string } | undefined)?.url;
+  if (!url) throw new Error("Missing OAuth redirect URL");
+  return url;
 }

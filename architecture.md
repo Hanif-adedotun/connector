@@ -174,8 +174,11 @@ Frontend OAuth
 ```sql
 id
 email
+first_name
 created_at
 ```
+
+`id` matches Supabase Auth user UUID.
 
 ---
 

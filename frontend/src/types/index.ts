@@ -1,3 +1,9 @@
+export interface User {
+  id: string;
+  email: string;
+  firstName: string | null;
+}
+
 export type ConnectorSource =
   | "gmail"
   | "slack"

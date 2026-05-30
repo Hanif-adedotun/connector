@@ -8,11 +8,13 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
-  id        String   @id @default(uuid())
+  id        String   @id
   email     String   @unique
+  firstName String?  @map("first_name")
   createdAt DateTime @default(now()) @map("created_at")
 
   integrations Integration[]

@@ -1,6 +1,7 @@
 "use client";
 
-import { env } from "@/lib/env";
+import { useState } from "react";
+import { getOAuthStartUrl, type ApiError } from "@/lib/api-client";
 
 export interface ProviderCardProps {
   id: "google" | "slack" | "jira" | "discord";
@@ -17,31 +18,50 @@ export function ProviderCard({
   connected,
   onDisconnect,
 }: ProviderCardProps) {
-  const startUrl = `${env.API_URL}/api/oauth/${id}/start`;
+  const [connecting, setConnecting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleConnect() {
+    setConnecting(true);
+    setError(null);
+    try {
+      const url = await getOAuthStartUrl(id);
+      window.location.href = url;
+    } catch (err) {
+      const apiErr = err as ApiError;
+      setError(apiErr.message ?? "Failed to start connection");
+      setConnecting(false);
+    }
+  }
 
   return (
-    <div className="flex items-start justify-between rounded-lg border border-neutral-200 p-4 dark:border-neutral-800">
-      <div>
-        <p className="font-medium">{label}</p>
-        <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-          {description}
-        </p>
+    <div className="flex flex-col gap-2 rounded-lg border border-neutral-200 p-4 dark:border-neutral-800">
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="font-medium">{label}</p>
+          <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+            {description}
+          </p>
+        </div>
+        {connected ? (
+          <button
+            onClick={onDisconnect}
+            className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-900"
+          >
+            Disconnect
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => void handleConnect()}
+            disabled={connecting}
+            className="rounded-md bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-50 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
+          >
+            {connecting ? "Connecting..." : "Connect"}
+          </button>
+        )}
       </div>
-      {connected ? (
-        <button
-          onClick={onDisconnect}
-          className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-900"
-        >
-          Disconnect
-        </button>
-      ) : (
-        <a
-          href={startUrl}
-          className="rounded-md bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
-        >
-          Connect
-        </a>
-      )}
+      {error && <p className="text-sm text-red-600">{error}</p>}
     </div>
   );
 }

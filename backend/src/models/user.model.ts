@@ -9,11 +9,25 @@ export const UserModel = {
     return prisma.user.findUnique({ where: { email } });
   },
 
-  upsertByEmail(email: string) {
+  upsertFromAuth(params: {
+    id: string;
+    email: string;
+    firstName?: string | null;
+  }) {
+    const { id, email, firstName } = params;
+    const trimmed = firstName?.trim();
+
     return prisma.user.upsert({
-      where: { email },
-      update: {},
-      create: { email },
+      where: { id },
+      create: {
+        id,
+        email,
+        firstName: trimmed || null,
+      },
+      update: {
+        email,
+        ...(trimmed ? { firstName: trimmed } : {}),
+      },
     });
   },
 };
