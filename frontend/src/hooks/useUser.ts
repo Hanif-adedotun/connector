@@ -1,33 +1,31 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 import type { User } from "@/types";
 
+export async function fetchUser(): Promise<User> {
+  const res = await api<{ user: User }>("/api/auth/me");
+  return res.user;
+}
+
 export function useUser() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const query = useQuery({
+    queryKey: queryKeys.user,
+    queryFn: fetchUser,
+  });
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await api<{ user: User }>("/api/auth/me");
-      setUser(res.user);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load user");
-      setUser(null);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
-
-  return { user, loading, error, reload: load };
+  return {
+    user: query.data ?? null,
+    loading: query.isPending && !query.data,
+    error: query.error
+      ? query.error instanceof Error
+        ? query.error.message
+        : "Failed to load user"
+      : null,
+    reload: () => query.refetch(),
+  };
 }
 
 export function displayFirstName(user: User | null): string {

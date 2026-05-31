@@ -9,6 +9,7 @@ export interface ProviderCardProps {
   description: string;
   connected: boolean;
   onDisconnect?: () => void;
+  disabled?: boolean;
 }
 
 export function ProviderCard({
@@ -17,6 +18,7 @@ export function ProviderCard({
   description,
   connected,
   onDisconnect,
+  disabled = false,
 }: ProviderCardProps) {
   const [connecting, setConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,7 +48,8 @@ export function ProviderCard({
         {connected ? (
           <button
             onClick={onDisconnect}
-            className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-900"
+            disabled={disabled}
+            className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-100 disabled:opacity-50 dark:border-neutral-700 dark:hover:bg-neutral-900"
           >
             Disconnect
           </button>

@@ -3,9 +3,12 @@
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { ProviderCard } from "@/components/integrations/ProviderCard";
-import { api } from "@/lib/api-client";
-import type { ConnectorSource, Integration } from "@/types";
+import { fetchFeed } from "@/hooks/useFeed";
+import { useIntegrations } from "@/hooks/useIntegrations";
+import { queryKeys } from "@/lib/query-keys";
+import type { ConnectorSource } from "@/types";
 
 const PROVIDERS: Array<{
   id: "google" | "slack" | "jira" | "discord";
@@ -48,22 +51,16 @@ const CONNECTED_LABELS: Record<string, string> = {
 
 function IntegrationsContent() {
   const searchParams = useSearchParams();
-  const [items, setItems] = useState<Integration[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const {
+    items,
+    loading,
+    error,
+    disconnectProviders,
+    isDisconnecting,
+    disconnectError,
+  } = useIntegrations();
   const [banner, setBanner] = useState<string | null>(null);
-
-  async function load() {
-    try {
-      const res = await api<{ items: Integration[] }>("/api/integrations");
-      setItems(res.items);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load");
-    }
-  }
-
-  useEffect(() => {
-    void load();
-  }, []);
 
   useEffect(() => {
     const connected = searchParams.get("connected");
@@ -72,36 +69,22 @@ function IntegrationsContent() {
       setBanner(
         `${CONNECTED_LABELS[connected] ?? connected} connected successfully.`,
       );
-      void load();
+      void Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.integrations }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.feed }),
+      ]);
     } else if (oauthError) {
       setBanner(`Connection failed: ${oauthError}`);
     }
-  }, [searchParams]);
-
-  async function disconnectProviders(providerKeys: ConnectorSource[]) {
-    try {
-      const toDisconnect = items.filter(
-        (i) =>
-          providerKeys.includes(i.provider as ConnectorSource) &&
-          i.status === "active",
-      );
-      await Promise.all(
-        toDisconnect.map((i) =>
-          api(`/api/integrations/${i.id}`, { method: "DELETE" }),
-        ),
-      );
-      await load();
-      setBanner(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to disconnect");
-    }
-  }
+  }, [searchParams, queryClient]);
 
   function isConnected(providerKeys: ConnectorSource[]) {
     return providerKeys.every((key) =>
       items.some((i) => i.provider === key && i.status === "active"),
     );
   }
+
+  const displayError = error ?? disconnectError;
 
   return (
     <>
@@ -110,21 +93,50 @@ function IntegrationsContent() {
           {banner}
         </p>
       )}
-      {error && <p className="mt-6 text-sm text-red-600">{error}</p>}
+      {displayError && (
+        <p className="mt-6 text-sm text-red-600">{displayError}</p>
+      )}
 
       <section className="mt-10 space-y-3">
-        {PROVIDERS.map((p) => (
-          <ProviderCard
-            key={p.id}
-            id={p.id}
-            label={p.label}
-            description={p.description}
-            connected={isConnected(p.providerKey)}
-            onDisconnect={() => disconnectProviders(p.providerKey)}
-          />
-        ))}
+        {loading ? (
+          <p className="text-sm text-neutral-500">Loading connections...</p>
+        ) : (
+          PROVIDERS.map((p) => (
+            <ProviderCard
+              key={p.id}
+              id={p.id}
+              label={p.label}
+              description={p.description}
+              connected={isConnected(p.providerKey)}
+              onDisconnect={() => void disconnectProviders(p.providerKey)}
+              disabled={isDisconnecting}
+            />
+          ))
+        )}
       </section>
     </>
+  );
+}
+
+function BackToFeedLink() {
+  const queryClient = useQueryClient();
+
+  function prefetchFeed() {
+    void queryClient.prefetchQuery({
+      queryKey: queryKeys.feed,
+      queryFn: fetchFeed,
+    });
+  }
+
+  return (
+    <Link
+      href="/dashboard"
+      onMouseEnter={prefetchFeed}
+      onFocus={prefetchFeed}
+      className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-900"
+    >
+      Back to feed
+    </Link>
   );
 }
 
@@ -140,12 +152,7 @@ export default function IntegrationsPage() {
             Integrations
           </h1>
         </div>
-        <Link
-          href="/dashboard"
-          className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-900"
-        >
-          Back to feed
-        </Link>
+        <BackToFeedLink />
       </header>
 
       <Suspense

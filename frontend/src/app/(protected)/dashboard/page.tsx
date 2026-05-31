@@ -9,11 +9,12 @@ import { useFeed } from "@/hooks/useFeed";
 import { displayFirstName, useUser } from "@/hooks/useUser";
 import { createClient } from "@/lib/supabase/client";
 import { RefreshCwIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function DashboardPage() {
   const router = useRouter();
   const { user, loading: userLoading } = useUser();
-  const { data, loading, error, reload } = useFeed();
+  const { data, loading, error, reload, isFetching } = useFeed();
 
   async function signOut() {
     const supabase = createClient();
@@ -44,10 +45,13 @@ export default function DashboardPage() {
         </div>
         <div className="flex shrink-0 items-center gap-3">
           <button
-            onClick={reload}
-            className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-900"
+            onClick={() => void reload()}
+            disabled={isFetching}
+            className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-100 disabled:opacity-50 dark:border-neutral-700 dark:hover:bg-neutral-900"
           >
-            <RefreshCwIcon className="h-4 w-4" />
+            <RefreshCwIcon
+              className={cn("h-4 w-4", isFetching && "animate-spin")}
+            />
           </button>
           <Link
             href="/integrations"
