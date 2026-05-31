@@ -1,28 +1,20 @@
+"use client";
+
 import { formatDistanceToNow, parseISO } from "date-fns";
+import { ClockIcon } from "lucide-react";
+import { motion, type Variants } from "motion/react";
 import type { FeedItem as FeedItemType } from "@/types";
 
-const SOURCE_LABEL: Record<string, string> = {
-  gmail: "Gmail",
-  slack: "Slack",
-  jira: "Jira",
-  calendar: "Calendar",
-  google_calendar: "Calendar",
-  discord: "Discord",
-};
-
-const SOURCE_LINK_LABEL: Record<string, string> = {
-  calendar: "Open in Calendar",
-  google_calendar: "Open in Calendar",
-  gmail: "Open in Gmail",
-};
-
-export function FeedItem({ item }: { item: FeedItemType }) {
+export function FeedItem({
+  item,
+  variants,
+}: {
+  item: FeedItemType;
+  variants?: Variants;
+}) {
   return (
-    <li className="flex items-start gap-4 border-b border-neutral-200 py-4 last:border-b-0 dark:border-neutral-800">
-      <span className="mt-1 inline-flex w-20 shrink-0 font-mono text-xs uppercase tracking-wider text-neutral-500">
-        {SOURCE_LABEL[item.source] ?? item.source}
-      </span>
-      <div className="min-w-0 flex-1">
+    <motion.li className="py-4" variants={variants}>
+      <div className="min-w-0">
         {item.sourceUrl ? (
           <a
             href={item.sourceUrl}
@@ -35,23 +27,18 @@ export function FeedItem({ item }: { item: FeedItemType }) {
         ) : (
           <p className="text-sm font-medium leading-snug">{item.task}</p>
         )}
-        {item.sourceUrl && (
-          <p className="mt-0.5 text-xs text-neutral-500">
-            {SOURCE_LINK_LABEL[item.source] ?? "Open source"}
-          </p>
-        )}
         {item.summary && (
           <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
             {item.summary}
           </p>
         )}
         {item.dueDate && (
-          <p className="mt-1 text-xs text-neutral-500">
-            Due{" "}
+          <p className="mt-1 flex items-center gap-1 text-xs text-neutral-500">
+            <ClockIcon className="h-4 w-4 text-neutral-500" /> Due{" "}
             {formatDistanceToNow(parseISO(item.dueDate), { addSuffix: true })}
           </p>
         )}
       </div>
-    </li>
+    </motion.li>
   );
 }

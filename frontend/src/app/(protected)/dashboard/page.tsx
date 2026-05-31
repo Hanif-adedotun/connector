@@ -4,6 +4,7 @@ import { format, parseISO } from "date-fns";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FeedList } from "@/components/feed/FeedList";
+import { FeedSkeleton } from "@/components/feed/FeedSkeleton";
 import { useFeed } from "@/hooks/useFeed";
 import { displayFirstName, useUser } from "@/hooks/useUser";
 import { createClient } from "@/lib/supabase/client";
@@ -64,9 +65,7 @@ export default function DashboardPage() {
       </header>
 
       <section className="mt-10">
-        {loading && (
-          <p className="py-12 text-center text-sm text-neutral-500">Loading...</p>
-        )}
+        {loading && <FeedSkeleton />}
         {error && (
           <p className="py-12 text-center text-sm text-red-600">{error}</p>
         )}
