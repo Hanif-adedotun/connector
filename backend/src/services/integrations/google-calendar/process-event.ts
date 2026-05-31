@@ -2,7 +2,7 @@ import type { calendar_v3 } from "googleapis";
 import type { ConnectorEvent } from "@prisma/client";
 import { EventModel } from "../../../models/event.model";
 import { TaskModel } from "../../../models/task.model";
-import { aiExtractionQueue } from "../../../queues/ai-extraction.queue";
+import { enqueueAiExtractionJob } from "../../../queues/ai-extraction.queue";
 import { logger } from "../../../utils/logger";
 
 const SIMPLE_MAX_DESCRIPTION = 80;
@@ -112,7 +112,7 @@ export async function processCalendarEvent(
     return;
   }
 
-  await aiExtractionQueue.add("extract", {
+  await enqueueAiExtractionJob({
     eventId: event.id,
     userId: event.userId,
   });

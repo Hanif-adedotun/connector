@@ -18,6 +18,7 @@ const PROVIDERS: Array<{
   label: string;
   description: string;
   icon: React.ReactNode;
+  comingSoon?: boolean;
 }> = [
   {
     id: "google",
@@ -32,6 +33,7 @@ const PROVIDERS: Array<{
     providerKey: ["slack"],
     label: "Slack",
     description: "Extract follow-ups from mentions and selected channels.",
+    comingSoon: true,
   },
   {
     id: "jira",
@@ -39,6 +41,7 @@ const PROVIDERS: Array<{
     providerKey: ["jira"],
     label: "Jira",
     description: "Track assigned tickets and due dates.",
+    comingSoon: true,
   },
   {
     id: "discord",
@@ -46,6 +49,7 @@ const PROVIDERS: Array<{
     providerKey: ["discord"],
     label: "Discord",
     description: "Pull action items from selected servers and channels.",
+    comingSoon: true,
   },
 ];
 
@@ -116,6 +120,7 @@ function IntegrationsContent() {
               label={p.label}
               description={p.description}
               connected={isConnected(p.providerKey)}
+              comingSoon={p.comingSoon}
               onDisconnect={() => void disconnectProviders(p.providerKey)}
               disabled={isDisconnecting}
             />

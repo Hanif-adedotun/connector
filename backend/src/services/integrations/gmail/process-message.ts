@@ -3,7 +3,7 @@ import { isCandidate } from "../../ai/candidate-filter";
 import { normalize } from "../../normalization/normalize";
 import { EventModel } from "../../../models/event.model";
 import { TaskModel } from "../../../models/task.model";
-import { aiExtractionQueue } from "../../../queues/ai-extraction.queue";
+import { enqueueAiExtractionJob } from "../../../queues/ai-extraction.queue";
 import { logger } from "../../../utils/logger";
 import { shouldSkipEmail } from "./skip-heuristics";
 
@@ -76,8 +76,7 @@ export async function processGmailMessage(event: ConnectorEvent): Promise<void> 
     return;
   }
 
-  await aiExtractionQueue.add(
-    "extract",
+  await enqueueAiExtractionJob(
     { eventId: event.id, userId: event.userId },
     { jobId: `extract-${event.id}` },
   );

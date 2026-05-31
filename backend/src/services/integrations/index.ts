@@ -1,6 +1,6 @@
 import type { Provider } from "@prisma/client";
 import { IntegrationModel } from "../../models/integration.model";
-import { aiExtractionQueue } from "../../queues/ai-extraction.queue";
+import { enqueueAiExtractionJob } from "../../queues/ai-extraction.queue";
 import { NotFoundError } from "../../utils/errors";
 import { logger } from "../../utils/logger";
 import { pollGoogleCalendar } from "./google-calendar";
@@ -51,5 +51,5 @@ export async function runProviderPoll(ctx: PollContext): Promise<PollResult> {
 }
 
 export async function enqueueExtraction(eventId: string, userId: string) {
-  await aiExtractionQueue.add("extract", { eventId, userId });
+  await enqueueAiExtractionJob({ eventId, userId });
 }
