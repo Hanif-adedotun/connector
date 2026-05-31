@@ -2,6 +2,12 @@ import type { Provider, TaskStatus } from "@prisma/client";
 import { prisma } from "../config/db";
 
 export const TaskModel = {
+  findBySourceEventId(sourceEventId: string) {
+    return prisma.extractedTask.findFirst({
+      where: { sourceEventId },
+    });
+  },
+
   create(params: {
     userId: string;
     provider: Provider;
@@ -30,6 +36,11 @@ export const TaskModel = {
         userId,
         status: "open",
         ...(opts?.since ? { createdAt: { gte: opts.since } } : {}),
+      },
+      include: {
+        sourceEvent: {
+          select: { metadataJson: true },
+        },
       },
       orderBy: [{ dueDate: "asc" }, { createdAt: "desc" }],
       take: opts?.limit ?? 100,

@@ -1,6 +1,6 @@
 import type { Provider } from "@prisma/client";
 import { prisma } from "../config/db";
-import { pollingQueue } from "../queues/polling.queue";
+import { POLLING_JOB_NAME, pollingQueue } from "../queues/polling.queue";
 import { logger } from "../utils/logger";
 
 export interface PollingTriggerResult {
@@ -34,7 +34,7 @@ export async function enqueuePollingJobs(opts?: {
 
   await pollingQueue.addBulk(
     integrations.map((i) => ({
-      name: `poll-${i.provider}`,
+      name: POLLING_JOB_NAME,
       data: {
         integrationId: i.id,
         userId: i.userId,

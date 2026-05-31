@@ -1,4 +1,4 @@
-import type { ExtractedTask } from "@prisma/client";
+import type { ExtractedTask, Prisma } from "@prisma/client";
 
 export interface TaskView {
   id: string;
@@ -9,9 +9,19 @@ export interface TaskView {
   confidence: number;
   status: string;
   createdAt: string;
+  sourceUrl: string | null;
 }
 
-export function serializeTask(t: ExtractedTask): TaskView {
+type TaskWithSourceEvent = ExtractedTask & {
+  sourceEvent?: { metadataJson: Prisma.JsonValue } | null;
+};
+
+function sourceUrlFromTask(t: TaskWithSourceEvent): string | null {
+  const meta = t.sourceEvent?.metadataJson as { htmlLink?: string } | null;
+  return meta?.htmlLink ?? null;
+}
+
+export function serializeTask(t: TaskWithSourceEvent): TaskView {
   return {
     id: t.id,
     source: t.provider,
@@ -21,5 +31,6 @@ export function serializeTask(t: ExtractedTask): TaskView {
     confidence: t.confidence,
     status: t.status,
     createdAt: t.createdAt.toISOString(),
+    sourceUrl: sourceUrlFromTask(t),
   };
 }

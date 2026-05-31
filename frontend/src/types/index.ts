@@ -21,6 +21,7 @@ export interface FeedItem {
   confidence: number;
   status: "open" | "done" | "dismissed";
   createdAt: string;
+  sourceUrl: string | null;
 }
 
 export interface FeedResponse {

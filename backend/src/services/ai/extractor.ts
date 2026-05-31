@@ -6,7 +6,12 @@ import {
 } from "./groq.client";
 import { isCandidate, truncate } from "./candidate-filter";
 import { redact } from "./redactor";
-import { buildExtractionUserPrompt, EXTRACTION_SYSTEM_PROMPT } from "./prompts";
+import {
+  buildCalendarExtractionUserPrompt,
+  buildExtractionUserPrompt,
+  CALENDAR_EXTRACTION_SYSTEM_PROMPT,
+  EXTRACTION_SYSTEM_PROMPT,
+} from "./prompts";
 import { EventModel } from "../../models/event.model";
 import { TaskModel } from "../../models/task.model";
 import { normalize } from "../normalization/normalize";
@@ -30,18 +35,17 @@ export interface ExtractionResult {
 
 const MIN_CONFIDENCE = 0.6;
 
-/**
- * Pipeline:
- *   candidate-filter -> redactor -> groq.chat.completions -> zod-parse -> persist task
- *
- * Tries the primary model first and falls back to the smaller model on error
- * or when the primary returns malformed JSON.
- */
 export async function extractTaskFromEvent(
   eventId: string,
 ): Promise<ExtractionResult> {
   const event = await EventModel.findById(eventId);
   if (!event) return { taskId: null, confidence: 0, skipped: "event not found" };
+
+  const existing = await TaskModel.findBySourceEventId(event.id);
+  if (existing) {
+    await EventModel.markProcessed(event.id);
+    return { taskId: existing.id, confidence: existing.confidence, skipped: "already extracted" };
+  }
 
   const normalized: ConnectorEvent = normalize({
     id: event.id,
@@ -78,13 +82,17 @@ export async function extractTaskFromEvent(
     };
   }
 
+  const dueDate =
+    parseDueDate(extracted.due_date ?? null) ??
+    calendarDefaultDueDate(normalized);
+
   const task = await TaskModel.create({
     userId: event.userId,
     provider: event.provider,
     sourceEventId: event.id,
     title: extracted.task,
     summary: extracted.summary || undefined,
-    dueDate: parseDueDate(extracted.due_date ?? null),
+    dueDate,
     confidence: extracted.confidence,
   });
 
@@ -94,6 +102,14 @@ export async function extractTaskFromEvent(
 async function runExtractionWithFallback(
   event: ConnectorEvent,
 ): Promise<ExtractedSchema | null> {
+  const isCalendar = event.source === "calendar";
+  const systemPrompt = isCalendar
+    ? CALENDAR_EXTRACTION_SYSTEM_PROMPT
+    : EXTRACTION_SYSTEM_PROMPT;
+  const userPrompt = isCalendar
+    ? buildCalendarExtractionUserPrompt(event)
+    : buildExtractionUserPrompt(event);
+
   for (const model of [GROQ_PRIMARY_MODEL, GROQ_FALLBACK_MODEL]) {
     try {
       const completion = await groq.chat.completions.create({
@@ -102,8 +118,8 @@ async function runExtractionWithFallback(
         max_tokens: 400,
         response_format: { type: "json_object" },
         messages: [
-          { role: "system", content: EXTRACTION_SYSTEM_PROMPT },
-          { role: "user", content: buildExtractionUserPrompt(event) },
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
         ],
       });
 
@@ -119,6 +135,16 @@ async function runExtractionWithFallback(
     }
   }
   return null;
+}
+
+function calendarDefaultDueDate(event: ConnectorEvent): Date | null {
+  const start = event.metadata?.start;
+  if (typeof start === "string") {
+    const d = new Date(start);
+    if (!Number.isNaN(d.getTime())) return d;
+  }
+  const d = new Date(event.occurredAt);
+  return Number.isNaN(d.getTime()) ? null : d;
 }
 
 function parseDueDate(raw: string | null): Date | null {

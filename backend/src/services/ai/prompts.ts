@@ -19,12 +19,49 @@ Schema:
 If the input is not actionable, return:
 { "task": "", "summary": "", "due_date": null, "confidence": 0 }`;
 
+export const CALENDAR_EXTRACTION_SYSTEM_PROMPT = `You extract preparation tasks and action items from calendar meeting descriptions.
+
+Rules:
+- Focus on prep work BEFORE the meeting (review doc, send slides, prepare agenda).
+- Do NOT return generic "attend the meeting" unless the description explicitly requires attendance prep.
+- Use the meeting start time as due_date when a prep task should be done before the meeting.
+- If the description has no actionable prep, return empty task with confidence 0.
+- Output a single JSON object matching the schema exactly. No prose.
+
+Schema:
+{
+  "task": string,
+  "summary": string,
+  "due_date": string | null,
+  "confidence": number
+}
+
+If not actionable:
+{ "task": "", "summary": "", "due_date": null, "confidence": 0 }`;
+
 export function buildExtractionUserPrompt(event: ConnectorEvent): string {
   const header = [
     `Source: ${event.source}`,
     event.actor ? `From: ${event.actor}` : null,
     event.title ? `Subject: ${event.title}` : null,
     `Occurred: ${event.occurredAt}`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  return `${header}\n\n---\n${event.content}\n---\n\nReturn JSON only.`;
+}
+
+export function buildCalendarExtractionUserPrompt(event: ConnectorEvent): string {
+  const meta = event.metadata ?? {};
+  const start = typeof meta.start === "string" ? meta.start : event.occurredAt;
+  const location = typeof meta.location === "string" ? meta.location : null;
+
+  const header = [
+    "Source: calendar",
+    event.title ? `Meeting: ${event.title}` : null,
+    `Starts: ${start}`,
+    location ? `Location: ${location}` : null,
   ]
     .filter(Boolean)
     .join("\n");

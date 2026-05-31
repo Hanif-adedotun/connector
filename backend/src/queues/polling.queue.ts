@@ -3,6 +3,7 @@ import { createRedisConnection } from "../config/redis";
 import type { Provider } from "@prisma/client";
 
 export const POLLING_QUEUE = "integration-polling";
+export const POLLING_JOB_NAME = "poll";
 
 export interface PollingJobData {
   integrationId: string;

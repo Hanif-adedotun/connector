@@ -16,7 +16,21 @@ export function FeedItem({ item }: { item: FeedItemType }) {
         {SOURCE_LABEL[item.source] ?? item.source}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium leading-snug">{item.task}</p>
+        {item.sourceUrl ? (
+          <a
+            href={item.sourceUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm font-medium leading-snug text-neutral-900 underline decoration-neutral-300 underline-offset-2 hover:decoration-neutral-900 dark:text-neutral-100 dark:decoration-neutral-600 dark:hover:decoration-neutral-100"
+          >
+            {item.task}
+          </a>
+        ) : (
+          <p className="text-sm font-medium leading-snug">{item.task}</p>
+        )}
+        {item.sourceUrl && (
+          <p className="mt-0.5 text-xs text-neutral-500">Open in Calendar</p>
+        )}
         {item.summary && (
           <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
             {item.summary}
