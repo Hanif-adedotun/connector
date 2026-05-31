@@ -1,11 +1,13 @@
 "use client";
 
+import { format, parseISO } from "date-fns";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FeedList } from "@/components/feed/FeedList";
 import { useFeed } from "@/hooks/useFeed";
 import { displayFirstName, useUser } from "@/hooks/useUser";
 import { createClient } from "@/lib/supabase/client";
+import { RefreshCwIcon } from "lucide-react";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -34,7 +36,9 @@ export default function DashboardPage() {
             </p>
           )}
           <h1 className="mt-1 text-2xl font-semibold tracking-tight">
-            {data?.date ?? "Daily feed"}
+            {data?.date
+              ? format(parseISO(data.date), "EEEE, do MMMM yyyy")
+              : "Daily feed"}
           </h1>
         </div>
         <div className="flex shrink-0 items-center gap-3">
@@ -42,7 +46,7 @@ export default function DashboardPage() {
             onClick={reload}
             className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-900"
           >
-            Refresh
+            <RefreshCwIcon className="h-4 w-4" />
           </button>
           <Link
             href="/integrations"

@@ -1,3 +1,4 @@
+import { formatDistanceToNow, parseISO } from "date-fns";
 import type { FeedItem as FeedItemType } from "@/types";
 
 const SOURCE_LABEL: Record<string, string> = {
@@ -46,7 +47,8 @@ export function FeedItem({ item }: { item: FeedItemType }) {
         )}
         {item.dueDate && (
           <p className="mt-1 text-xs text-neutral-500">
-            Due {new Date(item.dueDate).toLocaleString()}
+            Due{" "}
+            {formatDistanceToNow(parseISO(item.dueDate), { addSuffix: true })}
           </p>
         )}
       </div>
