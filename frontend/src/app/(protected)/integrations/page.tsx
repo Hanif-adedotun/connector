@@ -10,32 +10,39 @@ import { useIntegrations } from "@/hooks/useIntegrations";
 import { queryKeys } from "@/lib/query-keys";
 import type { ConnectorSource } from "@/types";
 
+import { SiGooglecalendar, SiGmail, SiSlack, SiJira, SiDiscord } from "react-icons/si";
+
 const PROVIDERS: Array<{
   id: "google" | "slack" | "jira" | "discord";
   providerKey: ConnectorSource[];
   label: string;
   description: string;
+  icon: React.ReactNode;
 }> = [
   {
     id: "google",
+    icon: <SiGmail className="h-4 w-4" />,
     providerKey: ["google_calendar", "gmail"],
     label: "Google (Calendar + Gmail)",
     description: "Surface upcoming meetings and email follow-ups.",
   },
   {
     id: "slack",
+    icon: <SiSlack className="h-4 w-4" />,
     providerKey: ["slack"],
     label: "Slack",
     description: "Extract follow-ups from mentions and selected channels.",
   },
   {
     id: "jira",
+    icon: <SiJira className="h-4 w-4" />,
     providerKey: ["jira"],
     label: "Jira",
     description: "Track assigned tickets and due dates.",
   },
   {
     id: "discord",
+    icon: <SiDiscord className="h-4 w-4" />,
     providerKey: ["discord"],
     label: "Discord",
     description: "Pull action items from selected servers and channels.",
@@ -105,6 +112,7 @@ function IntegrationsContent() {
             <ProviderCard
               key={p.id}
               id={p.id}
+              icon={p.icon}
               label={p.label}
               description={p.description}
               connected={isConnected(p.providerKey)}
