@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { ProviderCard } from "@/components/integrations/ProviderCard";
-import { fetchFeed } from "@/hooks/useFeed";
 import { useIntegrations } from "@/hooks/useIntegrations";
 import { queryKeys } from "@/lib/query-keys";
 import type { ConnectorSource } from "@/types";
@@ -131,24 +130,13 @@ function IntegrationsContent() {
   );
 }
 
-function BackToFeedLink() {
-  const queryClient = useQueryClient();
-
-  function prefetchFeed() {
-    void queryClient.prefetchQuery({
-      queryKey: queryKeys.feed,
-      queryFn: fetchFeed,
-    });
-  }
-
+function BackLink() {
   return (
     <Link
-      href="/dashboard"
-      onMouseEnter={prefetchFeed}
-      onFocus={prefetchFeed}
+      href="/settings"
       className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-900"
     >
-      Back to feed
+      Back
     </Link>
   );
 }
@@ -165,7 +153,7 @@ export default function IntegrationsPage() {
             Integrations
           </h1>
         </div>
-        <BackToFeedLink />
+        <BackLink />
       </header>
 
       <Suspense
