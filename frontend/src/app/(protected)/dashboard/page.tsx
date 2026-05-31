@@ -26,7 +26,7 @@ export default function DashboardPage() {
 
   return (
     <main className="mx-auto min-h-screen max-w-3xl px-6 py-16">
-      <header className="flex items-start justify-between gap-4">
+      <header className="flex sm:flex-row flex-col items-start justify-between gap-4">
         <div>
           <p className="font-mono text-xs uppercase tracking-widest text-neutral-500">
             Today
