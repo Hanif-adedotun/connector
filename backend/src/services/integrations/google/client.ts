@@ -48,11 +48,7 @@ async function persistGoogleTokens(
   }
 }
 
-/**
- * Returns an authenticated Google Calendar client for the given integration.
- * Refreshed tokens are persisted on both google_calendar + gmail rows.
- */
-export async function getGoogleCalendarClient(integration: Integration) {
+function getGoogleAuth(integration: Integration) {
   const oauth2 = createOAuth2Client();
   const accessToken = decrypt(integration.encryptedAccessToken);
   const refreshToken = integration.encryptedRefreshToken
@@ -75,5 +71,21 @@ export async function getGoogleCalendarClient(integration: Integration) {
     );
   });
 
-  return google.calendar({ version: "v3", auth: oauth2 });
+  return oauth2;
+}
+
+/**
+ * Returns an authenticated Google Calendar client for the given integration.
+ * Refreshed tokens are persisted on both google_calendar + gmail rows.
+ */
+export async function getGoogleCalendarClient(integration: Integration) {
+  return google.calendar({ version: "v3", auth: getGoogleAuth(integration) });
+}
+
+/**
+ * Returns an authenticated Gmail client for the given integration.
+ * Refreshed tokens are persisted on both google_calendar + gmail rows.
+ */
+export async function getGmailClient(integration: Integration) {
+  return google.gmail({ version: "v1", auth: getGoogleAuth(integration) });
 }

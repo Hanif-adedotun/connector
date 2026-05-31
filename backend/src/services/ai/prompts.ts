@@ -39,6 +39,26 @@ Schema:
 If not actionable:
 { "task": "", "summary": "", "due_date": null, "confidence": 0 }`;
 
+export const GMAIL_EXTRACTION_SYSTEM_PROMPT = `You extract actionable tasks from email messages.
+
+Rules:
+- Focus on clear obligations: reply, review, approve, sign off, send, schedule, complete by a deadline, or handle an attachment.
+- Ignore newsletters, marketing, automated notifications, FYI-only updates, and social chatter.
+- Do not invent details. If something is unclear, lower the confidence.
+- Use due_date when the email mentions a deadline or time-sensitive ask.
+- Output a single JSON object matching the schema exactly. No prose.
+
+Schema:
+{
+  "task": string,
+  "summary": string,
+  "due_date": string | null,
+  "confidence": number
+}
+
+If not actionable:
+{ "task": "", "summary": "", "due_date": null, "confidence": 0 }`;
+
 export function buildExtractionUserPrompt(event: ConnectorEvent): string {
   const header = [
     `Source: ${event.source}`,
@@ -62,6 +82,22 @@ export function buildCalendarExtractionUserPrompt(event: ConnectorEvent): string
     event.title ? `Meeting: ${event.title}` : null,
     `Starts: ${start}`,
     location ? `Location: ${location}` : null,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  return `${header}\n\n---\n${event.content}\n---\n\nReturn JSON only.`;
+}
+
+export function buildGmailExtractionUserPrompt(event: ConnectorEvent): string {
+  const meta = event.metadata ?? {};
+  const from = typeof meta.from === "string" ? meta.from : event.actor;
+
+  const header = [
+    "Source: gmail",
+    from ? `From: ${from}` : null,
+    event.title ? `Subject: ${event.title}` : null,
+    `Received: ${event.occurredAt}`,
   ]
     .filter(Boolean)
     .join("\n");

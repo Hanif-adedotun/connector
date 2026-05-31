@@ -9,6 +9,12 @@ const SOURCE_LABEL: Record<string, string> = {
   discord: "Discord",
 };
 
+const SOURCE_LINK_LABEL: Record<string, string> = {
+  calendar: "Open in Calendar",
+  google_calendar: "Open in Calendar",
+  gmail: "Open in Gmail",
+};
+
 export function FeedItem({ item }: { item: FeedItemType }) {
   return (
     <li className="flex items-start gap-4 border-b border-neutral-200 py-4 last:border-b-0 dark:border-neutral-800">
@@ -29,7 +35,9 @@ export function FeedItem({ item }: { item: FeedItemType }) {
           <p className="text-sm font-medium leading-snug">{item.task}</p>
         )}
         {item.sourceUrl && (
-          <p className="mt-0.5 text-xs text-neutral-500">Open in Calendar</p>
+          <p className="mt-0.5 text-xs text-neutral-500">
+            {SOURCE_LINK_LABEL[item.source] ?? "Open source"}
+          </p>
         )}
         {item.summary && (
           <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">

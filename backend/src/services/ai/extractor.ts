@@ -9,8 +9,10 @@ import { redact } from "./redactor";
 import {
   buildCalendarExtractionUserPrompt,
   buildExtractionUserPrompt,
+  buildGmailExtractionUserPrompt,
   CALENDAR_EXTRACTION_SYSTEM_PROMPT,
   EXTRACTION_SYSTEM_PROMPT,
+  GMAIL_EXTRACTION_SYSTEM_PROMPT,
 } from "./prompts";
 import { EventModel } from "../../models/event.model";
 import { TaskModel } from "../../models/task.model";
@@ -103,12 +105,17 @@ async function runExtractionWithFallback(
   event: ConnectorEvent,
 ): Promise<ExtractedSchema | null> {
   const isCalendar = event.source === "calendar";
+  const isGmail = event.source === "gmail";
   const systemPrompt = isCalendar
     ? CALENDAR_EXTRACTION_SYSTEM_PROMPT
-    : EXTRACTION_SYSTEM_PROMPT;
+    : isGmail
+      ? GMAIL_EXTRACTION_SYSTEM_PROMPT
+      : EXTRACTION_SYSTEM_PROMPT;
   const userPrompt = isCalendar
     ? buildCalendarExtractionUserPrompt(event)
-    : buildExtractionUserPrompt(event);
+    : isGmail
+      ? buildGmailExtractionUserPrompt(event)
+      : buildExtractionUserPrompt(event);
 
   for (const model of [GROQ_PRIMARY_MODEL, GROQ_FALLBACK_MODEL]) {
     try {
