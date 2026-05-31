@@ -47,9 +47,9 @@ export const TaskModel = {
     });
   },
 
-  updateStatus(id: string, status: TaskStatus) {
+  updateStatus(id: string, userId: string, status: TaskStatus) {
     return prisma.extractedTask.update({
-      where: { id },
+      where: { id, userId },
       data: { status },
     });
   },

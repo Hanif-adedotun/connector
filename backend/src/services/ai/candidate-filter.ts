@@ -32,6 +32,15 @@ const TRIGGERS = [
   "respond",
   "reply",
   "schedule",
+  "meeting",
+  "confirm",
+  "confirmation",
+  "important",
+  "urgent",
+  "rsvp",
+  "attendance",
+  "appointment",
+  "confirmation"
 ];
 
 const MIN_CONTENT_LENGTH = 8;

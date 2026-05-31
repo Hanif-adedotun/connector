@@ -14,7 +14,11 @@ export const TasksController = {
       if (!req.userId) throw new UnauthorizedError();
       const parsed = updateSchema.safeParse(req.body);
       if (!parsed.success) throw new BadRequestError("Invalid body", parsed.error.flatten());
-      const updated = await TaskModel.updateStatus(req.params.id, parsed.data.status);
+      const updated = await TaskModel.updateStatus(
+        req.params.id,
+        req.userId,
+        parsed.data.status,
+      );
       res.json(serializeTask(updated));
     } catch (err) {
       next(err);

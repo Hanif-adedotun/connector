@@ -1,6 +1,7 @@
 "use client";
 
-import { motion, type Variants } from "motion/react";
+import { AnimatePresence, motion, type Variants } from "motion/react";
+import { useDismissTask } from "@/hooks/useDismissTask";
 import type { ConnectorSource, FeedItem as FeedItemType } from "@/types";
 import { FeedItem } from "./FeedItem";
 
@@ -79,6 +80,9 @@ function groupItemsBySource(items: FeedItemType[]) {
 }
 
 export function FeedList({ items }: { items: FeedItemType[] }) {
+  const { dismiss, dismissingId } = useDismissTask();
+  const firstItemId = items[0]?.id;
+
   if (items.length === 0) {
     return (
       <p className="py-12 text-center text-sm text-neutral-500">
@@ -108,9 +112,18 @@ export function FeedList({ items }: { items: FeedItemType[] }) {
             className="mt-2 divide-y divide-neutral-200 dark:divide-neutral-800"
             variants={sectionVariants}
           >
-            {groupItems.map((item) => (
-              <FeedItem key={item.id} item={item} variants={itemVariants} />
-            ))}
+            <AnimatePresence initial={false}>
+              {groupItems.map((item) => (
+                <FeedItem
+                  key={item.id}
+                  item={item}
+                  variants={itemVariants}
+                  onDismiss={() => dismiss(item.id)}
+                  showSwipeHint={item.id === firstItemId}
+                  isDismissing={dismissingId === item.id}
+                />
+              ))}
+            </AnimatePresence>
           </motion.ul>
         </motion.section>
       ))}
