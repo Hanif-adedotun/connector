@@ -2,14 +2,17 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronRightIcon, LogOutIcon } from "lucide-react";
+import { BlocksIcon, ChevronRightIcon, LogOutIcon, MoonIcon } from "lucide-react";
+import { useTheme } from "@/hooks/useTheme";
 import { displayFirstName, useUser } from "@/hooks/useUser";
 import { createClient } from "@/lib/supabase/client";
 import { APP_VERSION } from "@/lib/version";
+import { cn } from "@/lib/utils";
 
 export default function SettingsPage() {
   const router = useRouter();
   const { user, loading } = useUser();
+  const { isDark, toggle, ready } = useTheme();
 
   async function signOut() {
     const supabase = createClient();
@@ -56,12 +59,40 @@ export default function SettingsPage() {
         )}
       </section>
 
-      <nav className="mt-6 overflow-hidden">
+      <nav className="mt-6 overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800">
+        <div className="flex items-center justify-between border-b border-neutral-200 px-4 py-3.5 text-sm dark:border-neutral-800">
+          <span className="flex items-center gap-2">
+            <MoonIcon className="h-4 w-4" />
+            Dark mode
+          </span>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={isDark}
+            aria-label="Toggle dark mode"
+            disabled={!ready}
+            onClick={toggle}
+            className={cn(
+              "relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-50",
+              isDark ? "bg-neutral-900 dark:bg-neutral-100" : "bg-neutral-200 dark:bg-neutral-700",
+            )}
+          >
+            <span
+              className={cn(
+                "absolute top-0.5 block h-5 w-5 rounded-full bg-white shadow transition-transform dark:bg-neutral-900",
+                isDark ? "translate-x-5" : "translate-x-0.5",
+              )}
+            />
+          </button>
+        </div>
         <Link
           href="/integrations"
           className="flex items-center justify-between px-4 py-3.5 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-900"
         >
-          <span>Integrations</span>
+          <span className="flex items-center gap-2">
+            <BlocksIcon className="h-4 w-4" />
+            Manage Integrations
+          </span>
           <ChevronRightIcon className="h-4 w-4 text-neutral-400" />
         </Link>
       </nav>

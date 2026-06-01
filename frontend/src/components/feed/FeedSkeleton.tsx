@@ -11,17 +11,29 @@ function SkeletonLine({ className }: { className?: string }) {
   );
 }
 
+function SkeletonCard() {
+  return (
+    <li className="flex gap-3 rounded-xl border border-neutral-200/90 bg-white p-3.5 dark:border-neutral-800 dark:bg-neutral-950">
+      <SkeletonLine className="mt-0.5 h-[18px] w-[18px] shrink-0 rounded-full" />
+      <div className="min-w-0 flex-1 space-y-2">
+        <SkeletonLine className="h-4 w-4/5" />
+        <SkeletonLine className="h-3 w-full" />
+        <SkeletonLine className="h-5 w-24 rounded-full" />
+      </div>
+    </li>
+  );
+}
+
 function SkeletonGroup({ itemCount }: { itemCount: number }) {
   return (
     <section>
-      <SkeletonLine className="h-3 w-16" />
-      <ul className="mt-2 divide-y divide-neutral-200 dark:divide-neutral-800">
+      <div className="flex items-baseline gap-2">
+        <SkeletonLine className="h-3 w-14" />
+        <SkeletonLine className="h-2.5 w-4" />
+      </div>
+      <ul className="mt-3 flex flex-col gap-2">
         {Array.from({ length: itemCount }, (_, i) => (
-          <li key={i} className="space-y-2 py-4">
-            <SkeletonLine className="h-4 w-3/4" />
-            <SkeletonLine className="h-3 w-full" />
-            <SkeletonLine className="h-3 w-1/3" />
-          </li>
+          <SkeletonCard key={i} />
         ))}
       </ul>
     </section>
@@ -31,7 +43,7 @@ function SkeletonGroup({ itemCount }: { itemCount: number }) {
 export function FeedSkeleton() {
   return (
     <div
-      className="space-y-8"
+      className="space-y-10"
       aria-busy="true"
       aria-label="Loading tasks"
     >

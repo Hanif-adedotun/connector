@@ -39,12 +39,11 @@ const sectionVariants = {
 };
 
 const itemVariants: Variants = {
-  hidden: { opacity: 0, y: 14, scale: 0.97 },
+  hidden: { opacity: 0, y: 10 },
   show: {
     opacity: 1,
     y: 0,
-    scale: 1,
-    transition: { type: "spring", stiffness: 520, damping: 22 },
+    transition: { type: "spring", stiffness: 480, damping: 26 },
   },
 };
 
@@ -95,23 +94,25 @@ export function FeedList({ items }: { items: FeedItemType[] }) {
 
   return (
     <motion.div
-      className="space-y-8"
+      className="space-y-10"
       variants={listVariants}
       initial="hidden"
       animate="show"
     >
       {groups.map(({ key, label, items: groupItems }) => (
         <motion.section key={key} variants={sectionVariants}>
-          <motion.h2
-            className="font-mono text-xs uppercase tracking-wider text-neutral-500"
+          <motion.div
+            className="flex items-baseline gap-2"
             variants={itemVariants}
           >
-            {label}
-          </motion.h2>
-          <motion.ul
-            className="mt-2 divide-y divide-neutral-200 dark:divide-neutral-800"
-            variants={sectionVariants}
-          >
+            <h2 className="font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-neutral-500">
+              {label}
+            </h2>
+            {/* <span className="font-mono text-[10px] tabular-nums text-neutral-400">
+              {groupItems.length}
+            </span> */}
+          </motion.div>
+          <motion.ul className="mt-3 flex flex-col gap-2" variants={sectionVariants}>
             <AnimatePresence initial={false}>
               {groupItems.map((item) => (
                 <FeedItem
