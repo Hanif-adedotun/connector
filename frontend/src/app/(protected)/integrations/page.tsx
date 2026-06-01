@@ -21,7 +21,7 @@ const PROVIDERS: Array<{
 }> = [
   {
     id: "google",
-    icon: <SiGmail className="h-4 w-4" />,
+    icon: <span className="flex items-center gap-2"><SiGooglecalendar className="h-4 w-4 font-light" /> <SiGmail className="h-4 w-4 font-light" /></span>,
     providerKey: ["google_calendar", "gmail"],
     label: "Google (Calendar + Gmail)",
     description: "Surface upcoming meetings and email follow-ups.",

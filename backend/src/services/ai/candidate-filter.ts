@@ -40,7 +40,14 @@ const TRIGGERS = [
   "rsvp",
   "attendance",
   "appointment",
-  "confirmation"
+  "report",
+  "reports",
+  "summary",
+  "summarize",
+  "summaries",
+  "summarize",
+  "summarize",
+  "weekly"
 ];
 
 const MIN_CONTENT_LENGTH = 8;

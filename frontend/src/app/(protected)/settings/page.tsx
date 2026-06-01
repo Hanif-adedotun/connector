@@ -56,7 +56,7 @@ export default function SettingsPage() {
         )}
       </section>
 
-      <nav className="mt-6 overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800">
+      <nav className="mt-6 overflow-hidden">
         <Link
           href="/integrations"
           className="flex items-center justify-between px-4 py-3.5 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-900"

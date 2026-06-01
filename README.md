@@ -1,51 +1,70 @@
 # Connector
 
-AI-powered ambient task extraction across work tools. Connector polls Google Calendar, Gmail, Slack, Jira, and Discord, normalizes events, and uses Groq LLM inference to surface actionable tasks in a unified daily feed.
+AI-powered ambient task extraction across work tools. Connector polls Google Calendar, Gmail, Slack, Jira, and Discord, normalizes events, and uses AI inference to surface actionable tasks in a unified daily feed.
 
-See [architecture.md](architecture.md) and [integrations.md](integrations.md) for the full design.
+**[Get Connector →](https://github.com/Hanif-adedotun/connector/releases)**
 
-## Layout
+Download the latest release, sign in, and open your daily feed. No new task manager to learn — Connector works inside the tools you already use.
 
-```
-connector/
-├── backend/    Node.js + Express API + BullMQ workers + polling scheduler (single process)
-└── frontend/   Next.js App Router UI
-```
+---
 
-## Prerequisites
+## What Connector does
 
-- [Bun](https://bun.sh) (package manager and runtime)
-- Redis 6+ (local install or [Upstash](https://upstash.com))
-- A [Supabase](https://supabase.com) project (Postgres + Auth)
-- A [Groq](https://console.groq.com) API key
-- OAuth apps for the providers you want to connect (see [integrations.md](integrations.md))
+Connector watches the apps where work actually happens and pulls out what you need to do next: follow-ups from email, prep for upcoming meetings, tickets assigned to you, and more. Everything lands in one daily briefing so you stop tab-hopping to remember what matters.
 
-## Setup
+---
 
-```bash
-# Backend
-cd backend
-cp .env.example .env       # fill in your secrets
-bun install
-bun run prisma:generate
-bun run prisma:migrate     # apply schema (first_name, Supabase user id)
-bun run dev                # starts API + workers + scheduler
+## Connect your tools
 
-# Frontend (in a separate terminal)
-cd frontend
-cp .env.example .env.local
-bun install
-bun run dev
-```
+Open **Integrations** in the app and authorize each provider once. Connector handles the rest in the background.
 
-The backend runs on `http://localhost:4000` and the frontend on `http://localhost:3000`.
+### Google Calendar and Gmail
 
-## How it works
+Connect Google to surface:
 
-A single `bun run dev` in `backend/` boots:
+- **Calendar** — today’s meetings and what’s coming in the next 24 hours, so you know what to prepare for
+- **Gmail** — unread and important messages turned into clear follow-ups, approvals, and replies you owe
 
-1. The Express HTTP API
-2. BullMQ workers for polling, AI extraction, and cleanup
-3. A scheduler that enqueues recurring polling jobs every 5 minutes
+One Google connection covers both Calendar and Gmail.
 
-No separate worker process is required during development.
+### Jira
+
+Connect Jira to keep assigned issues, updates, and due dates in your feed alongside email and calendar — without living inside Jira all day.
+
+### More integrations coming soon
+
+**Slack** and **Discord** are on the way. You’ll be able to pull action items from channels and mentions you choose, with the same minimal-data approach as Gmail and Calendar.
+
+---
+
+## Your data, stored with intent
+
+Connector is built around a simple rule: **store tasks, not your entire work history.**
+
+### What we keep
+
+- Extracted tasks and short summaries you see in your feed
+- Small pieces of context (titles, timestamps, references) needed to explain a task
+- Encrypted OAuth tokens so connections stay active — never exposed to the browser
+
+### What we avoid
+
+- Full inboxes or message archives
+- Entire Slack channels or Discord servers
+- Long-term copies of content we don’t need to show you a task
+
+Polling is scoped to what’s relevant: recent calendar windows, unread or important mail, tickets assigned to you — not everything you’ve ever touched.
+
+### How we protect privacy
+
+- **Encryption at rest** — access and refresh tokens are encrypted before they’re stored
+- **Redaction before AI** — obvious secrets (API keys, bearer tokens, private keys) are stripped before any content is sent for task extraction
+- **You stay in control** — disconnect any integration anytime, delete synced data, and turn off providers you don’t want monitored
+
+Your feed is yours. Connector exists to reduce noise, not to become another datastore of everything you’ve ever written.
+
+---
+
+## For developers
+
+Technical architecture, OAuth setup, and self-hosting details live in [architecture.md](architecture.md) and [integrations.md](integrations.md).
