@@ -55,31 +55,48 @@ function pluralFollowUps(n: number): string {
   return `${n} follow-up${n === 1 ? "" : "s"}`;
 }
 
+export interface FeedGreeting {
+  salutation: string;
+  summary: string;
+}
+
 export function buildFeedGreeting(opts: {
   firstName: string;
   timeOfDay: TimeOfDay;
   openCount: number;
   dueTodayCount: number;
   overdueCount: number;
-}): string {
+}): FeedGreeting {
   const { firstName, timeOfDay, openCount, dueTodayCount, overdueCount } = opts;
-  const hello = timeOfDayHello(timeOfDay);
+  const salutation = `${timeOfDayHello(timeOfDay)}, ${firstName}`;
 
   if (openCount === 0) {
-    return `${hello}, ${firstName} — you're all caught up.`;
+    return { salutation, summary: "You're all caught up." };
   }
 
   if (overdueCount > 0 && dueTodayCount > 0) {
-    return `${hello} — ${pluralFollowUps(overdueCount)} overdue and ${dueTodayCount} due today.`;
+    return {
+      salutation,
+      summary: `${pluralFollowUps(overdueCount)} overdue and ${dueTodayCount} due today.`,
+    };
   }
 
   if (overdueCount > 0) {
-    return `${hello} — ${pluralFollowUps(overdueCount)} ${overdueCount === 1 ? "is" : "are"} overdue.`;
+    return {
+      salutation,
+      summary: `${pluralFollowUps(overdueCount)} ${overdueCount === 1 ? "is" : "are"} overdue.`,
+    };
   }
 
   if (dueTodayCount > 0) {
-    return `${hello} — here ${dueTodayCount === 1 ? "is" : "are"} ${pluralFollowUps(dueTodayCount)} for today.`;
+    return {
+      salutation,
+      summary: `You have ${pluralFollowUps(dueTodayCount)} for today.`,
+    };
   }
 
-  return `${hello}, ${firstName} — ${openCount} open ${openCount === 1 ? "follow-up" : "follow-ups"} on your list.`;
+  return {
+    salutation,
+    summary: `${openCount} open ${openCount === 1 ? "follow-up" : "follow-ups"} on your list.`,
+  };
 }

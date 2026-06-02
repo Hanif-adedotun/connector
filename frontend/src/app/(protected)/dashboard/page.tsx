@@ -21,7 +21,7 @@ export default function DashboardPage() {
 
   const headerDate = data?.date ?? format(new Date(), "yyyy-MM-dd");
 
-  const greeting = useMemo(() => {
+  const { salutation, summary } = useMemo(() => {
     const firstName = displayFirstName(user);
     const timeOfDay = getTimeOfDay(new Date().getHours());
     const counts = countFeedDeadlines(data?.items ?? []);
@@ -36,8 +36,11 @@ export default function DashboardPage() {
             {format(parseISO(headerDate), "EEEE, d MMM yyyy")}
           </p>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight">
-            {greeting}
+            {salutation}
           </h1>
+          <p className="mt-1 text-base text-neutral-600 dark:text-neutral-400">
+            {summary}
+          </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <button
