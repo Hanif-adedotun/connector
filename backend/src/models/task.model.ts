@@ -1,5 +1,6 @@
 import type { Provider, TaskStatus } from "@prisma/client";
 import { prisma } from "../config/db";
+import { PushNotificationService } from "../services/notifications/push.service";
 
 export const TaskModel = {
   findBySourceEventId(sourceEventId: string) {
@@ -8,7 +9,7 @@ export const TaskModel = {
     });
   },
 
-  create(params: {
+  async create(params: {
     userId: string;
     provider: Provider;
     sourceEventId?: string;
@@ -17,7 +18,7 @@ export const TaskModel = {
     dueDate?: Date | null;
     confidence: number;
   }) {
-    return prisma.extractedTask.create({
+    const task = await prisma.extractedTask.create({
       data: {
         userId: params.userId,
         provider: params.provider,
@@ -28,6 +29,13 @@ export const TaskModel = {
         confidence: params.confidence,
       },
     });
+
+    void PushNotificationService.recordNewTask(params.userId, {
+      title: params.title,
+      provider: params.provider,
+    }).catch(() => {});
+
+    return task;
   },
 
   listForFeed(userId: string, opts?: { since?: Date; limit?: number }) {

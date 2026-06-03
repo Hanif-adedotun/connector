@@ -12,16 +12,32 @@ datasource db {
 }
 
 model User {
-  id        String   @id
-  email     String   @unique
-  firstName String?  @map("first_name")
-  createdAt DateTime @default(now()) @map("created_at")
+  id                   String   @id
+  email                String   @unique
+  firstName            String?  @map("first_name")
+  notificationsEnabled Boolean  @default(true) @map("notifications_enabled")
+  createdAt            DateTime @default(now()) @map("created_at")
 
-  integrations Integration[]
-  events       ConnectorEvent[]
-  tasks        ExtractedTask[]
+  integrations      Integration[]
+  events            ConnectorEvent[]
+  tasks             ExtractedTask[]
+  pushSubscriptions PushSubscription[]
 
   @@map("users")
+}
+
+model PushSubscription {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("push_subscriptions")
 }
 
 enum Provider {

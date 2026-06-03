@@ -2,10 +2,19 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { BlocksIcon, ChevronRightIcon, LogOutIcon, MoonIcon } from "lucide-react";
+import {
+  BlocksIcon,
+  BellIcon,
+  ChevronRightIcon,
+  LogOutIcon,
+  MoonIcon,
+} from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
+import { InstallPrompt } from "@/components/pwa/InstallPrompt";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { displayFirstName, useUser } from "@/hooks/useUser";
 import { createClient } from "@/lib/supabase/client";
+import { unsubscribeFromPush } from "@/lib/push";
 import { APP_VERSION } from "@/lib/version";
 import { cn } from "@/lib/utils";
 
@@ -13,12 +22,40 @@ export default function SettingsPage() {
   const router = useRouter();
   const { user, loading } = useUser();
   const { isDark, toggle, ready } = useTheme();
+  const {
+    supported: pushSupported,
+    swState,
+    swReady,
+    swError,
+    permission,
+    loading: pushLoading,
+    busy: pushBusy,
+    error: pushError,
+    enabled: pushEnabled,
+    canEnable,
+    enable: enablePush,
+    disable: disablePush,
+  } = usePushNotifications();
 
   async function signOut() {
+    try {
+      await unsubscribeFromPush();
+    } catch {
+      // Continue sign-out even if push cleanup fails
+    }
     const supabase = createClient();
     await supabase.auth.signOut();
     router.push("/login");
     router.refresh();
+  }
+
+  async function onNotificationsToggle(checked: boolean) {
+    if (pushBusy) return;
+    if (checked) {
+      await enablePush();
+    } else {
+      await disablePush();
+    }
   }
 
   const displayName = displayFirstName(user);
@@ -39,6 +76,10 @@ export default function SettingsPage() {
           Back
         </Link>
       </header>
+
+      <div className="mt-6">
+        <InstallPrompt />
+      </div>
 
       <section className="mt-10 rounded-lg border border-neutral-200 p-4 dark:border-neutral-800">
         <p className="font-mono text-xs uppercase tracking-wider text-neutral-500">
@@ -85,6 +126,87 @@ export default function SettingsPage() {
             />
           </button>
         </div>
+
+        <div className="border-b border-neutral-200 px-4 py-3.5 dark:border-neutral-800">
+          <div className="flex items-center justify-between gap-3 text-sm">
+            <span className="flex items-center gap-2">
+              <BellIcon className="h-4 w-4" />
+              Task notifications
+            </span>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={pushEnabled}
+              aria-label="Toggle task notifications"
+              disabled={
+                !pushSupported ||
+                pushLoading ||
+                pushBusy ||
+                (!pushEnabled && !canEnable)
+              }
+              onClick={() => void onNotificationsToggle(!pushEnabled)}
+              className={cn(
+                "relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-50",
+                pushEnabled
+                  ? "bg-neutral-900 dark:bg-neutral-100"
+                  : "bg-neutral-200 dark:bg-neutral-700",
+              )}
+            >
+              <span
+                className={cn(
+                  "absolute top-0.5 block h-5 w-5 rounded-full bg-white shadow transition-transform dark:bg-neutral-900",
+                  pushEnabled ? "translate-x-5" : "translate-x-0.5",
+                )}
+              />
+            </button>
+          </div>
+
+          {!pushSupported && (
+            <p className="mt-2 text-xs text-neutral-500">
+              Notifications require a browser with service workers and push
+              support (Chrome, Edge, Firefox, or an installed iOS PWA 16.4+).
+            </p>
+          )}
+
+          {pushSupported && swState === "registering" && (
+            <p className="mt-2 text-xs text-neutral-500">
+              Registering service worker…
+            </p>
+          )}
+
+          {pushSupported && swState === "error" && (
+            <p className="mt-2 text-xs text-red-600 dark:text-red-400">
+              {swError ?? "Service worker failed to register."}
+            </p>
+          )}
+
+          {pushSupported && swReady && permission === "denied" && (
+            <p className="mt-2 text-xs text-amber-700 dark:text-amber-300">
+              Notifications are blocked. Allow them in your browser site settings,
+              then turn the toggle on again.
+            </p>
+          )}
+
+          {pushSupported && swReady && permission === "default" && !pushEnabled && (
+            <p className="mt-2 text-xs text-neutral-500">
+              Turning on will ask for notification permission and subscribe this
+              device for task summaries.
+            </p>
+          )}
+
+          {pushError && (
+            <p className="mt-2 text-xs text-red-600 dark:text-red-400">
+              {pushError}
+            </p>
+          )}
+
+          {pushSupported && swReady && !pushError && pushEnabled && (
+            <p className="mt-2 text-xs text-neutral-500">
+              You&apos;ll get one summary when new tasks are added to your feed.
+            </p>
+          )}
+        </div>
+
         <Link
           href="/integrations"
           className="flex items-center justify-between px-4 py-3.5 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-900"
