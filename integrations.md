@@ -329,7 +329,7 @@ Reminder to send invoice.
 
 ## Goal
 
-Surface assigned work and summarize changes.
+Surface **your** active assigned issues in the feed (direct tasks, no AI).
 
 ---
 
@@ -337,18 +337,21 @@ Surface assigned work and summarize changes.
 
 1. Create Atlassian Developer Account
 2. Create OAuth Application
-3. Configure OAuth callback URL
+3. Configure OAuth callback URL: `http://localhost:4000/api/oauth/jira/callback` (backend port **4000**, not the Next.js frontend)
 
 ---
 
 ## Permissions
 
-Read-only access:
+Read-only OAuth scopes:
 
 ```text
 read:jira-work
 read:jira-user
+offline_access
 ```
+
+On connect, Connector calls `accessible-resources` and stores **cloudId** + **site URL** on the `integrations` row in Postgres (server-side only, not exposed in the API).
 
 ---
 
@@ -357,30 +360,32 @@ read:jira-user
 ```env
 JIRA_CLIENT_ID=
 JIRA_CLIENT_SECRET=
+JIRA_REDIRECT_URI=http://localhost:4000/api/oauth/jira/callback
+JIRA_MAX_RESULTS=50
+JIRA_STATUS_CATEGORIES=To Do,In Progress
+# JIRA_EXTRA_JQL=   # optional AND fragment for site-specific workflows
 ```
 
 ---
 
-## Polling Strategy
+## Polling Strategy (v1)
 
-Every 5 minutes:
-
-Fetch:
-
-* assigned tickets
-* updated tickets
-* due dates
-
----
-
-## Candidate Events
+Every 5 minutes, JQL search (max 50):
 
 ```text
-Ticket assigned
-Ticket updated
-Due date changed
-Comment added
+assignee = currentUser()
+AND statusCategory IN ("To Do", "In Progress")
+AND resolution IS EMPTY
+AND (
+  assignee CHANGED TO currentUser() AFTER -24h
+  OR (duedate >= startOfDay() AND duedate <= endOfDay("+1d"))
+)
+ORDER BY updated DESC
 ```
+
+- **Newly assigned to you** in the last 24h, or **due** within the next calendar day
+- **Not Done** (via statusCategory + empty resolution)
+- **Direct feed task** from issue summary/status/due (confidence 1.0), link to `{site}/browse/{KEY}`
 
 ---
 
@@ -388,8 +393,9 @@ Comment added
 
 ```json
 {
-  "task": "Review authentication implementation",
-  "source": "jira"
+  "task": "PROJ-123: Review authentication implementation",
+  "source": "jira",
+  "summary": "In Progress · High"
 }
 ```
 

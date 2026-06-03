@@ -10,6 +10,7 @@ import { queryKeys } from "@/lib/query-keys";
 import type { ConnectorSource } from "@/types";
 
 import { SiGooglecalendar, SiGmail, SiSlack, SiJira, SiDiscord } from "react-icons/si";
+import { CheckCircleIcon, InfoIcon } from "lucide-react";
 
 const PROVIDERS: Array<{
   id: "google" | "slack" | "jira" | "discord";
@@ -27,6 +28,13 @@ const PROVIDERS: Array<{
     description: "Surface upcoming meetings and email follow-ups.",
   },
   {
+    id: "jira",
+    icon: <SiJira className="h-4 w-4" />,
+    providerKey: ["jira"],
+    label: "Jira",
+    description: "Track assigned tickets and due dates.",
+  },
+  {
     id: "slack",
     icon: <SiSlack className="h-4 w-4" />,
     providerKey: ["slack"],
@@ -34,14 +42,7 @@ const PROVIDERS: Array<{
     description: "Extract follow-ups from mentions and selected channels.",
     comingSoon: true,
   },
-  {
-    id: "jira",
-    icon: <SiJira className="h-4 w-4" />,
-    providerKey: ["jira"],
-    label: "Jira",
-    description: "Track assigned tickets and due dates.",
-    comingSoon: true,
-  },
+  
   {
     id: "discord",
     icon: <SiDiscord className="h-4 w-4" />,
@@ -77,7 +78,7 @@ function IntegrationsContent() {
     const oauthError = searchParams.get("error");
     if (connected) {
       setBanner(
-        `${CONNECTED_LABELS[connected] ?? connected} connected successfully.`,
+        `${CONNECTED_LABELS[connected] ?? connected} connected successfully`,
       );
       void Promise.all([
         queryClient.invalidateQueries({ queryKey: queryKeys.integrations }),
@@ -99,9 +100,15 @@ function IntegrationsContent() {
   return (
     <>
       {banner && (
-        <p className="mt-6 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
-          {banner}
-        </p>
+        <div className="mt-6 flex items-start gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
+            <InfoIcon className="h-4 w-4 mt-0.5 font-light" />
+            <div className=" ">
+              {banner}
+              <p className="mt-0.5 text-sm text-neutral-500">
+                You should see new tasks in your feed shortly.
+              </p>
+            </div>
+        </div>
       )}
       {displayError && (
         <p className="mt-6 text-sm text-red-600">{displayError}</p>

@@ -63,6 +63,8 @@ model Integration {
   scope                 String?
   status                IntegrationStatus @default(active)
   lastPolledAt          DateTime?         @map("last_polled_at")
+  jiraCloudId           String?           @map("jira_cloud_id")
+  jiraSiteUrl           String?           @map("jira_site_url")
   createdAt             DateTime          @default(now()) @map("created_at")
 
   user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)

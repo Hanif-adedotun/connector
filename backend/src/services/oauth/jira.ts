@@ -1,7 +1,9 @@
 import axios from "axios";
 import { env } from "../../config/env";
 import { IntegrationModel } from "../../models/integration.model";
+import { resolveJiraSiteFromToken } from "../integrations/jira/client";
 import { BadRequestError } from "../../utils/errors";
+import { logger } from "../../utils/logger";
 import { decodeState, encodeState, integrationsRedirectUrl } from "./state";
 
 interface JiraTokenResponse {
@@ -57,6 +59,21 @@ export async function completeJiraOAuth(
     throw new BadRequestError("Jira token exchange failed");
   }
 
+  let jiraCloudId: string | null = null;
+  let jiraSiteUrl: string | null = null;
+
+  try {
+    const site = await resolveJiraSiteFromToken(data.access_token);
+    if (site) {
+      jiraCloudId = site.cloudId;
+      jiraSiteUrl = site.siteUrl;
+    } else {
+      logger.warn({ userId }, "jira oauth: no accessible Jira site found");
+    }
+  } catch (err) {
+    logger.warn({ err, userId }, "jira oauth: failed to fetch accessible resources");
+  }
+
   await IntegrationModel.upsertTokens({
     userId,
     provider: "jira",
@@ -68,6 +85,8 @@ export async function completeJiraOAuth(
         ? new Date(Date.now() + data.expires_in * 1000)
         : undefined,
     },
+    jiraCloudId,
+    jiraSiteUrl,
   });
 
   return { redirectUrl: integrationsRedirectUrl({ connected: "jira" }) };

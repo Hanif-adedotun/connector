@@ -54,7 +54,7 @@ export function ProviderCard({
         {icon}
         <p className="font-medium">{label}</p>
         {comingSoon && (
-          <span className="rounded-full border border-dashed px-2 py-0.5 font-mono text-[10px] tracking-wider text-white">
+          <span className="rounded-full border border-dashed px-2 py-0.5 font-mono text-[10px] tracking-wider text-neutral-600 dark:text-neutral-400">
             Coming soon
           </span>
         )}

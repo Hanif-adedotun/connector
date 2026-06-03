@@ -54,6 +54,13 @@ const envSchema = z.object({
     .string()
     .url()
     .default("http://localhost:4000/api/oauth/jira/callback"),
+  JIRA_MAX_RESULTS: z.coerce.number().default(50),
+  /** Comma-separated Jira statusCategory values (e.g. To Do,In Progress). */
+  JIRA_STATUS_CATEGORIES: z
+    .string()
+    .default("To Do,In Progress"),
+  /** Optional extra JQL AND fragment for site-specific workflows. */
+  JIRA_EXTRA_JQL: z.string().optional(),
 
   // Discord
   DISCORD_CLIENT_ID: z.string().optional(),

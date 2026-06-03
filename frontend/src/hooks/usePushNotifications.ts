@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useState } from "react";
 import {
   fetchPushStatus,
   getNotificationPermission,
@@ -10,51 +11,30 @@ import {
   unsubscribeFromPush,
   type PushStatus,
 } from "@/lib/push";
+import { queryKeys } from "@/lib/query-keys";
 import { useServiceWorker } from "@/hooks/useServiceWorker";
 
 export function usePushNotifications() {
-  const [status, setStatus] = useState<PushStatus | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [permission, setPermission] = useState(getNotificationPermission());
+  const queryClient = useQueryClient();
+  const [permission, setPermission] = useState(getNotificationPermission);
+  const [mutationError, setMutationError] = useState<string | null>(null);
 
   const supported = isPushSupported();
   const { state: swState, error: swError, isReady: swReady, register: registerSw } =
     useServiceWorker();
 
-  const refresh = useCallback(async () => {
-    setPermission(getNotificationPermission());
-    if (!supported) {
-      setLoading(false);
-      return;
-    }
-    try {
-      const next = await fetchPushStatus();
-      setStatus(next);
-      setError(null);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to load notification settings",
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, [supported]);
+  const statusQuery = useQuery({
+    queryKey: queryKeys.pushStatus,
+    queryFn: fetchPushStatus,
+    enabled: supported,
+    staleTime: 60_000,
+  });
 
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
-
-  async function enable() {
-    if (!supported) {
-      throw new Error("Push notifications are not supported in this browser");
-    }
-
-    setBusy(true);
-    setError(null);
-
-    try {
+  const enableMutation = useMutation({
+    mutationFn: async () => {
+      if (!supported) {
+        throw new Error("Push notifications are not supported in this browser");
+      }
       if (!swReady) {
         const reg = await registerSw();
         if (!reg?.active) {
@@ -64,39 +44,90 @@ export function usePushNotifications() {
           );
         }
       }
-
       await subscribeToPush();
       await setNotificationsEnabled(true);
+    },
+    onMutate: async () => {
+      setMutationError(null);
+      await queryClient.cancelQueries({ queryKey: queryKeys.pushStatus });
+      const previous = queryClient.getQueryData<PushStatus>(queryKeys.pushStatus);
+      if (previous) {
+        queryClient.setQueryData<PushStatus>(queryKeys.pushStatus, {
+          ...previous,
+          enabled: true,
+          subscribed: true,
+        });
+      }
+      return { previous };
+    },
+    onSuccess: () => {
       setPermission(getNotificationPermission());
-      await refresh();
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Could not enable notifications";
-      setError(message);
-      throw err;
-    } finally {
-      setBusy(false);
-    }
-  }
+    },
+    onError: (err, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(queryKeys.pushStatus, context.previous);
+      }
+      setMutationError(
+        err instanceof Error ? err.message : "Could not enable notifications",
+      );
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.pushStatus });
+    },
+  });
 
-  async function disable() {
-    setBusy(true);
-    setError(null);
-    try {
+  const disableMutation = useMutation({
+    mutationFn: async () => {
       await unsubscribeFromPush();
       await setNotificationsEnabled(false);
-      await refresh();
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Could not disable notifications";
-      setError(message);
-      throw err;
-    } finally {
-      setBusy(false);
-    }
-  }
+    },
+    onMutate: async () => {
+      setMutationError(null);
+      await queryClient.cancelQueries({ queryKey: queryKeys.pushStatus });
+      const previous = queryClient.getQueryData<PushStatus>(queryKeys.pushStatus);
+      if (previous) {
+        queryClient.setQueryData<PushStatus>(queryKeys.pushStatus, {
+          ...previous,
+          enabled: false,
+          subscribed: false,
+        });
+      }
+      return { previous };
+    },
+    onError: (err, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(queryKeys.pushStatus, context.previous);
+      }
+      setMutationError(
+        err instanceof Error ? err.message : "Could not disable notifications",
+      );
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.pushStatus });
+    },
+  });
 
+  const status = statusQuery.data ?? null;
   const enabled = Boolean(status?.enabled && status?.subscribed);
+  const loading = supported && statusQuery.isPending && !statusQuery.data;
+  const busy = enableMutation.isPending || disableMutation.isPending;
+
+  const queryError = statusQuery.error
+    ? statusQuery.error instanceof Error
+      ? statusQuery.error.message
+      : "Failed to load notification settings"
+    : null;
+
+  const enable = useCallback(async () => {
+    await enableMutation.mutateAsync();
+  }, [enableMutation]);
+
+  const disable = useCallback(async () => {
+    await disableMutation.mutateAsync();
+  }, [disableMutation]);
+
+  const refresh = useCallback(() => statusQuery.refetch(), [statusQuery]);
+
   const canEnable =
     supported && swReady && permission !== "denied" && !loading;
 
@@ -108,7 +139,7 @@ export function usePushNotifications() {
     permission,
     loading,
     busy,
-    error,
+    error: mutationError ?? queryError,
     status,
     enabled,
     canEnable,
