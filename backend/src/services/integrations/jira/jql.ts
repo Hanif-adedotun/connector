@@ -5,8 +5,8 @@ function quoteJqlList(values: string[]): string {
 }
 
 /**
- * Jira issues assigned to the current user, active status, and either
- * newly assigned in the last 24h or due within the next calendar day.
+ * Jira issues assigned to the current user, active status, and a recent
+ * activity window: reassigned in 24h, due today/tomorrow, or self-reported in 3d.
  */
 export function buildJiraPollJql(): string {
   const categories = env.JIRA_STATUS_CATEGORIES.split(",")
@@ -15,13 +15,13 @@ export function buildJiraPollJql(): string {
   const categoryClause =
     categories.length > 0
       ? `statusCategory IN (${quoteJqlList(categories)})`
-      : 'statusCategory IN ("To Do", "In Progress")';
+      : 'statusCategory IN ("To Do", "In Progress", "In Review", "Assigned")';
 
   const extra = env.JIRA_EXTRA_JQL?.trim()
     ? ` AND (${env.JIRA_EXTRA_JQL.trim()})`
     : "";
 
-  const timeWindow = `(assignee CHANGED TO currentUser() AFTER -24h OR (duedate >= startOfDay() AND duedate <= endOfDay("+1d")))${extra}`;
+  const timeWindow = `(assignee CHANGED TO currentUser() AFTER -24h OR (duedate >= startOfDay() AND duedate <= endOfDay("+1d"))  OR (reporter = currentUser() AND created >= -3d))${extra}`;
 
   return [
     "assignee = currentUser()",

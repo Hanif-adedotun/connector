@@ -379,11 +379,12 @@ AND resolution IS EMPTY
 AND (
   assignee CHANGED TO currentUser() AFTER -24h
   OR (duedate >= startOfDay() AND duedate <= endOfDay("+1d"))
+  OR (reporter = currentUser() AND created >= -3d)
 )
 ORDER BY updated DESC
 ```
 
-- **Newly assigned to you** in the last 24h, or **due** within the next calendar day
+- **Newly assigned to you** in the last 24h, **due** within the next calendar day, or **created by you** (still assigned to you) in the last 3 days
 - **Not Done** (via statusCategory + empty resolution)
 - **Direct feed task** from issue summary/status/due (confidence 1.0), link to `{site}/browse/{KEY}`
 

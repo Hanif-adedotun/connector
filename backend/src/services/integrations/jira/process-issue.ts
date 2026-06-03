@@ -22,22 +22,46 @@ function formatSummary(meta: JiraEventMetadata): string | undefined {
   return parts.join(" · ");
 }
 
+function issueKeyFromEvent(event: ConnectorEvent): string {
+  const meta = parseMetadata(event);
+  return meta.issueKey ?? event.externalId;
+}
+
 /**
  * Direct feed task from Jira issue fields (no AI).
+ * Idempotent per issue key: one open task per SCRUM-xxx per user.
  */
 export async function processJiraIssue(event: ConnectorEvent): Promise<void> {
   if (event.processed) return;
 
-  const existing = await TaskModel.findBySourceEventId(event.id);
+  const issueKey = issueKeyFromEvent(event);
+
+  await TaskModel.dedupeOpenByProviderExternalKey(
+    event.userId,
+    "jira",
+    issueKey,
+  );
+
+  let existing =
+    (await TaskModel.findBySourceEventId(event.id)) ??
+    (await TaskModel.findOpenByProviderExternalKey(
+      event.userId,
+      "jira",
+      issueKey,
+    ));
+
   if (existing) {
+    if (existing.sourceEventId !== event.id) {
+      await TaskModel.linkSourceEvent(existing.id, event.userId, event.id);
+    }
     await EventModel.markProcessed(event.id);
     return;
   }
 
   const meta = parseMetadata(event);
-  const key = meta.issueKey ?? event.externalId;
-  const summaryText = event.title?.replace(`${key}: `, "") ?? event.title ?? key;
-  const title = event.title ?? `${key}: ${summaryText}`;
+  const summaryText =
+    event.title?.replace(`${issueKey}: `, "") ?? event.title ?? issueKey;
+  const title = event.title ?? `${issueKey}: ${summaryText}`;
 
   let dueDate: Date | null = null;
   if (meta.dueDate) {
@@ -55,5 +79,5 @@ export async function processJiraIssue(event: ConnectorEvent): Promise<void> {
     confidence: 1.0,
   });
   await EventModel.markProcessed(event.id);
-  logger.debug({ eventId: event.id, issueKey: key }, "jira: direct task created");
+  logger.debug({ eventId: event.id, issueKey }, "jira: direct task created");
 }

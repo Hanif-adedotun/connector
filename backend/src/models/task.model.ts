@@ -1,11 +1,107 @@
-import type { Provider, TaskStatus } from "@prisma/client";
+import type { ExtractedTask, Provider, TaskStatus } from "@prisma/client";
 import { prisma } from "../config/db";
 import { PushNotificationService } from "../services/notifications/push.service";
+
+function openTaskMatchesExternalKey(externalKey: string) {
+  return {
+    OR: [
+      { sourceEvent: { externalId: externalKey } },
+      { title: { startsWith: `${externalKey}:` } },
+    ],
+  };
+}
 
 export const TaskModel = {
   findBySourceEventId(sourceEventId: string) {
     return prisma.extractedTask.findFirst({
       where: { sourceEventId },
+    });
+  },
+
+  findOpenByProviderExternalKey(
+    userId: string,
+    provider: Provider,
+    externalKey: string,
+  ) {
+    return prisma.extractedTask.findFirst({
+      where: {
+        userId,
+        provider,
+        status: "open",
+        ...openTaskMatchesExternalKey(externalKey),
+      },
+      orderBy: { createdAt: "desc" },
+    });
+  },
+
+  /**
+   * Keeps the newest open task for a provider issue key; dismisses older duplicates.
+   */
+  async dedupeOpenByProviderExternalKey(
+    userId: string,
+    provider: Provider,
+    externalKey: string,
+  ): Promise<ExtractedTask | null> {
+    const tasks = await prisma.extractedTask.findMany({
+      where: {
+        userId,
+        provider,
+        status: "open",
+        ...openTaskMatchesExternalKey(externalKey),
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    if (tasks.length <= 1) return tasks[0] ?? null;
+
+    const [keep, ...duplicates] = tasks;
+    await prisma.extractedTask.updateMany({
+      where: { id: { in: duplicates.map((t) => t.id) }, userId },
+      data: { status: "dismissed" },
+    });
+
+    return keep;
+  },
+
+  /**
+   * One-time-style sweep: dedupe all open Jira tasks grouped by issue key.
+   */
+  async dedupeAllOpenJiraTasks(userId: string): Promise<number> {
+    const tasks = await prisma.extractedTask.findMany({
+      where: { userId, provider: "jira", status: "open" },
+      include: { sourceEvent: { select: { externalId: true } } },
+      orderBy: { createdAt: "desc" },
+    });
+
+    const byKey = new Map<string, ExtractedTask[]>();
+    for (const task of tasks) {
+      const key =
+        task.sourceEvent?.externalId ??
+        task.title.split(":")[0]?.trim();
+      if (!key) continue;
+      const list = byKey.get(key) ?? [];
+      list.push(task);
+      byKey.set(key, list);
+    }
+
+    let dismissed = 0;
+    for (const [, group] of byKey) {
+      if (group.length <= 1) continue;
+      const [, ...duplicates] = group;
+      await prisma.extractedTask.updateMany({
+        where: { id: { in: duplicates.map((t) => t.id) }, userId },
+        data: { status: "dismissed" },
+      });
+      dismissed += duplicates.length;
+    }
+
+    return dismissed;
+  },
+
+  linkSourceEvent(taskId: string, userId: string, sourceEventId: string) {
+    return prisma.extractedTask.updateMany({
+      where: { id: taskId, userId },
+      data: { sourceEventId },
     });
   },
 

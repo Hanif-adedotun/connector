@@ -1,6 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import { IntegrationModel } from "../../../models/integration.model";
 import { EventModel } from "../../../models/event.model";
+import { TaskModel } from "../../../models/task.model";
 import { logger } from "../../../utils/logger";
 import type { PollContext, PollResult } from "..";
 import {
@@ -82,6 +83,14 @@ export async function pollJira(ctx: PollContext): Promise<PollResult> {
   } catch (err) {
     logger.error({ err, integrationId: ctx.integrationId }, "pollJira: search failed");
     return { eventsFetched: 0 };
+  }
+
+  const dismissedDupes = await TaskModel.dedupeAllOpenJiraTasks(ctx.userId);
+  if (dismissedDupes > 0) {
+    logger.info(
+      { integrationId: ctx.integrationId, dismissedDupes },
+      "pollJira: dismissed duplicate open tasks",
+    );
   }
 
   let eventsFetched = 0;
