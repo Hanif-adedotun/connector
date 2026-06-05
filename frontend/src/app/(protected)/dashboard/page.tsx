@@ -2,27 +2,45 @@
 
 import { format, parseISO } from "date-fns";
 import Link from "next/link";
+import { useMemo } from "react";
 import { FeedList } from "@/components/feed/FeedList";
 import { FeedSkeleton } from "@/components/feed/FeedSkeleton";
 import { useFeed } from "@/hooks/useFeed";
+import { displayFirstName, useUser } from "@/hooks/useUser";
+import {
+  buildFeedGreeting,
+  countFeedDeadlines,
+  getTimeOfDay,
+} from "@/lib/feed-greeting";
 import { RefreshCwIcon, SettingsIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function DashboardPage() {
   const { data, loading, error, reload, isFetching } = useFeed();
+  const { user } = useUser();
+
+  const headerDate = data?.date ?? format(new Date(), "yyyy-MM-dd");
+
+  const { salutation, summary } = useMemo(() => {
+    const firstName = displayFirstName(user);
+    const timeOfDay = getTimeOfDay(new Date().getHours());
+    const counts = countFeedDeadlines(data?.items ?? []);
+    return buildFeedGreeting({ firstName, timeOfDay, ...counts });
+  }, [user, data?.items]);
 
   return (
     <main className="mx-auto min-h-screen max-w-3xl px-6 py-16">
       <header className="flex items-start justify-between gap-4">
         <div>
-          <p className="font-mono text-xs uppercase tracking-widest text-neutral-500">
-            Today
+          <p className="font-mono text-xs tracking-widest text-neutral-500">
+            {format(parseISO(headerDate), "EEEE, d MMM yyyy")}
           </p>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight">
-            {data?.date
-              ? format(parseISO(data.date), "EEEE, do MMMM yyyy")
-              : "Daily feed"}
+            {salutation}
           </h1>
+          <p className="mt-1 text-base text-neutral-600 dark:text-neutral-400">
+            {summary}
+          </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <button

@@ -28,8 +28,14 @@ export function useUser() {
   };
 }
 
+function firstNameToken(name: string): string {
+  const trimmed = name.trim();
+  if (!trimmed) return "there";
+  return trimmed.split(/\s+/)[0] ?? "there";
+}
+
 export function displayFirstName(user: User | null): string {
-  if (user?.firstName) return user.firstName;
-  if (user?.email) return user.email.split("@")[0] ?? "there";
+  if (user?.firstName) return firstNameToken(user.firstName);
+  if (user?.email) return firstNameToken(user.email.split("@")[0] ?? "there");
   return "there";
 }
