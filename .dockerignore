@@ -1,0 +1,27 @@
+# Git
+.git
+.gitignore
+
+# Env (injected at runtime via compose)
+.env
+.env.*
+!.env.docker.example
+
+# Dependencies & build artifacts (rebuilt in image)
+**/node_modules
+**/.next
+**/dist
+**/.turbo
+**/coverage
+
+# Generated service workers
+frontend/public/sw.js
+frontend/public/sw.js.map
+frontend/public/swe-worker*
+
+# Editor & OS
+.vscode
+.idea
+.DS_Store
+*.log
+.agents
