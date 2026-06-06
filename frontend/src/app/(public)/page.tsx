@@ -30,13 +30,23 @@ export default async function LandingPage() {
         {/* Navbar */}
         <nav className="z-20 flex shrink-0 items-center justify-between px-6 py-[1.8vh] sm:px-10">
           <BriefWordmark size="lg" showIcon />
-          <Link
-                href="https://github.com/hanif-adedotun/connector"
-                className="flex items-center justify-center rounded-full border border-neutral-200 bg-white px-6 py-2 text-sm font-medium text-neutral-900 shadow-sm transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white dark:hover:bg-neutral-700"
-              >
-               <SiGithub className="h-4 w-4 mr-2" />
-               Github
-              </Link>
+          <div className="flex items-center gap-4 sm:gap-5">
+            
+            <Link
+              href="https://github.com/hanif-adedotun/connector"
+              className="flex items-center justify-center rounded-full px-6 py-2 text-sm font-medium text-neutral-900  transition-colors dark:border-neutral-700 dark:bg-neutral-800 dark:text-white dark:hover:bg-neutral-700"
+            >
+              <SiGithub className="h-4 w-4 mr-2" />
+              Github
+            </Link>
+
+            <Link
+              href="/privacy"
+              className="text-xs font-medium text-neutral-500 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
+            >
+              Privacy Policy
+            </Link>
+          </div>
         </nav>
 
         {/* Hero */}
@@ -59,7 +69,7 @@ export default async function LandingPage() {
                 ))}
               </div>
               <span className="text-xs font-medium text-neutral-600 dark:text-neutral-300">
-                Most used work tools combined
+                Your most used work tools. Combined.
               </span>
             </div>
 
