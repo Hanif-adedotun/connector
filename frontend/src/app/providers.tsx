@@ -1,7 +1,7 @@
 "use client";
 
 import { SerwistProvider } from "@serwist/next/react";
-import { QueryClient } from "@tanstack/react-query";
+import { QueryClient, defaultShouldDehydrateQuery } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { useState } from "react";
 import { createIdbPersister } from "@/lib/query-persister";
@@ -33,6 +33,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           persister,
           dehydrateOptions: {
             shouldDehydrateQuery: (query) =>
+              defaultShouldDehydrateQuery(query) &&
               query.queryKey[0] === queryKeys.feed[0],
           },
         }}

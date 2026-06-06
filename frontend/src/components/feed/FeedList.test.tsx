@@ -1,0 +1,47 @@
+/** @jest-environment jsdom */
+
+jest.mock("../../hooks/useDismissTask", () => ({
+  useDismissTask: () => ({
+    dismiss: jest.fn(),
+    dismissingId: undefined,
+  }),
+}));
+
+import { render, screen } from "@testing-library/react";
+import { FeedList } from "./FeedList";
+import type { FeedItem } from "@/types";
+
+const item = (overrides: Partial<FeedItem> = {}): FeedItem => ({
+  id: "1",
+  source: "gmail",
+  task: "Review proposal",
+  summary: "From Alice",
+  dueDate: null,
+  confidence: 0.9,
+  status: "open",
+  createdAt: "2024-06-01",
+  sourceUrl: null,
+  ...overrides,
+});
+
+describe("FeedList", () => {
+  it("shows empty state", () => {
+    render(<FeedList items={[]} />);
+    expect(screen.getByText(/No tasks surfaced yet/)).toBeInTheDocument();
+  });
+
+  it("groups and renders items by source", () => {
+    render(
+      <FeedList
+        items={[
+          item({ id: "1", source: "gmail", task: "Gmail task" }),
+          item({ id: "2", source: "jira", task: "Jira task" }),
+        ]}
+      />,
+    );
+    expect(screen.getByText("Gmail task")).toBeInTheDocument();
+    expect(screen.getByText("Jira task")).toBeInTheDocument();
+    expect(screen.getByText("Gmail")).toBeInTheDocument();
+    expect(screen.getByText("Jira")).toBeInTheDocument();
+  });
+});
