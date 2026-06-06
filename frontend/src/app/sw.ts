@@ -42,8 +42,8 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(payload.title ?? "Brief", {
       body: payload.body ?? "You have new tasks",
-      icon: "/icons/icon-192.png",
-      badge: "/icons/icon-192.png",
+      icon: "/icons/icon-512.png",
+      badge: "/icons/icon-512.png",
       tag: payload.tag ?? "new-tasks",
       data: { url: payload.url ?? "/dashboard" },
     }),

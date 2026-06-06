@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { APP_DOMAIN, APP_NAME } from "@/lib/brand";
+import Image from "next/image";
 
 type BriefWordmarkProps = {
   className?: string;
   showDomain?: boolean;
+  showIcon?: boolean;
   href?: "/" | "/dashboard" | "/login";
   size?: "sm" | "md" | "lg";
 };
@@ -27,6 +29,7 @@ const sizeStyles = {
 export function BriefWordmark({
   className,
   showDomain = false,
+  showIcon = false,
   href,
   size = "md",
 }: BriefWordmarkProps) {
@@ -34,9 +37,21 @@ export function BriefWordmark({
 
   const content = (
     <span className={cn("inline-flex flex-col gap-1", className)}>
-      <span className={cn("text-neutral-900 dark:text-neutral-100", styles.name)}>
-        {APP_NAME}
-      </span>
+      {showIcon && (
+        <> 
+      <Image
+        src="/icons/icon-full.png"
+        alt="Brief logo"
+        className={cn(
+          "h-5 w-5 sm:h-6 sm:w-6 align-middle mr-1 inline-block",
+          size === "lg" ? "h-10 w-10 sm:h-10 sm:w-10" : "",
+          )}
+          width={size === "lg" ? 80 : 40}
+          height={size === "lg" ? 80 : 40}
+          draggable={false}
+        />
+      </>
+      )}
       {showDomain && (
         <span
           className={cn(
