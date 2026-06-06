@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import { BriefWordmark } from "@/components/brand/BriefWordmark";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
@@ -40,6 +42,10 @@ export default function LoginPage() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-24">
+      <Link href="/" className="mb-10 inline-block w-fit">
+        <BriefWordmark size="sm" />
+      </Link>
+
       <h1 className="text-2xl font-semibold tracking-tight">
         Sign up / Sign in
       </h1>

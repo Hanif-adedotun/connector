@@ -1,4 +1,4 @@
-# Connector Roadmap
+# Brief Roadmap
 
 This document tracks what’s shipped today and what we’re building next. Order reflects current priority, not final commitment dates.
 
@@ -18,7 +18,7 @@ This document tracks what’s shipped today and what we’re building next. Orde
 
 ### Slack integration
 
-Connect Slack workspaces so Connector can pull follow-ups, requests, and deadlines from channels and mentions you opt into — not entire workspaces.
+Connect Slack workspaces so Brief can pull follow-ups, requests, and deadlines from channels and mentions you opt into — not entire workspaces.
 
 **Planned scope**
 
@@ -40,7 +40,7 @@ Connect selected servers and channels to surface action items from communities a
 - Channel-level opt-in
 - Lower-noise extraction tuned for chat (experimental in early releases)
 
-**Why it matters** — Many teams and communities run on Discord; Connector should meet them where work is discussed.
+**Why it matters** — Many teams and communities run on Discord; Brief should meet them where work is discussed.
 
 ---
 
@@ -48,7 +48,7 @@ Connect selected servers and channels to surface action items from communities a
 
 ### Push notifications for new tasks
 
-Notify you when Connector adds a new item to your feed — on mobile and desktop — so you don’t have to keep the app open to catch urgent follow-ups.
+Notify you when Brief adds a new item to your feed — on mobile and desktop — so you don’t have to keep the app open to catch urgent follow-ups.
 
 **Planned scope**
 
@@ -70,13 +70,13 @@ Support corporate and custom email beyond Gmail via IMAP — for Outlook-hosted 
 - Same scoped polling philosophy: unread / important / recent, not full mailbox sync
 - Thread cleanup (quoted replies, signatures) before extraction
 
-**Why it matters** — Many people’s work email isn’t on Gmail; IMAP unlocks Connector for those inboxes without changing how they work.
+**Why it matters** — Many people’s work email isn’t on Gmail; IMAP unlocks Brief for those inboxes without changing how they work.
 
 ---
 
 ### Progressive Web App (PWA)
 
-Install Connector like a native app: home-screen icon, standalone window, and offline-friendly shell where possible.
+Install Brief like a native app: home-screen icon, standalone window, and offline-friendly shell where possible.
 
 **Planned scope**
 
@@ -99,7 +99,7 @@ Extend today’s encryption-at-rest for tokens with E2E encryption for feed cont
 - Clear migration path for existing accounts
 - Documented tradeoffs (e.g. server-side AI extraction may require client-side decrypt or alternative architectures)
 
-**Why it matters** — Connector already minimizes what it stores; E2E raises the bar so a breach of the database doesn’t expose readable work content.
+**Why it matters** — Brief already minimizes what it stores; E2E raises the bar so a breach of the database doesn’t expose readable work content.
 
 ---
 

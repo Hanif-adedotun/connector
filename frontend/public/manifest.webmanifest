@@ -1,7 +1,8 @@
 {
-  "name": "Connector",
-  "short_name": "Connector",
+  "name": "Brief",
+  "short_name": "Brief",
   "description": "Ambient task extraction across your work tools.",
+  "id": "/",
   "start_url": "/dashboard?source=pwa",
   "scope": "/",
   "display": "standalone",

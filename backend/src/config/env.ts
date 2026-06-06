@@ -76,7 +76,7 @@ const envSchema = z.object({
   // Web Push (VAPID)
   VAPID_PUBLIC_KEY: z.string().optional(),
   VAPID_PRIVATE_KEY: z.string().optional(),
-  VAPID_SUBJECT: z.string().default("mailto:connector@localhost"),
+  VAPID_SUBJECT: z.string().default("mailto:brief@localhost"),
   PUSH_BATCH_DELAY_MS: z.coerce.number().default(30_000),
 });
 

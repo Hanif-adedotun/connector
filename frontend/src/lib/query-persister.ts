@@ -1,7 +1,7 @@
 import { get, set, del } from "idb-keyval";
 import type { PersistedClient, Persister } from "@tanstack/react-query-persist-client";
 
-const IDB_KEY = "connector-query-cache";
+const IDB_KEY = "brief-query-cache";
 
 export function createIdbPersister(): Persister {
   return {

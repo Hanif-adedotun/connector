@@ -1,12 +1,12 @@
-# Connector v1 — Architecture & Technical Design Document
+# Brief v1 — Architecture & Technical Design Document
 
 ## Overview
 
-Connector is a lightweight operational intelligence layer that aggregates actionable items from workplace tools into a unified daily feed.
+Brief is a lightweight operational intelligence layer that aggregates actionable items from workplace tools into a unified daily feed.
 
 AI-powered ambient task extraction across work tools.
 
-people already express intent naturally inside Slack, Calendar, Gmail, Notion, Jira, etc. Connector simply extracts latent obligations/tasks from those streams.
+people already express intent naturally inside Slack, Calendar, Gmail, Notion, Jira, etc. Brief simply extracts latent obligations/tasks from those streams.
 
 The system connects to:
 
@@ -16,7 +16,7 @@ The system connects to:
 * Jira
 * Discord
 
-Connector does not aim to replace task managers. Instead, it extracts latent tasks and obligations from existing workflows using AI-assisted inference.
+Brief does not aim to replace task managers. Instead, it extracts latent tasks and obligations from existing workflows using AI-assisted inference.
 
 ---
 
@@ -32,7 +32,7 @@ Users already express intent naturally inside:
 * tickets
 * notes
 
-Connector surfaces these obligations automatically.
+Brief surfaces these obligations automatically.
 
 ---
 
@@ -817,4 +817,4 @@ The most important thing is:
 3. privacy trust
 4. simplicity
 
-If users trust Connector and consistently see useful tasks surface automatically, the product already delivers meaningful value.
+If users trust Brief and consistently see useful tasks surface automatically, the product already delivers meaningful value.

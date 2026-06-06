@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import type { ConnectorSource, Integration } from "@/types";
+import type { BriefSource, Integration } from "@/types";
 
 export async function fetchIntegrations(): Promise<Integration[]> {
   const res = await api<{ items: Integration[] }>("/api/integrations");
@@ -34,11 +34,11 @@ export function useIntegrations() {
     },
   });
 
-  async function disconnectProviders(providerKeys: ConnectorSource[]) {
+  async function disconnectProviders(providerKeys: BriefSource[]) {
     const items = query.data ?? [];
     const toDisconnect = items.filter(
       (i) =>
-        providerKeys.includes(i.provider as ConnectorSource) &&
+        providerKeys.includes(i.provider as BriefSource) &&
         i.status === "active",
     );
     if (toDisconnect.length === 0) return;

@@ -36,11 +36,11 @@ self.addEventListener("push", (event) => {
   try {
     payload = event.data.json() as typeof payload;
   } catch {
-    payload = { title: "Connector", body: event.data.text() };
+    payload = { title: "Brief", body: event.data.text() };
   }
 
   event.waitUntil(
-    self.registration.showNotification(payload.title ?? "Connector", {
+    self.registration.showNotification(payload.title ?? "Brief", {
       body: payload.body ?? "You have new tasks",
       icon: "/icons/icon-192.png",
       badge: "/icons/icon-192.png",

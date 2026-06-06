@@ -16,7 +16,7 @@ import { DeleteIcon } from "../ui/delete";
 
 const DISMISS_WIDTH = 88;
 const DISMISS_THRESHOLD = 80;
-const SWIPE_HINT_KEY = "connector.feed.swipeHintSeen";
+const SWIPE_HINT_KEY = "brief.feed.swipeHintSeen";
 const HINT_OFFSET = -48;
 
 function TodoMarker() {

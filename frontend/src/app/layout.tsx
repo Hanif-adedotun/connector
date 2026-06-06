@@ -1,13 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import { Providers } from "./providers";
 import { themeInitScript } from "@/lib/theme";
+import { APP_DESCRIPTION, APP_DOMAIN, APP_NAME } from "@/lib/brand";
 import "./globals.css";
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
-
-const APP_NAME = "Connector";
 
 export const metadata: Metadata = {
   applicationName: APP_NAME,
@@ -15,8 +14,9 @@ export const metadata: Metadata = {
     default: APP_NAME,
     template: `%s · ${APP_NAME}`,
   },
-  description: "Ambient task extraction across your work tools.",
+  description: APP_DESCRIPTION,
   manifest: "/manifest.webmanifest",
+  metadataBase: new URL(`https://${APP_DOMAIN}`),
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",

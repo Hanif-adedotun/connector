@@ -1,8 +1,8 @@
 {
-  "name": "connector-backend",
+  "name": "brief-backend",
   "version": "0.1.0",
   "private": true,
-  "description": "Connector backend: Express API + BullMQ workers + polling scheduler in a single process",
+  "description": "Brief backend: Express API + BullMQ workers + polling scheduler in a single process",
   "main": "src/index.ts",
   "scripts": {
     "dev": "bun --watch src/index.ts",

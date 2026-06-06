@@ -1,4 +1,4 @@
-// Prisma schema for Connector v1
+// Prisma schema for Brief v1
 // See architecture.md for the full database design.
 
 generator client {

@@ -1,5 +1,5 @@
 import { Queue } from "bullmq";
-import { createRedisConnection } from "../config/redis";
+import { redis } from "../config/redis";
 import type { Provider } from "@prisma/client";
 
 export const POLLING_QUEUE = "integration-polling";
@@ -12,7 +12,7 @@ export interface PollingJobData {
 }
 
 export const pollingQueue = new Queue<PollingJobData>(POLLING_QUEUE, {
-  connection: createRedisConnection(),
+  connection: redis,
   defaultJobOptions: {
     attempts: 3,
     backoff: { type: "exponential", delay: 5000 },

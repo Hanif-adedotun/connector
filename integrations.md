@@ -1,6 +1,6 @@
 # Integrations Setup Guide
 
-This document describes how to configure and connect all initial Connector integrations.
+This document describes how to configure and connect all initial Brief integrations.
 
 ---
 
@@ -351,7 +351,7 @@ read:jira-user
 offline_access
 ```
 
-On connect, Connector calls `accessible-resources` and stores **cloudId** + **site URL** on the `integrations` row in Postgres (server-side only, not exposed in the API).
+On connect, Brief calls `accessible-resources` and stores **cloudId** + **site URL** on the `integrations` row in Postgres (server-side only, not exposed in the API).
 
 ---
 
@@ -560,7 +560,7 @@ type ConnectorEvent = {
 # AI Extraction Pipeline
 
 ```text
-Connector Event
+Normalized Event
         ↓
 Candidate Filter
         ↓
@@ -604,7 +604,7 @@ llama-3.1-8b-instant
 
 # Definition of Done
 
-A connector is considered complete when:
+An integration is considered complete when:
 
 * OAuth flow works
 * Tokens stored securely

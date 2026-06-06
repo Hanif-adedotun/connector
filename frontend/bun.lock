@@ -2,7 +2,7 @@
   "lockfileVersion": 1,
   "workspaces": {
     "": {
-      "name": "connector-frontend",
+      "name": "brief-frontend",
       "dependencies": {
         "@supabase/ssr": "^0.5.2",
         "@supabase/supabase-js": "^2.46.1",

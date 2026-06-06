@@ -1,5 +1,5 @@
 import { Queue } from "bullmq";
-import { createRedisConnection } from "../config/redis";
+import { redis } from "../config/redis";
 
 export const CLEANUP_QUEUE = "cleanup-jobs";
 
@@ -13,7 +13,7 @@ export interface CleanupJobData {
 }
 
 export const cleanupQueue = new Queue<CleanupJobData>(CLEANUP_QUEUE, {
-  connection: createRedisConnection(),
+  connection: redis,
   defaultJobOptions: {
     attempts: 1,
     removeOnComplete: { count: 50 },

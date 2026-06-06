@@ -1,5 +1,5 @@
 import { Worker } from "bullmq";
-import { createRedisConnection } from "../config/redis";
+import { redis } from "../config/redis";
 import {
   AI_EXTRACTION_QUEUE,
   type AiExtractionJobData,
@@ -21,7 +21,7 @@ export function createAiExtractionWorker(): Worker<AiExtractionJobData> {
       return result;
     },
     {
-      connection: createRedisConnection(),
+      connection: redis,
       concurrency: 3,
     },
   );

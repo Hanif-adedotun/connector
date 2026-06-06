@@ -4,17 +4,18 @@ import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
+import { BriefWordmark } from "@/components/brand/BriefWordmark";
 import { ProviderCard } from "@/components/integrations/ProviderCard";
 import { useIntegrations } from "@/hooks/useIntegrations";
 import { queryKeys } from "@/lib/query-keys";
-import type { ConnectorSource } from "@/types";
+import type { BriefSource } from "@/types";
 
 import { SiGooglecalendar, SiGmail, SiSlack, SiJira, SiDiscord } from "react-icons/si";
 import { CheckCircleIcon, InfoIcon } from "lucide-react";
 
 const PROVIDERS: Array<{
   id: "google" | "slack" | "jira" | "discord";
-  providerKey: ConnectorSource[];
+  providerKey: BriefSource[];
   label: string;
   description: string;
   icon: React.ReactNode;
@@ -89,7 +90,7 @@ function IntegrationsContent() {
     }
   }, [searchParams, queryClient]);
 
-  function isConnected(providerKeys: ConnectorSource[]) {
+  function isConnected(providerKeys: BriefSource[]) {
     return providerKeys.every((key) =>
       items.some((i) => i.provider === key && i.status === "active"),
     );
@@ -151,7 +152,12 @@ function BackLink() {
 export default function IntegrationsPage() {
   return (
     <main className="mx-auto min-h-screen max-w-3xl px-6 py-16">
-      <header className="flex items-center justify-between">
+      <div className="mb-8 flex items-center justify-between">
+        <BriefWordmark href="/dashboard" size="sm" />
+        <BackLink />
+      </div>
+
+      <header>
         <div>
           <p className="font-mono text-xs uppercase tracking-widest text-neutral-500">
             Connections
@@ -160,7 +166,6 @@ export default function IntegrationsPage() {
             Integrations
           </h1>
         </div>
-        <BackLink />
       </header>
 
       <Suspense

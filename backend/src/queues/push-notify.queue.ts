@@ -1,5 +1,5 @@
 import { type JobsOptions, Queue } from "bullmq";
-import { createRedisConnection } from "../config/redis";
+import { redis } from "../config/redis";
 import { env } from "../config/env";
 
 export const PUSH_NOTIFY_QUEUE = "push-notify";
@@ -14,7 +14,7 @@ export const pushNotifyQueue = new Queue<
   unknown,
   typeof PUSH_NOTIFY_JOB_NAME
 >(PUSH_NOTIFY_QUEUE, {
-  connection: createRedisConnection(),
+  connection: redis,
   defaultJobOptions: {
     attempts: 2,
     backoff: { type: "exponential", delay: 1000 },

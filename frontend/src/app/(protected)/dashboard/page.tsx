@@ -14,6 +14,7 @@ import {
   countFeedDeadlines,
   getTimeOfDay,
 } from "@/lib/feed-greeting";
+import { BriefWordmark } from "@/components/brand/BriefWordmark";
 import { RefreshCwIcon, SettingsIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -33,6 +34,10 @@ export default function DashboardPage() {
 
   return (
     <main className="mx-auto min-h-screen max-w-3xl px-6 py-16">
+      <div className="mb-8">
+        <BriefWordmark href="/dashboard" size="sm" />
+      </div>
+
       <header className="flex items-start justify-between gap-4">
         <div>
           <p className="font-mono text-xs tracking-widest text-neutral-500">

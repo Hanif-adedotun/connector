@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { DownloadIcon, XIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const DISMISS_KEY = "connector-pwa-install-dismissed";
+const DISMISS_KEY = "brief-pwa-install-dismissed";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -89,7 +89,7 @@ export function InstallPrompt() {
       <div className="flex gap-3">
         <DownloadIcon className="mt-0.5 h-4 w-4 shrink-0 text-neutral-600 dark:text-neutral-400" />
         <div>
-          <p className="font-medium">Install Connector</p>
+          <p className="font-medium">Install Brief</p>
           {deferredPrompt ? (
             <p className="mt-0.5 text-neutral-600 dark:text-neutral-400">
               Add to your home screen or dock for quick access and notifications.

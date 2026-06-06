@@ -4,7 +4,7 @@ export interface User {
   firstName: string | null;
 }
 
-export type ConnectorSource =
+export type BriefSource =
   | "gmail"
   | "slack"
   | "jira"
@@ -14,7 +14,7 @@ export type ConnectorSource =
 
 export interface FeedItem {
   id: string;
-  source: ConnectorSource;
+  source: BriefSource;
   task: string;
   summary: string | null;
   dueDate: string | null;
@@ -31,7 +31,7 @@ export interface FeedResponse {
 
 export interface Integration {
   id: string;
-  provider: ConnectorSource;
+  provider: BriefSource;
   status: "active" | "disconnected" | "error";
   scope: string | null;
   lastPolledAt: string | null;

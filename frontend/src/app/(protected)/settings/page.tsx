@@ -9,6 +9,7 @@ import {
   LogOutIcon,
   MoonIcon,
 } from "lucide-react";
+import { BriefWordmark } from "@/components/brand/BriefWordmark";
 import { useTheme } from "@/hooks/useTheme";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
@@ -62,19 +63,23 @@ export default function SettingsPage() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-3xl flex-col px-6 py-16">
-      <header className="flex items-start justify-between gap-4">
-        <div>
-          <p className="font-mono text-xs uppercase tracking-widest text-neutral-500">
-            Account
-          </p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight">Settings</h1>
-        </div>
+      <div className="mb-8 flex items-start justify-between gap-4">
+        <BriefWordmark href="/dashboard" size="sm" />
         <Link
           href="/dashboard"
           className="shrink-0 rounded-md border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-900"
         >
           Back
         </Link>
+      </div>
+
+      <header>
+        <div>
+          <p className="font-mono text-xs uppercase tracking-widest text-neutral-500">
+            Account
+          </p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight">Settings</h1>
+        </div>
       </header>
 
       <div className="mt-6">
