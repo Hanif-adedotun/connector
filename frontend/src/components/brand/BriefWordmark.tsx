@@ -43,7 +43,19 @@ export function BriefWordmark({
         src="/icons/icon-full.png"
         alt="Brief logo"
         className={cn(
-          "h-5 w-5 sm:h-6 sm:w-6 align-middle mr-1 inline-block",
+          "hidden dark:inline-block h-5 w-5 sm:h-6 sm:w-6 align-middle mr-1 ",
+          size === "lg" ? "h-10 w-10 sm:h-10 sm:w-10" : "",
+          )}
+          width={size === "lg" ? 80 : 40}
+          height={size === "lg" ? 80 : 40}
+          draggable={false}
+        />
+
+<Image
+        src="/icons/icon-full-dark.png"
+        alt="Brief logo"
+        className={cn(
+          "inline-block dark:hidden h-5 w-5 sm:h-6 sm:w-6 align-middle mr-1 ",
           size === "lg" ? "h-10 w-10 sm:h-10 sm:w-10" : "",
           )}
           width={size === "lg" ? 80 : 40}

@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { BriefWordmark } from "@/components/brand/BriefWordmark";
+import { createClient } from "@/lib/supabase/server";
 import {
   SiGmail,
   SiGooglecalendar,
@@ -8,7 +9,7 @@ import {
   SiDiscord,
   SiGithub,
 } from "react-icons/si";
-import { PlayIcon, PlaySquare } from "lucide-react";
+import { PlayIcon, PlaySquare, UserIcon } from "lucide-react";
 
 const INTEGRATIONS = [
   { Icon: SiGmail, label: "Gmail", color: "#EA4335" },
@@ -17,7 +18,12 @@ const INTEGRATIONS = [
   { Icon: SiDiscord, label: "Discord", color: "#5865F2" },
 ];
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   return (
     <main className="grid h-[100dvh] w-screen place-items-center overflow-hidden bg-neutral-100  dark:bg-neutral-950">
       <section className="relative flex pt-1 md:px-12 h-full w-full flex-col overflow-hidden bg-transparent shadow-[0_30px_80px_-40px_rgba(0,0,0,0.35)] ring-1 ring-black/5 dark:ring-white/10 backdrop-blur-sm">
@@ -25,12 +31,12 @@ export default function LandingPage() {
         <nav className="z-20 flex shrink-0 items-center justify-between px-6 py-[1.8vh] sm:px-10">
           <BriefWordmark size="lg" showIcon />
           <Link
-            href="/login"
-            className="rounded-full border border-neutral-700 flex items-center bg-transparent px-5 py-2 text-xs font-medium text-neutral-900 transition-colors hover:bg-neutral-100 dark:text-white dark:hover:bg-neutral-900"
-          >
-            <SiGithub className="h-4 w-4 mr-2" />
-            Github
-          </Link>
+                href="https://github.com/hanif-adedotun/connector"
+                className="flex items-center justify-center rounded-full border border-neutral-200 bg-white px-6 py-2 text-sm font-medium text-neutral-900 shadow-sm transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white dark:hover:bg-neutral-700"
+              >
+               <SiGithub className="h-4 w-4 mr-2" />
+               Github
+              </Link>
         </nav>
 
         {/* Hero */}
@@ -39,14 +45,14 @@ export default function LandingPage() {
           <div className="relative z-20 flex min-h-0 flex-1 flex-col items-center justify-center px-6 text-center">
             {/* Integration sources pill */}
             <div
-              className="brief-reveal inline-flex items-center gap-2.5 rounded-full border border-neutral-200 bg-white/80 py-1.5 pl-2 pr-4 shadow-sm backdrop-blur dark:border-neutral-700 dark:bg-neutral-800/80"
+              className="brief-reveal inline-flex items-center gap-2.5 rounded-full border border-neutral-200 bg-neutral-100 py-1.5 pl-2 pr-4 shadow-sm backdrop-blur dark:border-neutral-700 dark:bg-neutral-800/80"
               style={{ animationDelay: "80ms" }}
             >
               <div className="flex items-center -space-x-2">
                 {INTEGRATIONS.map(({ Icon, label, color }) => (
                   <span
                     key={label}
-                    className="grid h-6 w-6 place-items-center rounded-full bg-white ring-2 ring-white dark:bg-neutral-900 dark:ring-neutral-800"
+                    className="grid h-6 w-6 place-items-center rounded-full bg-white ring-2 ring-neutral-200 dark:bg-neutral-900 dark:ring-neutral-800"
                   >
                     <Icon className="h-3.5 w-3.5" style={{ color }} aria-hidden />
                   </span>
@@ -97,10 +103,11 @@ export default function LandingPage() {
                 <PlayIcon className="h-4 w-4 mr-2" /> View demo
               </Link>
               <Link
-                href="/login"
+                href={user ? "/dashboard" : "/login"}
                 className="flex w-52 items-center justify-center rounded-full bg-neutral-900 px-6 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-neutral-700 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
               >
-                Sign up
+                <UserIcon className="h-4 w-4 mr-2" />{" "}
+                {user ? "View dashboard" : "Get started"}
               </Link>
             </div>
           </div>
