@@ -1,5 +1,6 @@
 import { IntegrationModel } from "../../../models/integration.model";
 import { EventModel } from "../../../models/event.model";
+import { handleGooglePollError } from "../google/auth-errors";
 import { getGoogleCalendarClient } from "../google/client";
 import { logger } from "../../../utils/logger";
 import type { PollContext, PollResult } from "..";
@@ -22,38 +23,52 @@ export async function pollGoogleCalendar(
     return { eventsFetched: 0 };
   }
 
-  const calendar = await getGoogleCalendarClient(integration);
-  const timeMin = new Date();
-  const timeMax = new Date(Date.now() + POLL_WINDOW_MS);
+  try {
+    const calendar = await getGoogleCalendarClient(integration);
+    const timeMin = new Date();
+    const timeMax = new Date(Date.now() + POLL_WINDOW_MS);
 
-  const { data } = await calendar.events.list({
-    calendarId: "primary",
-    timeMin: timeMin.toISOString(),
-    timeMax: timeMax.toISOString(),
-    singleEvents: true,
-    orderBy: "startTime",
-    maxResults: 50,
-  });
+    const { data } = await calendar.events.list({
+      calendarId: "primary",
+      timeMin: timeMin.toISOString(),
+      timeMax: timeMax.toISOString(),
+      singleEvents: true,
+      orderBy: "startTime",
+      maxResults: 50,
+    });
 
-  const items = data.items ?? [];
-  let eventsFetched = 0;
+    const items = data.items ?? [];
+    let eventsFetched = 0;
 
-  for (const item of items) {
-    const params = mapGoogleEventToPersistParams(ctx.userId, item);
-    if (!params) continue;
+    for (const item of items) {
+      const params = mapGoogleEventToPersistParams(ctx.userId, item);
+      if (!params) continue;
 
-    const event = await EventModel.upsertByExternalId(params);
-    eventsFetched += 1;
+      const event = await EventModel.upsertByExternalId(params);
+      eventsFetched += 1;
 
-    if (!event.processed) {
-      await processCalendarEvent(event);
+      if (!event.processed) {
+        await processCalendarEvent(event);
+      }
     }
+
+    logger.info(
+      { integrationId: ctx.integrationId, eventsFetched },
+      "pollGoogleCalendar: done",
+    );
+
+    return { eventsFetched };
+  } catch (err) {
+    if (
+      await handleGooglePollError(
+        ctx.userId,
+        ctx.integrationId,
+        "google_calendar",
+        err,
+      )
+    ) {
+      return { eventsFetched: 0 };
+    }
+    throw err;
   }
-
-  logger.info(
-    { integrationId: ctx.integrationId, eventsFetched },
-    "pollGoogleCalendar: done",
-  );
-
-  return { eventsFetched };
 }

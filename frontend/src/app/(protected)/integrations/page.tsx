@@ -6,7 +6,9 @@ import { useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { BriefWordmark } from "@/components/brand/BriefWordmark";
 import { ProviderCard } from "@/components/integrations/ProviderCard";
+import { ReconnectGoogleBanner } from "@/components/integrations/ReconnectGoogleBanner";
 import { useIntegrations } from "@/hooks/useIntegrations";
+import { googleNeedsReconnect, isGoogleConnected } from "@/lib/integrations";
 import { queryKeys } from "@/lib/query-keys";
 import type { BriefSource } from "@/types";
 
@@ -91,11 +93,15 @@ function IntegrationsContent() {
   }, [searchParams, queryClient]);
 
   function isConnected(providerKeys: BriefSource[]) {
+    if (providerKeys.includes("google_calendar") && providerKeys.includes("gmail")) {
+      return isGoogleConnected(items);
+    }
     return providerKeys.every((key) =>
       items.some((i) => i.provider === key && i.status === "active"),
     );
   }
 
+  const showGoogleReconnect = googleNeedsReconnect(items);
   const displayError = error ?? disconnectError;
 
   return (
@@ -111,6 +117,8 @@ function IntegrationsContent() {
             </div>
         </div>
       )}
+      {showGoogleReconnect && <ReconnectGoogleBanner className="mt-6" />}
+
       {displayError && (
         <p className="mt-6 text-sm text-red-600">{displayError}</p>
       )}
@@ -127,6 +135,7 @@ function IntegrationsContent() {
               label={p.label}
               description={p.description}
               connected={isConnected(p.providerKey)}
+              needsReconnect={p.id === "google" && showGoogleReconnect}
               comingSoon={p.comingSoon}
               onDisconnect={() => void disconnectProviders(p.providerKey)}
               disabled={isDisconnecting}

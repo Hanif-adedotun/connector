@@ -87,4 +87,11 @@ export const IntegrationModel = {
       data: { status: "disconnected" },
     });
   },
+
+  markError(id: string) {
+    return prisma.integration.update({
+      where: { id },
+      data: { status: "error" },
+    });
+  },
 };

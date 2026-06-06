@@ -5,8 +5,11 @@ import Link from "next/link";
 import { useMemo } from "react";
 import { FeedList } from "@/components/feed/FeedList";
 import { FeedSkeleton } from "@/components/feed/FeedSkeleton";
+import { ReconnectGoogleBanner } from "@/components/integrations/ReconnectGoogleBanner";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 import { useFeed } from "@/hooks/useFeed";
+import { useIntegrations } from "@/hooks/useIntegrations";
+import { googleNeedsReconnect } from "@/lib/integrations";
 import { useOnlineSync } from "@/hooks/useOnlineSync";
 import { displayFirstName, useUser } from "@/hooks/useUser";
 import {
@@ -20,8 +23,10 @@ import { cn } from "@/lib/utils";
 
 export default function DashboardPage() {
   const { data, loading, error, reload, isFetching } = useFeed();
+  const { items: integrations } = useIntegrations();
   const { user } = useUser();
   const { isOnline } = useOnlineSync();
+  const showGoogleReconnect = googleNeedsReconnect(integrations);
 
   const headerDate = data?.date ?? format(new Date(), "yyyy-MM-dd");
 
@@ -72,6 +77,8 @@ export default function DashboardPage() {
       </header>
 
       <InstallPrompt />
+
+      {showGoogleReconnect && <ReconnectGoogleBanner className="mt-6" />}
 
       {!isOnline && data && (
         <p

@@ -10,6 +10,7 @@ export interface ProviderCardProps {
   icon: React.ReactNode;
   description: string;
   connected: boolean;
+  needsReconnect?: boolean;
   comingSoon?: boolean;
   onDisconnect?: () => void;
   disabled?: boolean;
@@ -21,6 +22,7 @@ export function ProviderCard({
   label,
   description,
   connected,
+  needsReconnect = false,
   comingSoon = false,
   onDisconnect,
   disabled = false,
@@ -47,7 +49,9 @@ export function ProviderCard({
       className={`flex flex-col gap-2 rounded-lg border p-4 ${
         comingSoon
           ? "border-neutral-200 bg-neutral-50/80 dark:border-neutral-800 dark:bg-neutral-900/40"
-          : "border-neutral-200 dark:border-neutral-800"
+          : needsReconnect
+            ? "border-amber-200/80 bg-amber-50/30 dark:border-amber-900/40 dark:bg-amber-950/10"
+            : "border-neutral-200 dark:border-neutral-800"
       }`}
     >
       <div className="flex items-center gap-2">
@@ -63,7 +67,17 @@ export function ProviderCard({
         <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
           {description}
         </p>
-        {connected ? (
+        {needsReconnect ? (
+          <button
+            type="button"
+            onClick={() => void handleConnect()}
+            disabled={connecting}
+            className="flex items-center gap-2 rounded-md border border-amber-400 px-3 py-1.5 text-xs font-medium text-amber-900 hover:bg-amber-50 disabled:opacity-50 dark:border-amber-700 dark:text-amber-100 dark:hover:bg-amber-950/40"
+          >
+            <LinkIcon className="h-4 w-4" />
+            {connecting ? "Redirecting…" : "Reconnect"}
+          </button>
+        ) : connected ? (
           <button
             onClick={onDisconnect}
             disabled={disabled}
