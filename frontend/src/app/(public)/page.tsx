@@ -37,7 +37,10 @@ export default function LandingPage() {
           {/* Content */}
           <div className="relative z-20 flex w-full flex-col items-center px-6 pt-[1vh] text-center">
             {/* Integration sources pill */}
-            <div className="inline-flex items-center gap-2.5 rounded-full border border-neutral-200 bg-white/80 py-1.5 pl-2 pr-4 shadow-sm backdrop-blur dark:border-neutral-700 dark:bg-neutral-800/80">
+            <div
+              className="brief-reveal inline-flex items-center gap-2.5 rounded-full border border-neutral-200 bg-white/80 py-1.5 pl-2 pr-4 shadow-sm backdrop-blur dark:border-neutral-700 dark:bg-neutral-800/80"
+              style={{ animationDelay: "80ms" }}
+            >
               <div className="flex items-center -space-x-2">
                 {INTEGRATIONS.map(({ Icon, label, color }) => (
                   <span
@@ -54,7 +57,10 @@ export default function LandingPage() {
             </div>
 
             {/* Headline */}
-            <h1 className="mt-[2.4vh] max-w-2xl text-balance font-semibold leading-[1.08] tracking-tight text-[clamp(1.5rem,4.2vh,3.25rem)]">
+            <h1
+              className="brief-reveal mt-[2.4vh] max-w-2xl text-balance font-semibold leading-[1.08] tracking-tight text-[clamp(1.5rem,4.2vh,3.25rem)]"
+              style={{ animationDelay: "180ms" }}
+            >
               <span className="text-neutral-400 dark:text-neutral-500">
                 Turn the noise of work into
               </span>{" "}
@@ -64,13 +70,19 @@ export default function LandingPage() {
             </h1>
 
             {/* Secondary copy */}
-            <p className="mx-auto mt-[1.8vh] max-w-md leading-relaxed text-neutral-500 dark:text-neutral-400 text-[clamp(0.8rem,1.7vh,1rem)]">
+            <p
+              className="brief-reveal mx-auto mt-[1.8vh] max-w-md leading-relaxed text-neutral-500 dark:text-neutral-400 text-[clamp(0.8rem,1.7vh,1rem)]"
+              style={{ animationDelay: "300ms" }}
+            >
               Brief reads your Gmail, Calendar, Jira, and Discord, then hands you
               a short daily list of what actually needs doing.
             </p>
 
             {/* CTAs */}
-            <div className="mt-[2.4vh] flex flex-col md:flex-row items-center gap-2.5">
+            <div
+              className="brief-reveal mt-[2.4vh] flex flex-col md:flex-row items-center gap-2.5"
+              style={{ animationDelay: "420ms" }}
+            >
               <Link
                 href="/login"
                 className="flex w-52 items-center justify-center rounded-full border border-neutral-200 bg-white px-6 py-2 text-sm font-medium text-neutral-900 shadow-sm transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white dark:hover:bg-neutral-700"
@@ -98,14 +110,18 @@ export default function LandingPage() {
               }}
             />
             <div className="absolute bottom-0 left-1/2 h-full w-full -translate-x-1/2 translate-y-[12%]">
-              <Image
-                src="/mockup.png"
-                alt="Brief app on a phone"
-                fill
-                priority
-                sizes="(max-width: 768px) 80vw, 420px"
-                className="select-none object-contain object-bottom drop-shadow-2xl"
-              />
+              <div className="brief-phone-in relative h-full w-full">
+                <div className="brief-phone-float relative h-full w-full">
+                  <Image
+                    src="/mockup.png"
+                    alt="Brief app on a phone"
+                    fill
+                    priority
+                    sizes="(max-width: 768px) 80vw, 420px"
+                    className="select-none object-contain object-bottom drop-shadow-2xl"
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>

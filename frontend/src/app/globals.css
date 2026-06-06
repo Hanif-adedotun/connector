@@ -22,3 +22,52 @@ body {
 html.dark body {
   @apply bg-neutral-950 text-neutral-100;
 }
+
+/* Landing entrance + ambient motion. Static for reduced-motion users. */
+@media (prefers-reduced-motion: no-preference) {
+  .brief-reveal {
+    opacity: 0;
+    animation: brief-reveal 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .brief-phone-in {
+    opacity: 0;
+    animation: brief-phone-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.5s both;
+  }
+
+  .brief-phone-float {
+    animation: brief-float 7s ease-in-out 1.6s infinite;
+  }
+}
+
+@keyframes brief-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes brief-phone-in {
+  from {
+    opacity: 0;
+    transform: translateY(56px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes brief-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
