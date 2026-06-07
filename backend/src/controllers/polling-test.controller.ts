@@ -1,6 +1,9 @@
 import type { NextFunction, Request, Response } from "express";
 import { BadRequestError } from "../utils/errors";
-import { enqueuePollingJobs } from "../workers/polling-trigger";
+import {
+  enqueuePollingJobs,
+  listActiveIntegrations,
+} from "../workers/polling-trigger";
 import { runProviderPoll } from "../services/integrations";
 
 export const PollingTestController = {
@@ -16,7 +19,7 @@ export const PollingTestController = {
       const sync = req.query.sync === "true" || req.query.sync === "1";
 
       if (sync) {
-        const { integrations } = await enqueuePollingJobs({ integrationId });
+        const integrations = await listActiveIntegrations({ integrationId });
         if (integrations.length === 0) {
           res.json({ ok: true, mode: "sync", results: [] });
           return;

@@ -9,6 +9,13 @@ export const UserModel = {
     return prisma.user.findUnique({ where: { email } });
   },
 
+  setNotificationsEnabled(userId: string, enabled: boolean) {
+    return prisma.user.update({
+      where: { id: userId },
+      data: { notificationsEnabled: enabled },
+    });
+  },
+
   upsertFromAuth(params: {
     id: string;
     email: string;

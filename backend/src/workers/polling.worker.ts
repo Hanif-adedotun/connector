@@ -1,5 +1,5 @@
 import { Worker } from "bullmq";
-import { createRedisConnection } from "../config/redis";
+import { redis } from "../config/redis";
 import { POLLING_QUEUE, type PollingJobData } from "../queues/polling.queue";
 import { runProviderPoll } from "../services/integrations";
 import { logger } from "../utils/logger";
@@ -18,7 +18,7 @@ export function createPollingWorker(): Worker<PollingJobData> {
       return result;
     },
     {
-      connection: createRedisConnection(),
+      connection: redis,
       concurrency: 5,
     },
   );

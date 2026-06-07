@@ -1,5 +1,5 @@
 import { type JobsOptions, Queue } from "bullmq";
-import { createRedisConnection } from "../config/redis";
+import { redis } from "../config/redis";
 
 export const AI_EXTRACTION_QUEUE = "ai-extraction";
 export const AI_EXTRACTION_JOB_NAME = "extract" as const;
@@ -16,7 +16,7 @@ export const aiExtractionQueue = new Queue<
 >(
   AI_EXTRACTION_QUEUE,
   {
-    connection: createRedisConnection(),
+    connection: redis,
     defaultJobOptions: {
       attempts: 2,
       backoff: { type: "exponential", delay: 2000 },

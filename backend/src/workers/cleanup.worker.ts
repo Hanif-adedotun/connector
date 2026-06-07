@@ -1,5 +1,5 @@
 import { Worker } from "bullmq";
-import { createRedisConnection } from "../config/redis";
+import { redis } from "../config/redis";
 import { CLEANUP_QUEUE, type CleanupJobData } from "../queues/cleanup.queue";
 import { logger } from "../utils/logger";
 
@@ -12,7 +12,7 @@ export function createCleanupWorker(): Worker<CleanupJobData> {
       return { kind: job.data.kind, removed: 0 };
     },
     {
-      connection: createRedisConnection(),
+      connection: redis,
       concurrency: 1,
     },
   );

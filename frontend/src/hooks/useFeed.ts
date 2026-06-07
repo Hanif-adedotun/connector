@@ -13,6 +13,11 @@ export function useFeed() {
   const query = useQuery({
     queryKey: queryKeys.feed,
     queryFn: fetchFeed,
+    networkMode: "offlineFirst",
+    retry: (failureCount) => {
+      if (typeof navigator !== "undefined" && !navigator.onLine) return false;
+      return failureCount < 2;
+    },
   });
 
   return {

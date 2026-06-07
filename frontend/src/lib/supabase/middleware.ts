@@ -36,7 +36,7 @@ export async function updateSession(request: NextRequest) {
   const isAuthPage = pathname === "/login";
   const isLanding = pathname === "/";
 
-  if (user && (isLanding || isAuthPage)) {
+  if (user && isAuthPage) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     return NextResponse.redirect(url);

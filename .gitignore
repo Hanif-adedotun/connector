@@ -3,6 +3,7 @@
 .env
 .env.*
 !.env.example
+!.env.docker.example
 .agents
 # Node
 node_modules/
@@ -41,3 +42,8 @@ Thumbs.db
 # Misc
 .cache/
 tmp/
+
+# Serwist (generated service workers)
+frontend/public/sw.js
+frontend/public/sw.js.map
+frontend/public/swe-worker*

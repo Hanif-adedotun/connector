@@ -1,4 +1,4 @@
-# Connector backend
+# Brief backend
 
 Node.js + Express API that also boots BullMQ workers and the polling scheduler in the same process. One `bun run dev` brings up the whole backend.
 

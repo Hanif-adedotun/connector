@@ -4,16 +4,20 @@ import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
+import { BriefWordmark } from "@/components/brand/BriefWordmark";
 import { ProviderCard } from "@/components/integrations/ProviderCard";
+import { ReconnectGoogleBanner } from "@/components/integrations/ReconnectGoogleBanner";
 import { useIntegrations } from "@/hooks/useIntegrations";
+import { googleNeedsReconnect, isGoogleConnected } from "@/lib/integrations";
 import { queryKeys } from "@/lib/query-keys";
-import type { ConnectorSource } from "@/types";
+import type { BriefSource } from "@/types";
 
 import { SiGooglecalendar, SiGmail, SiSlack, SiJira, SiDiscord } from "react-icons/si";
+import { CheckCircleIcon, InfoIcon } from "lucide-react";
 
 const PROVIDERS: Array<{
   id: "google" | "slack" | "jira" | "discord";
-  providerKey: ConnectorSource[];
+  providerKey: BriefSource[];
   label: string;
   description: string;
   icon: React.ReactNode;
@@ -27,6 +31,13 @@ const PROVIDERS: Array<{
     description: "Surface upcoming meetings and email follow-ups.",
   },
   {
+    id: "jira",
+    icon: <SiJira className="h-4 w-4" />,
+    providerKey: ["jira"],
+    label: "Jira",
+    description: "Track assigned tickets and due dates.",
+  },
+  {
     id: "slack",
     icon: <SiSlack className="h-4 w-4" />,
     providerKey: ["slack"],
@@ -34,14 +45,7 @@ const PROVIDERS: Array<{
     description: "Extract follow-ups from mentions and selected channels.",
     comingSoon: true,
   },
-  {
-    id: "jira",
-    icon: <SiJira className="h-4 w-4" />,
-    providerKey: ["jira"],
-    label: "Jira",
-    description: "Track assigned tickets and due dates.",
-    comingSoon: true,
-  },
+  
   {
     id: "discord",
     icon: <SiDiscord className="h-4 w-4" />,
@@ -77,7 +81,7 @@ function IntegrationsContent() {
     const oauthError = searchParams.get("error");
     if (connected) {
       setBanner(
-        `${CONNECTED_LABELS[connected] ?? connected} connected successfully.`,
+        `${CONNECTED_LABELS[connected] ?? connected} connected successfully`,
       );
       void Promise.all([
         queryClient.invalidateQueries({ queryKey: queryKeys.integrations }),
@@ -88,21 +92,33 @@ function IntegrationsContent() {
     }
   }, [searchParams, queryClient]);
 
-  function isConnected(providerKeys: ConnectorSource[]) {
+  function isConnected(providerKeys: BriefSource[]) {
+    if (providerKeys.includes("google_calendar") && providerKeys.includes("gmail")) {
+      return isGoogleConnected(items);
+    }
     return providerKeys.every((key) =>
       items.some((i) => i.provider === key && i.status === "active"),
     );
   }
 
+  const showGoogleReconnect = googleNeedsReconnect(items);
   const displayError = error ?? disconnectError;
 
   return (
     <>
       {banner && (
-        <p className="mt-6 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
-          {banner}
-        </p>
+        <div className="mt-6 flex items-start gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
+            <InfoIcon className="h-4 w-4 mt-0.5 font-light" />
+            <div className=" ">
+              {banner}
+              <p className="mt-0.5 text-sm text-neutral-500">
+                You should see new tasks in your feed shortly.
+              </p>
+            </div>
+        </div>
       )}
+      {showGoogleReconnect && <ReconnectGoogleBanner className="mt-6" />}
+
       {displayError && (
         <p className="mt-6 text-sm text-red-600">{displayError}</p>
       )}
@@ -119,6 +135,7 @@ function IntegrationsContent() {
               label={p.label}
               description={p.description}
               connected={isConnected(p.providerKey)}
+              needsReconnect={p.id === "google" && showGoogleReconnect}
               comingSoon={p.comingSoon}
               onDisconnect={() => void disconnectProviders(p.providerKey)}
               disabled={isDisconnecting}
@@ -144,7 +161,12 @@ function BackLink() {
 export default function IntegrationsPage() {
   return (
     <main className="mx-auto min-h-screen max-w-3xl px-6 py-16">
-      <header className="flex items-center justify-between">
+      <div className="mb-8 flex items-center justify-between">
+        <BriefWordmark href="/dashboard" size="sm" />
+        <BackLink />
+      </div>
+
+      <header>
         <div>
           <p className="font-mono text-xs uppercase tracking-widest text-neutral-500">
             Connections
@@ -153,7 +175,6 @@ export default function IntegrationsPage() {
             Integrations
           </h1>
         </div>
-        <BackLink />
       </header>
 
       <Suspense

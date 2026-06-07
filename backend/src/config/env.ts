@@ -7,8 +7,10 @@ const envSchema = z.object({
     .enum(["development", "production", "test"])
     .default("development"),
   PORT: z.coerce.number().default(4000),
-  APP_URL: z.string().url().default("http://localhost:3000"),
+  APP_URL: z.string().url().default("http://localhost:4001"),
   API_URL: z.string().url().default("http://localhost:4000"),
+  /** Comma-separated browser origins allowed for CORS (defaults to APP_URL + dev localhost ports). */
+  CORS_ORIGINS: z.string().optional(),
 
   // Database (Supabase Postgres)
   DATABASE_URL: z.string().min(1),
@@ -52,6 +54,13 @@ const envSchema = z.object({
     .string()
     .url()
     .default("http://localhost:4000/api/oauth/jira/callback"),
+  JIRA_MAX_RESULTS: z.coerce.number().default(50),
+  /** Comma-separated Jira statusCategory values (e.g. To Do,In Progress). */
+  JIRA_STATUS_CATEGORIES: z
+    .string()
+    .default("To Do,In Progress"),
+  /** Optional extra JQL AND fragment for site-specific workflows. */
+  JIRA_EXTRA_JQL: z.string().optional(),
 
   // Discord
   DISCORD_CLIENT_ID: z.string().optional(),
@@ -63,6 +72,12 @@ const envSchema = z.object({
 
   // Polling
   POLLING_INTERVAL_MS: z.coerce.number().default(5 * 60 * 1000),
+
+  // Web Push (VAPID)
+  VAPID_PUBLIC_KEY: z.string().optional(),
+  VAPID_PRIVATE_KEY: z.string().optional(),
+  VAPID_SUBJECT: z.string().default("mailto:brief@localhost"),
+  PUSH_BATCH_DELAY_MS: z.coerce.number().default(30_000),
 });
 
 const parsed = envSchema.safeParse(process.env);

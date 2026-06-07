@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion, type Variants } from "motion/react";
 import { useDismissTask } from "@/hooks/useDismissTask";
-import type { ConnectorSource, FeedItem as FeedItemType } from "@/types";
+import type { BriefSource, FeedItem as FeedItemType } from "@/types";
 import { FeedItem } from "./FeedItem";
 
 const SOURCE_LABEL: Record<string, string> = {
@@ -14,7 +14,7 @@ const SOURCE_LABEL: Record<string, string> = {
   discord: "Discord",
 };
 
-const SOURCE_ORDER: ConnectorSource[] = [
+const SOURCE_ORDER: BriefSource[] = [
   "gmail",
   "calendar",
   "slack",
@@ -47,7 +47,7 @@ const itemVariants: Variants = {
   },
 };
 
-function normalizeSource(source: ConnectorSource): string {
+function normalizeSource(source: BriefSource): string {
   return source === "google_calendar" ? "calendar" : source;
 }
 
@@ -68,7 +68,7 @@ function groupItemsBySource(items: FeedItemType[]) {
   }));
 
   const remaining = [...groups.keys()]
-    .filter((key) => !SOURCE_ORDER.includes(key as ConnectorSource))
+    .filter((key) => !SOURCE_ORDER.includes(key as BriefSource))
     .map((key) => ({
       key,
       label: SOURCE_LABEL[key] ?? key,

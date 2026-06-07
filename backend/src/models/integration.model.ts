@@ -25,8 +25,18 @@ export const IntegrationModel = {
     userId: string;
     provider: Provider;
     tokens: OAuthTokens;
+    jiraCloudId?: string | null;
+    jiraSiteUrl?: string | null;
   }) {
-    const { userId, provider, tokens } = params;
+    const { userId, provider, tokens, jiraCloudId, jiraSiteUrl } = params;
+    const jiraFields =
+      provider === "jira"
+        ? {
+            ...(jiraCloudId !== undefined ? { jiraCloudId } : {}),
+            ...(jiraSiteUrl !== undefined ? { jiraSiteUrl } : {}),
+          }
+        : {};
+
     return prisma.integration.upsert({
       where: { userId_provider: { userId, provider } },
       update: {
@@ -36,6 +46,7 @@ export const IntegrationModel = {
           : null,
         scope: tokens.scope ?? null,
         status: "active",
+        ...jiraFields,
       },
       create: {
         userId,
@@ -45,6 +56,20 @@ export const IntegrationModel = {
           ? encrypt(tokens.refreshToken)
           : null,
         scope: tokens.scope ?? null,
+        ...jiraFields,
+      },
+    });
+  },
+
+  updateJiraSite(
+    integrationId: string,
+    site: { cloudId: string; siteUrl: string },
+  ) {
+    return prisma.integration.update({
+      where: { id: integrationId },
+      data: {
+        jiraCloudId: site.cloudId,
+        jiraSiteUrl: site.siteUrl,
       },
     });
   },
@@ -60,6 +85,13 @@ export const IntegrationModel = {
     return prisma.integration.update({
       where: { id },
       data: { status: "disconnected" },
+    });
+  },
+
+  markError(id: string) {
+    return prisma.integration.update({
+      where: { id },
+      data: { status: "error" },
     });
   },
 };

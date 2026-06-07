@@ -1,4 +1,4 @@
-export const THEME_STORAGE_KEY = "connector-theme";
+export const THEME_STORAGE_KEY = "brief-theme";
 
 export type Theme = "light" | "dark";
 

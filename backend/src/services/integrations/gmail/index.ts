@@ -2,6 +2,7 @@ import type { gmail_v1 } from "googleapis";
 import type { Prisma } from "@prisma/client";
 import { IntegrationModel } from "../../../models/integration.model";
 import { EventModel } from "../../../models/event.model";
+import { handleGooglePollError } from "../google/auth-errors";
 import { getGmailClient } from "../google/client";
 import { logger } from "../../../utils/logger";
 import type { PollContext, PollResult } from "..";
@@ -119,43 +120,57 @@ export async function pollGmail(ctx: PollContext): Promise<PollResult> {
     return { eventsFetched: 0 };
   }
 
-  const gmail = await getGmailClient(integration);
+  try {
+    const gmail = await getGmailClient(integration);
 
-  const { data: listData } = await gmail.users.messages.list({
-    userId: "me",
-    q: GMAIL_QUERY,
-    maxResults: MAX_RESULTS,
-  });
-
-  const messageIds = (listData.messages ?? [])
-    .map((m) => m.id)
-    .filter((id): id is string => Boolean(id))
-    .slice(0, MAX_RESULTS);
-
-  let eventsFetched = 0;
-
-  for (const messageId of messageIds) {
-    const { data: message } = await gmail.users.messages.get({
+    const { data: listData } = await gmail.users.messages.list({
       userId: "me",
-      id: messageId,
-      format: "full",
+      q: GMAIL_QUERY,
+      maxResults: MAX_RESULTS,
     });
 
-    const params = mapGmailMessageToPersistParams(ctx.userId, message);
-    if (!params) continue;
+    const messageIds = (listData.messages ?? [])
+      .map((m) => m.id)
+      .filter((id): id is string => Boolean(id))
+      .slice(0, MAX_RESULTS);
 
-    const event = await EventModel.upsertByExternalId(params);
-    eventsFetched += 1;
+    let eventsFetched = 0;
 
-    if (!event.processed) {
-      await processGmailMessage(event);
+    for (const messageId of messageIds) {
+      const { data: message } = await gmail.users.messages.get({
+        userId: "me",
+        id: messageId,
+        format: "full",
+      });
+
+      const params = mapGmailMessageToPersistParams(ctx.userId, message);
+      if (!params) continue;
+
+      const event = await EventModel.upsertByExternalId(params);
+      eventsFetched += 1;
+
+      if (!event.processed) {
+        await processGmailMessage(event);
+      }
     }
+
+    logger.info(
+      { integrationId: ctx.integrationId, eventsFetched },
+      "pollGmail: done",
+    );
+
+    return { eventsFetched };
+  } catch (err) {
+    if (
+      await handleGooglePollError(
+        ctx.userId,
+        ctx.integrationId,
+        "gmail",
+        err,
+      )
+    ) {
+      return { eventsFetched: 0 };
+    }
+    throw err;
   }
-
-  logger.info(
-    { integrationId: ctx.integrationId, eventsFetched },
-    "pollGmail: done",
-  );
-
-  return { eventsFetched };
 }

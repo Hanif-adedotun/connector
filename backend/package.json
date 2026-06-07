@@ -1,22 +1,24 @@
 {
-  "name": "connector-backend",
+  "name": "brief-backend",
   "version": "0.1.0",
   "private": true,
-  "description": "Connector backend: Express API + BullMQ workers + polling scheduler in a single process",
+  "description": "Brief backend: Express API + BullMQ workers + polling scheduler in a single process",
   "main": "src/index.ts",
   "scripts": {
     "dev": "bun --watch src/index.ts",
     "start": "bun src/index.ts",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc --noEmit",
+    "test": "jest --selectProjects backend",
+    "test:coverage": "jest --selectProjects backend --coverage",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
-    "@supabase/supabase-js": "^2.46.1",
     "@slack/web-api": "^7.7.0",
+    "@supabase/supabase-js": "^2.46.1",
     "axios": "^1.7.7",
     "bullmq": "^5.34.0",
     "cors": "^2.8.5",
@@ -28,13 +30,20 @@
     "ioredis": "^5.4.1",
     "pino": "^9.5.0",
     "pino-pretty": "^11.3.0",
+    "web-push": "^3.6.7",
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "@types/supertest": "^6.0.2",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
     "@types/node": "^22.9.0",
+    "@types/web-push": "^3.6.4",
+    "jest": "^29.7.0",
     "prisma": "^5.22.0",
+    "supertest": "^7.0.0",
+    "ts-jest": "^29.2.5",
     "tsx": "^4.19.2",
     "typescript": "^5.6.3"
   }
