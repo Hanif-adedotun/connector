@@ -25,5 +25,5 @@
     "**/*.tsx",
     ".next/types/**/*.ts"
   ],
-  "exclude": ["node_modules", "public/sw.js"]
+  "exclude": ["node_modules", "public/sw.js", "jest.setup.ts", "jest.config.js", "**/*.test.ts", "**/*.test.tsx"]
 }
