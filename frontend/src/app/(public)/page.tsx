@@ -69,7 +69,7 @@ export default async function LandingPage() {
                 ))}
               </div>
               <span className="text-xs font-medium text-neutral-600 dark:text-neutral-300">
-                Your most used work tools. Combined.
+                Your most used work tools. In Sync.
               </span>
             </div>
 

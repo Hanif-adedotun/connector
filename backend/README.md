@@ -39,12 +39,23 @@ src/
 bun install
 cp .env.example .env
 bun run prisma:generate
-bun run dev          # API + workers + scheduler
+bun run dev          # API + workers + scheduler (polling off when APP_MODE=development)
 ```
+
+## APP_MODE and polling
+
+Set `APP_MODE` in `.env` to control automatic integration polling:
+
+| Value | Polling |
+|-------|---------|
+| `development` (default for local dev) | **Off** — scheduler does not enqueue jobs; workers skip queued jobs. Use when local dev shares prod DB/Redis to avoid duplicate tasks. |
+| `production` | **On** — normal scheduler + worker behavior. |
+
+`NODE_ENV` still controls logging, CORS, and dev-only routes. Production deploys should set `APP_MODE=production` (see `.env.docker.example`).
 
 ## Dev-only polling debug
 
-When `NODE_ENV=development`, unauthenticated endpoints trigger polling on demand:
+When `NODE_ENV=development` **and** `APP_MODE=production`, unauthenticated endpoints trigger polling on demand:
 
 ```bash
 # Enqueue jobs for all active integrations (BullMQ workers process them)
