@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM oven/bun:1 AS base
+FROM oven/bun:1.2.21 AS base
 
 # --- Backend dependencies ---
 FROM base AS backend-deps
