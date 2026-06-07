@@ -21,8 +21,15 @@ term_handler() {
 
 trap term_handler TERM INT
 
-# Exit when either process exits, then stop the other.
-wait -n "$BACKEND_PID" "$FRONTEND_PID"
-EXIT_CODE=$?
+# Wait until either process exits (POSIX-compatible)
+while kill -0 "$BACKEND_PID" 2>/dev/null && kill -0 "$FRONTEND_PID" 2>/dev/null; do
+  sleep 1
+done
+
+wait "$BACKEND_PID" 2>/dev/null || true
+BACKEND_EXIT=$?
+wait "$FRONTEND_PID" 2>/dev/null || true
+FRONTEND_EXIT=$?
+
 term_handler
-exit "$EXIT_CODE"
+exit $(( BACKEND_EXIT != 0 ? BACKEND_EXIT : FRONTEND_EXIT ))
