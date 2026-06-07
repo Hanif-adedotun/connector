@@ -8,7 +8,6 @@ import { Suspense, useEffect, useState } from "react";
 import { APP_TAGLINE } from "@/lib/brand";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
-import { BriefWordmark } from "@/components/brand/BriefWordmark";
 
 const RESEND_COOLDOWN_SEC = 30;
 
@@ -164,28 +163,45 @@ function LoginPageContent() {
 
   return (
     <main className="grid min-h-[100dvh] lg:grid-cols-2">
-      <div className="relative flex min-h-[100dvh] flex-col px-6 py-10 sm:px-12 lg:px-16 xl:px-24">
+      <div className="relative flex min-h-[100dvh] flex-col px-8 py-8 sm:px-12 sm:py-10 lg:px-16 xl:px-24">
         <Link
           href="/"
-          className="inline-flex w-fit items-center gap-1.5 text-sm text-neutral-500 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
+          className="inline-flex w-fit shrink-0 items-center gap-1.5 text-sm text-neutral-500 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
         >
           <ArrowLeftIcon className="h-4 w-4" />
           Back
         </Link>
 
-        <div className="flex flex-1 flex-col justify-center">
-          <div className="brief-reveal mx-auto w-full max-w-sm">
-            <div className="mt-8 flex items-center gap-4 rounded-2xl border border-neutral-200 bg-neutral-50/80 p-4 dark:border-neutral-800 dark:bg-neutral-900/50 lg:hidden">
-              <BriefWordmark size="lg" showIcon />
-              <p className="text-left text-sm leading-snug text-neutral-600 dark:text-neutral-400">
-                <span className="font-medium text-neutral-900 dark:text-white">
-                  Know what&apos;s next.
-                </span>{" "}
-                One daily briefing from the tools you already use.
-              </p>
-            </div>
+      <div className="flex flex-1 flex-col justify-start sm:justify-center">
+          <div className="flex shrink-0 flex-col items-center gap-3 lg:hidden pt-8 mb-24 sm:mb-0">
+            <Image
+              src="/icons/icon-full.png"
+              alt="Brief"
+              width={78}
+              height={78}
+              className="hidden h-24 w-24 dark:inline-block"
+              priority
+              draggable={false}
+            />
+            <Image
+              src="/icons/icon-full-dark.png"
+              alt="Brief"
+              width={78}
+              height={78}
+              className="inline-block h-16 w-16 dark:hidden"
+              priority
+              draggable={false}
+            />
+            <p className="text-center text-sm leading-snug text-neutral-600 dark:text-neutral-400">
+              <span className="font-medium text-neutral-900 dark:text-white">
+                Know what&apos;s next.
+              </span>
+            </p>
+          </div>
 
-            <h1 className="mt-8 text-2xl font-semibold tracking-tight sm:text-3xl">
+        
+          <div className="brief-reveal mx-auto w-full max-w-sm">
+            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
               Sign in
             </h1>
 
