@@ -2,6 +2,7 @@ import type { NextFunction, Request, Response } from "express";
 import { z } from "zod";
 import { TaskModel } from "../models/task.model";
 import { BadRequestError, UnauthorizedError } from "../utils/errors";
+import { routeParam } from "../utils/route-param";
 import { serializeTask } from "../views/task.view";
 
 const updateSchema = z.object({
@@ -15,7 +16,7 @@ export const TasksController = {
       const parsed = updateSchema.safeParse(req.body);
       if (!parsed.success) throw new BadRequestError("Invalid body", parsed.error.flatten());
       const updated = await TaskModel.updateStatus(
-        req.params.id,
+        routeParam(req.params.id),
         req.userId,
         parsed.data.status,
       );

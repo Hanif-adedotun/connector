@@ -1,7 +1,7 @@
 import { Worker } from "bullmq";
 import { env } from "../config/env";
 import { isPollingEnabled } from "../config/polling";
-import { redis } from "../config/redis";
+import { bullmqConnection } from "../config/redis";
 import { POLLING_QUEUE, type PollingJobData } from "../queues/polling.queue";
 import { runProviderPoll } from "../services/integrations";
 import { logger } from "../utils/logger";
@@ -28,7 +28,7 @@ export function createPollingWorker(): Worker<PollingJobData> {
       return result;
     },
     {
-      connection: redis,
+      connection: bullmqConnection,
       concurrency: 5,
     },
   );

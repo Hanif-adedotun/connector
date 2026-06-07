@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import { IntegrationModel } from "../models/integration.model";
 import { UnauthorizedError } from "../utils/errors";
+import { routeParam } from "../utils/route-param";
 import { serializeIntegration } from "../views/integration.view";
 
 export const IntegrationsController = {
@@ -17,7 +18,7 @@ export const IntegrationsController = {
   async disconnect(req: Request, res: Response, next: NextFunction) {
     try {
       if (!req.userId) throw new UnauthorizedError();
-      const updated = await IntegrationModel.disconnect(req.params.id);
+      const updated = await IntegrationModel.disconnect(routeParam(req.params.id));
       res.json(serializeIntegration(updated));
     } catch (err) {
       next(err);

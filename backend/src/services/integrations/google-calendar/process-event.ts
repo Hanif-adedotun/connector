@@ -1,5 +1,5 @@
 import type { calendar_v3 } from "googleapis";
-import type { ConnectorEvent } from "@prisma/client";
+import type { ConnectorEvent, Prisma } from "@prisma/client";
 import { EventModel } from "../../../models/event.model";
 import { TaskModel } from "../../../models/task.model";
 import { enqueueAiExtractionJob } from "../../../queues/ai-extraction.queue";
@@ -161,7 +161,7 @@ export function mapGoogleEventToPersistParams(
     eventType: "calendar.event",
     title: item.summary ?? "Untitled event",
     content: contentParts.join("\n\n") || item.summary || "Calendar event",
-    metadata,
+    metadata: metadata as Prisma.InputJsonValue,
     occurredAt,
   };
 }

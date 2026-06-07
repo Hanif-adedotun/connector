@@ -62,7 +62,7 @@ export async function processGmailMessage(event: ConnectorEvent): Promise<void> 
       content: event.content,
       actor: meta.from,
       occurredAt: event.occurredAt,
-      metadata: meta,
+      metadata: meta as Record<string, unknown>,
     },
   });
 

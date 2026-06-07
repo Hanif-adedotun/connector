@@ -1,6 +1,6 @@
 import { env } from "../config/env";
 import { isPollingEnabled } from "../config/polling";
-import { cleanupQueue } from "../queues/cleanup.queue";
+import { CLEANUP_JOB_NAME, cleanupQueue } from "../queues/cleanup.queue";
 import { logger } from "../utils/logger";
 import { enqueuePollingJobs } from "./polling-trigger";
 
@@ -36,7 +36,7 @@ export function startScheduler(): void {
 }
 
 async function enqueueDailyCleanup(): Promise<void> {
-  await cleanupQueue.add("stale-events", { kind: "stale-events" });
+  await cleanupQueue.add(CLEANUP_JOB_NAME, { kind: "stale-events" });
 }
 
 export async function stopScheduler(): Promise<void> {

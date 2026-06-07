@@ -1,5 +1,5 @@
 import { Worker } from "bullmq";
-import { redis } from "../config/redis";
+import { bullmqConnection } from "../config/redis";
 import {
   PUSH_NOTIFY_QUEUE,
   type PushNotifyJobData,
@@ -16,7 +16,7 @@ export function createPushNotifyWorker(): Worker<PushNotifyJobData> {
       await PushNotificationService.flushBatch(userId);
     },
     {
-      connection: redis,
+      connection: bullmqConnection,
       concurrency: 5,
     },
   );
