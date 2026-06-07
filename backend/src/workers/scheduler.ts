@@ -1,4 +1,5 @@
 import { env } from "../config/env";
+import { isPollingEnabled } from "../config/polling";
 import { cleanupQueue } from "../queues/cleanup.queue";
 import { logger } from "../utils/logger";
 import { enqueuePollingJobs } from "./polling-trigger";
@@ -7,15 +8,22 @@ let timer: NodeJS.Timeout | undefined;
 let cleanupTimer: NodeJS.Timeout | undefined;
 
 export function startScheduler(): void {
-  void enqueuePollingJobs().catch((err) =>
-    logger.error({ err }, "scheduler: initial enqueue failed"),
-  );
-
-  timer = setInterval(() => {
+  if (isPollingEnabled()) {
     void enqueuePollingJobs().catch((err) =>
-      logger.error({ err }, "scheduler: enqueue failed"),
+      logger.error({ err }, "scheduler: initial enqueue failed"),
     );
-  }, env.POLLING_INTERVAL_MS);
+
+    timer = setInterval(() => {
+      void enqueuePollingJobs().catch((err) =>
+        logger.error({ err }, "scheduler: enqueue failed"),
+      );
+    }, env.POLLING_INTERVAL_MS);
+  } else {
+    logger.info(
+      { appMode: env.APP_MODE },
+      "scheduler: polling disabled (APP_MODE is not production)",
+    );
+  }
 
   cleanupTimer = setInterval(
     () => {

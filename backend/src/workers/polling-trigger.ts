@@ -1,4 +1,6 @@
 import type { Provider } from "@prisma/client";
+import { env } from "../config/env";
+import { isPollingEnabled } from "../config/polling";
 import { prisma } from "../config/db";
 import { POLLING_JOB_NAME, pollingQueue } from "../queues/polling.queue";
 import { logger } from "../utils/logger";
@@ -39,6 +41,14 @@ export async function listActiveIntegrations(opts?: {
 export async function enqueuePollingJobs(opts?: {
   integrationId?: string;
 }): Promise<PollingTriggerResult> {
+  if (!isPollingEnabled()) {
+    logger.debug(
+      { appMode: env.APP_MODE },
+      "polling trigger: skipped (APP_MODE is not production)",
+    );
+    return { enqueued: 0, integrations: [] };
+  }
+
   const integrations = await listActiveIntegrations(opts);
 
   if (integrations.length === 0) {

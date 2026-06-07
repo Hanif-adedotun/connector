@@ -6,6 +6,8 @@ const envSchema = z.object({
   NODE_ENV: z
     .enum(["development", "production", "test"])
     .default("development"),
+  /** Controls runtime behavior (e.g. disable polling in local dev against shared prod DB). */
+  APP_MODE: z.enum(["development", "production"]).default("development"),
   PORT: z.coerce.number().default(4000),
   APP_URL: z.string().url().default("http://localhost:4001"),
   API_URL: z.string().url().default("http://localhost:4000"),

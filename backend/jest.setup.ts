@@ -7,6 +7,7 @@ process.env.GROQ_API_KEY = "test-groq-key";
 process.env.REDIS_URL = "redis://localhost:6379";
 process.env.APP_URL = "http://localhost:4001";
 process.env.API_URL = "http://localhost:4000";
+process.env.APP_MODE = "production";
 
 jest.mock("./src/config/redis", () => ({
   redis: {

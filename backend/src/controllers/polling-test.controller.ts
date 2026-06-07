@@ -1,4 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
+import { isPollingEnabled } from "../config/polling";
 import { BadRequestError } from "../utils/errors";
 import {
   enqueuePollingJobs,
@@ -13,6 +14,15 @@ export const PollingTestController = {
    */
   async trigger(req: Request, res: Response, next: NextFunction) {
     try {
+      if (!isPollingEnabled()) {
+        res.status(503).json({
+          ok: false,
+          error:
+            "Polling is disabled when APP_MODE=development. Set APP_MODE=production to enable.",
+        });
+        return;
+      }
+
       const integrationId = req.query.integrationId
         ? String(req.query.integrationId)
         : undefined;
@@ -54,6 +64,15 @@ export const PollingTestController = {
 
   async triggerOne(req: Request, res: Response, next: NextFunction) {
     try {
+      if (!isPollingEnabled()) {
+        res.status(503).json({
+          ok: false,
+          error:
+            "Polling is disabled when APP_MODE=development. Set APP_MODE=production to enable.",
+        });
+        return;
+      }
+
       const integrationId = String(req.params.integrationId ?? "");
       if (!integrationId) {
         throw new BadRequestError("integrationId required");

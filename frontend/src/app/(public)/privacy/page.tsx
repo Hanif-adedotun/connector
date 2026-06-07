@@ -54,8 +54,9 @@ export default function PrivacyPage() {
                 <p className="mt-1">
                   When you sign in, we collect your email address and, if you
                   provide it, your first name. Authentication is handled by
-                  Supabase using magic links. Session cookies keep you signed in
-                  on your device.
+                  Supabase using email one-time codes. Session cookies keep you
+                  signed in on your device for up to two days, after which you
+                  need to sign in again.
                 </p>
               </div>
               <div>
