@@ -1,4 +1,4 @@
-DOCKER_DEFAULT_PLATFORM=linux/amd64 docker compose build --no-cache
+DOCKER_DEFAULT_PLATFORM=linux/amd64 docker compose build
 docker tag connector-brief devhanif/brief:v0.1.5
 docker push devhanif/brief:v0.1.5   
 

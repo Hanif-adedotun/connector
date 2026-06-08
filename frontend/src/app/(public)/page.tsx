@@ -25,7 +25,7 @@ export default async function LandingPage() {
   } = await supabase.auth.getUser();
 
   return (
-    <main className="brief-landing grid w-full max-w-full place-items-center overflow-visible  bg-neutral-100 dark:bg-neutral-950 [padding-left:env(safe-area-inset-left)] [padding-right:env(safe-area-inset-right)]">
+    <main className="brief-landing grid w-full max-w-full place-items-center bg-neutral-100 dark:bg-neutral-950 [padding-left:env(safe-area-inset-left)] [padding-right:env(safe-area-inset-right)]">
       <section className="relative flex h-full w-full max-w-full flex-col overflow-visible bg-transparent pt-1 shadow-[0_30px_80px_-40px_rgba(0,0,0,0.35)] ring-1 ring-black/5 backdrop-blur-sm dark:ring-white/10 md:px-12">
         {/* Navbar */}
         <nav className="z-20 flex shrink-0 items-center justify-between px-6 py-[1.8vh] sm:px-10">

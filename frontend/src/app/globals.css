@@ -41,6 +41,7 @@ html.dark body {
 .brief-landing {
   height: var(--brief-vh);
   min-height: 100svh;
+  overflow: hidden;
 }
 
 @supports (-webkit-touch-callout: none) {
