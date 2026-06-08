@@ -145,6 +145,14 @@ export default async function LandingPage() {
                       sizes="(max-width: 768px) 94vw, 440px"
                       className="select-none object-contain object-top drop-shadow-2xl"
                     />
+                     {/* <Image
+                      src="/mockup-new-black.png"
+                      alt="Brief app on a phone"
+                      fill
+                      priority
+                      sizes="(max-width: 768px) 94vw, 440px"
+                      className="hidden dark:inline-block select-none object-contain object-top drop-shadow-2xl"
+                    /> */}
                   </div>
                 </div>
               </div>
