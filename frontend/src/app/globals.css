@@ -4,6 +4,8 @@
 
 :root {
   color-scheme: light dark;
+  --brief-vh: 100svh;
+  --brief-vh: 100dvh;
 }
 
 html.dark {
@@ -13,6 +15,18 @@ html.dark {
 html,
 body {
   height: 100%;
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+@supports (-webkit-touch-callout: none) {
+  html {
+    height: -webkit-fill-available;
+  }
+
+  body {
+    min-height: -webkit-fill-available;
+  }
 }
 
 body {
@@ -21,6 +35,19 @@ body {
 
 html.dark body {
   @apply bg-neutral-950 text-neutral-100;
+}
+
+/* Full-viewport landing — stable height on iOS Safari (URL bar, Dynamic Island) */
+.brief-landing {
+  height: var(--brief-vh);
+  min-height: 100svh;
+}
+
+@supports (-webkit-touch-callout: none) {
+  .brief-landing {
+    height: -webkit-fill-available;
+    min-height: -webkit-fill-available;
+  }
 }
 
 /* Landing entrance + ambient motion. Static for reduced-motion users. */

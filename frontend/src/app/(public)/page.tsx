@@ -25,8 +25,8 @@ export default async function LandingPage() {
   } = await supabase.auth.getUser();
 
   return (
-    <main className="grid h-[100dvh] w-screen place-items-center overflow-hidden bg-neutral-100  dark:bg-neutral-950">
-      <section className="relative flex pt-1 md:px-12 h-full w-full flex-col overflow-hidden bg-transparent shadow-[0_30px_80px_-40px_rgba(0,0,0,0.35)] ring-1 ring-black/5 dark:ring-white/10 backdrop-blur-sm">
+    <main className="brief-landing grid w-full max-w-full place-items-center overflow-visible  bg-neutral-100 dark:bg-neutral-950 [padding-left:env(safe-area-inset-left)] [padding-right:env(safe-area-inset-right)]">
+      <section className="relative flex h-full w-full max-w-full flex-col overflow-visible bg-transparent pt-1 shadow-[0_30px_80px_-40px_rgba(0,0,0,0.35)] ring-1 ring-black/5 backdrop-blur-sm dark:ring-white/10 md:px-12">
         {/* Navbar */}
         <nav className="z-20 flex shrink-0 items-center justify-between px-6 py-[1.8vh] sm:px-10">
           <BriefWordmark size="lg" showIcon />
@@ -50,7 +50,7 @@ export default async function LandingPage() {
         </nav>
 
         {/* Hero */}
-        <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div className="relative flex min-h-0 flex-1 flex-col overflow-visible ">
           {/* Content — vertically centered in the area above the phone */}
           <div className="relative z-20 flex min-h-0 flex-1 flex-col items-center justify-center px-6 text-center">
             {/* Integration sources pill */}
@@ -122,8 +122,8 @@ export default async function LandingPage() {
             </div>
           </div>
 
-          {/* Phone zone — smaller on mobile; top half of image visible, bottom clipped */}
-          <div className="relative z-10 min-h-0 w-full shrink-0 flex-[0.5] sm:flex-[0.5] md:flex-[0.7] overflow-visible">
+          {/* Phone zone — aspect-ratio frame; bottom half clipped, sides preserved (Safari-safe) */}
+          <div className="relative z-10 min-h-0 w-full shrink-0 flex-[0.5] md:flex-[0.7]">
             {/* Subtle radial gradient glow behind the phone */}
             <div
               aria-hidden
@@ -133,17 +133,19 @@ export default async function LandingPage() {
                   "radial-gradient(circle, rgba(99,102,241,0.20) 0%, rgba(56,189,248,0.12) 36%, rgba(56,189,248,0) 70%)",
               }}
             />
-            <div className="absolute inset-x-0 bottom-0 mx-auto h-full w-[58vw] max-w-[220px] overflow-visible sm:w-[min(70vw,300px)] md:w-full md:max-w-[min(80vw,420px)] overflow-visible">
-              <div className="brief-phone-in relative h-[180%] w-full overflow-visible sm:h-[180%] md:h-[200%] overflow-visible">
-                <div className="brief-phone-float relative h-full w-full origin-bottom scale-100">
-                  <Image
-                    src="/mockup-new.png"
-                    alt="Brief app on a phone"
-                    fill
-                    priority
-                    sizes="(max-width: 640px) 58vw, (max-width: 768px) 70vw, 420px"
-                    className="select-none object-cover object-top drop-shadow-2xl  z-[100000] overflow-visible"
-                  />
+            <div className="absolute inset-x-0 bottom-0 flex justify-center">
+              <div className="brief-phone-in aspect-[1242/850] w-[min(94vw,440px)] overflow-hidden">
+                <div className="brief-phone-float-wrap pt-3">
+                  <div className="brief-phone-float relative aspect-[1242/1677] w-full">
+                    <Image
+                      src="/mockup-new.png"
+                      alt="Brief app on a phone"
+                      fill
+                      priority
+                      sizes="(max-width: 768px) 94vw, 440px"
+                      className="select-none object-contain object-top drop-shadow-2xl"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
