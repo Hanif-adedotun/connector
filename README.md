@@ -1,3 +1,5 @@
+![Brief — Turn the noise of work into one calm briefing](frontend/public/banner.jpg)
+
 # Brief
 
 AI-powered ambient task extraction across work tools. Brief polls Google Calendar, Gmail, Slack, Jira, and Discord, normalizes events, and uses AI inference to surface actionable tasks in a unified daily feed.

@@ -122,27 +122,27 @@ export default async function LandingPage() {
             </div>
           </div>
 
-          {/* Phone zone — 70% of original height; top half of image visible */}
-          <div className="relative z-10 min-h-0 w-full shrink-0 flex-[0.7]">
+          {/* Phone zone — smaller on mobile; top half of image visible, bottom clipped */}
+          <div className="relative z-10 min-h-0 w-full shrink-0 flex-[0.5] sm:flex-[0.5] md:flex-[0.7] overflow-visible">
             {/* Subtle radial gradient glow behind the phone */}
             <div
               aria-hidden
-              className="pointer-events-none absolute bottom-0 left-1/2 aspect-square h-[210%] -translate-x-1/2 translate-y-[40%] rounded-full"
+              className="pointer-events-none absolute bottom-0 left-1/2 aspect-square h-[190%] -translate-x-1/2 translate-y-[40%] rounded-full sm:h-[210%]"
               style={{
                 background:
                   "radial-gradient(circle, rgba(99,102,241,0.20) 0%, rgba(56,189,248,0.12) 36%, rgba(56,189,248,0) 70%)",
               }}
             />
-            <div className="absolute inset-x-0 bottom-0 mx-auto h-full w-full max-w-[min(80vw,420px)] overflow-hidden">
-              <div className="brief-phone-in relative h-[200%] w-full">
-                <div className="brief-phone-float relative h-full w-full">
+            <div className="absolute inset-x-0 bottom-0 mx-auto h-full w-[58vw] max-w-[220px] overflow-visible sm:w-[min(70vw,300px)] md:w-full md:max-w-[min(80vw,420px)] overflow-visible">
+              <div className="brief-phone-in relative h-[180%] w-full overflow-visible sm:h-[180%] md:h-[200%] overflow-visible">
+                <div className="brief-phone-float relative h-full w-full origin-bottom scale-100">
                   <Image
-                    src="/mockup.png"
+                    src="/mockup-new.png"
                     alt="Brief app on a phone"
                     fill
                     priority
-                    sizes="(max-width: 768px) 80vw, 420px"
-                    className="select-none object-cover object-top drop-shadow-2xl z-[100000]"
+                    sizes="(max-width: 640px) 58vw, (max-width: 768px) 70vw, 420px"
+                    className="select-none object-cover object-top drop-shadow-2xl  z-[100000] overflow-visible"
                   />
                 </div>
               </div>
