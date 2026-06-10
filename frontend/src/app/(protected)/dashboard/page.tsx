@@ -9,6 +9,7 @@ import { ReconnectGoogleBanner } from "@/components/integrations/ReconnectGoogle
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 import { useAuthGate } from "@/hooks/useAuthGate";
 import { useFeed } from "@/hooks/useFeed";
+import { useHydrated } from "@/hooks/useHydrated";
 import { useIntegrations } from "@/hooks/useIntegrations";
 import { googleNeedsReconnect, hasAnyActiveIntegration } from "@/lib/integrations";
 import { useOnlineSync } from "@/hooks/useOnlineSync";
@@ -24,26 +25,38 @@ import { cn } from "@/lib/utils";
 
 export default function DashboardPage() {
   useAuthGate("/dashboard");
-  const { data, loading, error, refreshError, reload, isFetching } = useFeed();
+  const hydrated = useHydrated();
+  const { data, loading, error, refreshError, reload, isFetching, isRestoring } =
+    useFeed();
   const { items: integrations } = useIntegrations();
   const { user } = useUser();
   const { isOnline } = useOnlineSync();
   const showGoogleReconnect = googleNeedsReconnect(integrations);
   const hasIntegrations = hasAnyActiveIntegration(integrations);
 
-  const headerDate = data?.date ?? format(new Date(), "yyyy-MM-dd");
+  const showClientData = hydrated && !isRestoring;
+
+  const headerDate =
+    showClientData && data?.date
+      ? data.date
+      : format(new Date(), "yyyy-MM-dd");
 
   const { salutation, summary } = useMemo(() => {
-    const firstName = displayFirstName(user);
+    const firstName = showClientData ? displayFirstName(user) : "there";
     const timeOfDay = getTimeOfDay(new Date().getHours());
-    const counts = countFeedDeadlines(data?.items ?? []);
+    const counts = countFeedDeadlines(
+      showClientData ? (data?.items ?? []) : [],
+    );
     return buildFeedGreeting({
       firstName,
       timeOfDay,
       ...counts,
-      hasIntegrations,
+      hasIntegrations: showClientData ? hasIntegrations : true,
     });
-  }, [user, data?.items, hasIntegrations]);
+  }, [showClientData, user, data?.items, hasIntegrations]);
+
+  const showFeed = showClientData && data;
+  const showFeedLoading = !showClientData || loading;
 
   return (
     <main className="mx-auto min-h-screen max-w-3xl px-6 py-16">
@@ -88,7 +101,7 @@ export default function DashboardPage() {
 
       {showGoogleReconnect && <ReconnectGoogleBanner className="mt-6" />}
 
-      {!isOnline && data && (
+      {!isOnline && showFeed && (
         <p
           className="mt-6 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200"
           role="status"
@@ -98,7 +111,7 @@ export default function DashboardPage() {
         </p>
       )}
 
-      {refreshError && data && (
+      {refreshError && showFeed && (
         <p
           className="mt-6 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200"
           role="status"
@@ -108,14 +121,13 @@ export default function DashboardPage() {
       )}
 
       <section className="mt-10">
-        {loading && <FeedSkeleton />}
-        {error && !data && (
+        {showFeedLoading && <FeedSkeleton />}
+        {showClientData && error && !data && (
           <p className="py-12 text-center text-sm text-red-600">{error}</p>
         )}
-        {data && (
+        {showFeed && (
           <FeedList items={data.items} hasIntegrations={hasIntegrations} />
         )}
-        {!loading && !data && <FeedSkeleton />}
       </section>
     </main>
   );
