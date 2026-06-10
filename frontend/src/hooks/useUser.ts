@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useIsRestoring, useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { User } from "@/types";
@@ -11,14 +11,18 @@ export async function fetchUser(): Promise<User> {
 }
 
 export function useUser() {
+  const isRestoring = useIsRestoring();
   const query = useQuery({
     queryKey: queryKeys.user,
     queryFn: fetchUser,
+    networkMode: "offlineFirst",
   });
+
+  const hasUser = query.data != null;
 
   return {
     user: query.data ?? null,
-    loading: query.isPending && !query.data,
+    loading: !hasUser && (query.isPending || isRestoring),
     error: query.error
       ? query.error instanceof Error
         ? query.error.message

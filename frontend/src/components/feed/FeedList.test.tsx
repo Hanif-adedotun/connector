@@ -25,9 +25,16 @@ const item = (overrides: Partial<FeedItem> = {}): FeedItem => ({
 });
 
 describe("FeedList", () => {
-  it("shows empty state", () => {
-    render(<FeedList items={[]} />);
+  it("shows empty state when integrations exist", () => {
+    render(<FeedList items={[]} hasIntegrations />);
     expect(screen.getByText(/No tasks surfaced yet/)).toBeInTheDocument();
+  });
+
+  it("shows connect CTA when no integrations", () => {
+    render(<FeedList items={[]} hasIntegrations={false} />);
+    expect(
+      screen.getByRole("link", { name: /add integrations/i }),
+    ).toHaveAttribute("href", "/integrations");
   });
 
   it("groups and renders items by source", () => {

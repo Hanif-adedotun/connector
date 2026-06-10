@@ -66,9 +66,24 @@ export function buildFeedGreeting(opts: {
   openCount: number;
   dueTodayCount: number;
   overdueCount: number;
+  hasIntegrations?: boolean;
 }): FeedGreeting {
-  const { firstName, timeOfDay, openCount, dueTodayCount, overdueCount } = opts;
+  const {
+    firstName,
+    timeOfDay,
+    openCount,
+    dueTodayCount,
+    overdueCount,
+    hasIntegrations = true,
+  } = opts;
   const salutation = `${timeOfDayHello(timeOfDay)}, ${firstName}`;
+
+  if (openCount === 0 && !hasIntegrations) {
+    return {
+      salutation,
+      summary: "Connect your tools to start your briefing.",
+    };
+  }
 
   if (openCount === 0) {
     return { salutation, summary: "You're all caught up." };

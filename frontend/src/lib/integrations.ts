@@ -13,3 +13,7 @@ export function isGoogleConnected(items: Integration[]): boolean {
     items.some((i) => i.provider === key && i.status === "active"),
   );
 }
+
+export function hasAnyActiveIntegration(items: Integration[]): boolean {
+  return items.some((i) => i.status === "active");
+}

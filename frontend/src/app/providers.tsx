@@ -5,7 +5,9 @@ import { QueryClient, defaultShouldDehydrateQuery } from "@tanstack/react-query"
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { useEffect, useState } from "react";
 import { warmAuthSession } from "@/lib/auth-session";
+import { createClient } from "@/lib/supabase/client";
 import { env } from "@/lib/env";
+import { clearLocalAppData } from "@/lib/query-cache";
 import { createIdbPersister } from "@/lib/query-persister";
 import { queryKeys } from "@/lib/query-keys";
 import { shouldReloadOnOnline } from "@/lib/pwa";
@@ -33,17 +35,19 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     void warmAuthSession();
-
     document.body.classList.add("brief-ready");
-    const bootEl = document.getElementById("brief-boot");
-    const removeTimer = bootEl
-      ? window.setTimeout(() => bootEl.remove(), 250)
-      : undefined;
 
-    return () => {
-      if (removeTimer !== undefined) window.clearTimeout(removeTimer);
-    };
-  }, []);
+    const supabase = createClient();
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") {
+        void clearLocalAppData(queryClient);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [queryClient]);
 
   return (
     <SerwistProvider swUrl="/sw.js" register reloadOnOnline={reloadOnOnline}>
@@ -56,7 +60,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
           dehydrateOptions: {
             shouldDehydrateQuery: (query) =>
               defaultShouldDehydrateQuery(query) &&
-              query.queryKey[0] === queryKeys.feed[0],
+              (query.queryKey[0] === queryKeys.feed[0] ||
+                query.queryKey[0] === queryKeys.user[0]),
           },
         }}
       >

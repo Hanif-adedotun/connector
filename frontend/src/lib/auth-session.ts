@@ -22,7 +22,11 @@ export async function getAccessToken(): Promise<string | undefined> {
   return session?.access_token;
 }
 
+export function resetAuthSession(): void {
+  sessionPromise = null;
+}
+
 /** @internal test helper */
 export function resetAuthSessionForTests(): void {
-  sessionPromise = null;
+  resetAuthSession();
 }

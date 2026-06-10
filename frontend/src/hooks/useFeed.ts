@@ -23,13 +23,22 @@ export function useFeed() {
 
   const hasData = query.data != null;
 
+  function formatError(err: unknown): string {
+    if (err instanceof Error) return err.message;
+    if (typeof err === "object" && err !== null && "message" in err) {
+      return String((err as { message: unknown }).message);
+    }
+    return "Failed to load feed";
+  }
+
+  const queryError = query.error ? formatError(query.error) : null;
+
   return {
     data: query.data ?? null,
-    error: query.error
-      ? query.error instanceof Error
-        ? query.error.message
-        : "Failed to load feed"
-      : null,
+    /** Blocking error — only when there is no cached feed to show. */
+    error: !hasData ? queryError : null,
+    /** Non-blocking refresh failure while stale feed is visible. */
+    refreshError: hasData ? queryError : null,
     loading: !hasData && (query.isPending || isRestoring),
     isRestoring,
     isFetching: query.isFetching,

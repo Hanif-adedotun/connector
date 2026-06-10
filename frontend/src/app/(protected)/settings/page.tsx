@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   BlocksIcon,
   BellIcon,
@@ -15,12 +16,14 @@ import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { displayFirstName, useUser } from "@/hooks/useUser";
 import { createClient } from "@/lib/supabase/client";
+import { clearLocalAppData } from "@/lib/query-cache";
 import { unsubscribeFromPush } from "@/lib/push";
 import { APP_VERSION } from "@/lib/version";
 import { cn } from "@/lib/utils";
 
 export default function SettingsPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { user, loading } = useUser();
   const { isDark, toggle, ready } = useTheme();
   const {
@@ -46,6 +49,7 @@ export default function SettingsPage() {
     }
     const supabase = createClient();
     await supabase.auth.signOut();
+    await clearLocalAppData(queryClient);
     router.push("/login");
     router.refresh();
   }

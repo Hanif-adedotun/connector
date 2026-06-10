@@ -1,6 +1,8 @@
 "use client";
 
 import { AnimatePresence, motion, type Variants } from "motion/react";
+import Link from "next/link";
+import { BlocksIcon } from "lucide-react";
 import { useDismissTask } from "@/hooks/useDismissTask";
 import type { BriefSource, FeedItem as FeedItemType } from "@/types";
 import { FeedItem } from "./FeedItem";
@@ -78,14 +80,39 @@ function groupItemsBySource(items: FeedItemType[]) {
   return [...ordered, ...remaining];
 }
 
-export function FeedList({ items }: { items: FeedItemType[] }) {
+export function FeedList({
+  items,
+  hasIntegrations = true,
+}: {
+  items: FeedItemType[];
+  hasIntegrations?: boolean;
+}) {
   const { dismiss, dismissingId } = useDismissTask();
   const firstItemId = items[0]?.id;
 
   if (items.length === 0) {
+    if (!hasIntegrations) {
+      return (
+        <div className="py-12 text-center">
+          <p className="text-sm text-neutral-600 dark:text-neutral-400">
+            Connect Gmail, Calendar, Jira, or Discord to surface your follow-ups
+            here.
+          </p>
+          <Link
+            href="/integrations"
+            className="mt-5 inline-flex items-center gap-2 rounded-xl bg-neutral-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
+          >
+            <BlocksIcon className="h-4 w-4" aria-hidden />
+            Add integrations
+          </Link>
+        </div>
+      );
+    }
+
     return (
       <p className="py-12 text-center text-sm text-neutral-500">
-        No tasks surfaced yet. Connect an integration to get started.
+        No tasks surfaced yet. New follow-ups will appear here as Brief syncs
+        your connected tools.
       </p>
     );
   }

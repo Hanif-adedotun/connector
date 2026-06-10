@@ -7,9 +7,10 @@ import { FeedList } from "@/components/feed/FeedList";
 import { FeedSkeleton } from "@/components/feed/FeedSkeleton";
 import { ReconnectGoogleBanner } from "@/components/integrations/ReconnectGoogleBanner";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
+import { useAuthGate } from "@/hooks/useAuthGate";
 import { useFeed } from "@/hooks/useFeed";
 import { useIntegrations } from "@/hooks/useIntegrations";
-import { googleNeedsReconnect } from "@/lib/integrations";
+import { googleNeedsReconnect, hasAnyActiveIntegration } from "@/lib/integrations";
 import { useOnlineSync } from "@/hooks/useOnlineSync";
 import { displayFirstName, useUser } from "@/hooks/useUser";
 import {
@@ -22,11 +23,13 @@ import { RefreshCwIcon, SettingsIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function DashboardPage() {
-  const { data, loading, error, reload, isFetching } = useFeed();
+  useAuthGate("/dashboard");
+  const { data, loading, error, refreshError, reload, isFetching } = useFeed();
   const { items: integrations } = useIntegrations();
   const { user } = useUser();
   const { isOnline } = useOnlineSync();
   const showGoogleReconnect = googleNeedsReconnect(integrations);
+  const hasIntegrations = hasAnyActiveIntegration(integrations);
 
   const headerDate = data?.date ?? format(new Date(), "yyyy-MM-dd");
 
@@ -34,8 +37,13 @@ export default function DashboardPage() {
     const firstName = displayFirstName(user);
     const timeOfDay = getTimeOfDay(new Date().getHours());
     const counts = countFeedDeadlines(data?.items ?? []);
-    return buildFeedGreeting({ firstName, timeOfDay, ...counts });
-  }, [user, data?.items]);
+    return buildFeedGreeting({
+      firstName,
+      timeOfDay,
+      ...counts,
+      hasIntegrations,
+    });
+  }, [user, data?.items, hasIntegrations]);
 
   return (
     <main className="mx-auto min-h-screen max-w-3xl px-6 py-16">
@@ -90,13 +98,24 @@ export default function DashboardPage() {
         </p>
       )}
 
+      {refreshError && data && (
+        <p
+          className="mt-6 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200"
+          role="status"
+        >
+          Couldn&apos;t refresh — showing your last synced feed.
+        </p>
+      )}
+
       <section className="mt-10">
         {loading && <FeedSkeleton />}
-        {error && (
+        {error && !data && (
           <p className="py-12 text-center text-sm text-red-600">{error}</p>
         )}
-        {!loading && !error && data && <FeedList items={data.items} />}
-        {!loading && !error && !data && <FeedSkeleton />}
+        {data && (
+          <FeedList items={data.items} hasIntegrations={hasIntegrations} />
+        )}
+        {!loading && !data && <FeedSkeleton />}
       </section>
     </main>
   );

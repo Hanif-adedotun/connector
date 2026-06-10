@@ -33,8 +33,9 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/integrations") ||
     pathname.startsWith("/settings");
+  /** Dashboard is client-gated so cached feed can render before server auth resolves. */
+  const isClientGated = pathname.startsWith("/dashboard");
   const isAuthPage = pathname === "/login";
-  const isLanding = pathname === "/";
 
   if (user && isAuthPage) {
     const url = request.nextUrl.clone();
@@ -42,7 +43,7 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (!user && isProtected) {
+  if (!user && isProtected && !isClientGated) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("next", pathname);

@@ -79,7 +79,7 @@ describe("countFeedDeadlines", () => {
 });
 
 describe("buildFeedGreeting", () => {
-  it("shows caught up when empty", () => {
+  it("shows caught up when empty with integrations", () => {
     expect(
       buildFeedGreeting({
         firstName: "Alice",
@@ -87,10 +87,27 @@ describe("buildFeedGreeting", () => {
         openCount: 0,
         dueTodayCount: 0,
         overdueCount: 0,
+        hasIntegrations: true,
       }),
     ).toEqual({
       salutation: "Good morning, Alice",
       summary: "You're all caught up.",
+    });
+  });
+
+  it("prompts to connect when empty without integrations", () => {
+    expect(
+      buildFeedGreeting({
+        firstName: "Alice",
+        timeOfDay: "morning",
+        openCount: 0,
+        dueTodayCount: 0,
+        overdueCount: 0,
+        hasIntegrations: false,
+      }),
+    ).toEqual({
+      salutation: "Good morning, Alice",
+      summary: "Connect your tools to start your briefing.",
     });
   });
 

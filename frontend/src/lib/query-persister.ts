@@ -21,3 +21,7 @@ export function createIdbPersister(): Persister {
     },
   };
 }
+
+export async function clearPersistedQueryCache(): Promise<void> {
+  await del(IDB_KEY);
+}

@@ -1,4 +1,8 @@
-import { googleNeedsReconnect, isGoogleConnected } from "./integrations";
+import {
+  googleNeedsReconnect,
+  hasAnyActiveIntegration,
+  isGoogleConnected,
+} from "./integrations";
 import type { Integration } from "@/types";
 
 function integration(
@@ -29,6 +33,24 @@ describe("googleNeedsReconnect", () => {
         integration("google_calendar", "active"),
       ]),
     ).toBe(false);
+  });
+});
+
+describe("hasAnyActiveIntegration", () => {
+  it("returns false when no integrations", () => {
+    expect(hasAnyActiveIntegration([])).toBe(false);
+  });
+
+  it("returns false when all integrations are inactive", () => {
+    expect(hasAnyActiveIntegration([integration("jira", "error")])).toBe(
+      false,
+    );
+  });
+
+  it("returns true when at least one integration is active", () => {
+    expect(hasAnyActiveIntegration([integration("jira", "active")])).toBe(
+      true,
+    );
   });
 });
 
