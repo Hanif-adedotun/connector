@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useIsRestoring, useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { FeedResponse } from "@/types";
@@ -10,6 +10,7 @@ export async function fetchFeed(): Promise<FeedResponse> {
 }
 
 export function useFeed() {
+  const isRestoring = useIsRestoring();
   const query = useQuery({
     queryKey: queryKeys.feed,
     queryFn: fetchFeed,
@@ -20,6 +21,8 @@ export function useFeed() {
     },
   });
 
+  const hasData = query.data != null;
+
   return {
     data: query.data ?? null,
     error: query.error
@@ -27,7 +30,8 @@ export function useFeed() {
         ? query.error.message
         : "Failed to load feed"
       : null,
-    loading: query.isPending && !query.data,
+    loading: !hasData && (query.isPending || isRestoring),
+    isRestoring,
     isFetching: query.isFetching,
     reload: () => query.refetch(),
   };

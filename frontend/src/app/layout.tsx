@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
+import Image from "next/image";
 import { Providers } from "./providers";
+import { bootFallbackScript } from "@/lib/boot";
 import { themeInitScript } from "@/lib/theme";
 import { APP_DESCRIPTION, APP_DOMAIN, APP_NAME } from "@/lib/brand";
 import "./globals.css";
@@ -76,8 +78,27 @@ export default function RootLayout({
     <html lang="en" className={cn("font-sans", geist.variable)} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <script dangerouslySetInnerHTML={{ __html: bootFallbackScript }} />
       </head>
       <body>
+        <div
+          id="brief-boot"
+          className="brief-boot"
+          aria-live="polite"
+          aria-label="Loading Brief"
+        >
+          <div className="brief-boot-inner">
+            <Image
+              src="/icons/icon-512.png"
+              alt=""
+              width={48}
+              height={48}
+              priority
+              className="brief-boot-icon"
+            />
+            <div className="brief-boot-spinner" aria-hidden />
+          </div>
+        </div>
         <Providers>{children}</Providers>
       </body>
     </html>

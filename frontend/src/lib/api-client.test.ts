@@ -1,11 +1,6 @@
-jest.mock("./supabase/client", () => ({
-  createClient: jest.fn(() => ({
-    auth: {
-      getSession: jest.fn().mockResolvedValue({
-        data: { session: { access_token: "test-token" } },
-      }),
-    },
-  })),
+jest.mock("./auth-session", () => ({
+  getAccessToken: jest.fn().mockResolvedValue("test-token"),
+  warmAuthSession: jest.fn(),
 }));
 
 import { api, getOAuthStartUrl } from "./api-client";

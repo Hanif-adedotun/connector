@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/client";
+import { getAccessToken } from "@/lib/auth-session";
 import { env } from "./env";
 
 export interface ApiError {
@@ -8,9 +8,7 @@ export interface ApiError {
 }
 
 async function authHeader(): Promise<Record<string, string>> {
-  const supabase = createClient();
-  const { data } = await supabase.auth.getSession();
-  const token = data.session?.access_token;
+  const token = await getAccessToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 

@@ -96,6 +96,7 @@ export default function DashboardPage() {
           <p className="py-12 text-center text-sm text-red-600">{error}</p>
         )}
         {!loading && !error && data && <FeedList items={data.items} />}
+        {!loading && !error && !data && <FeedSkeleton />}
       </section>
     </main>
   );
