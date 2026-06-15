@@ -241,15 +241,16 @@ Extract action items from team communication.
 
 Start minimal.
 
-Recommended:
+Recommended user scopes (OAuth v2 `user_scope`):
 
 ```text
 channels:read
 channels:history
-
-users:read
-
+groups:read
+groups:history
+im:read
 im:history
+users:read
 ```
 
 Future scopes should be added only when required.
@@ -259,7 +260,7 @@ Future scopes should be added only when required.
 ## Redirect URL
 
 ```text
-http://localhost:3000/api/oauth/slack/callback
+http://localhost:4000/api/oauth/slack/callback
 ```
 
 ---

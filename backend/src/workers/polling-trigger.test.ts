@@ -12,14 +12,15 @@ jest.mock("../queues/polling.queue", () => ({
 }));
 
 jest.mock("../config/polling", () => ({
-  isPollingEnabled: jest.fn(() => true),
+  isAnyPollingEnabled: jest.fn(() => true),
+  isProviderPollingEnabled: jest.fn(() => true),
 }));
 
 jest.mock("../utils/logger", () => ({
   logger: { debug: jest.fn(), info: jest.fn() },
 }));
 
-import { isPollingEnabled } from "../config/polling";
+import { isAnyPollingEnabled } from "../config/polling";
 import { prisma } from "../config/db";
 import { pollingQueue } from "../queues/polling.queue";
 import {
@@ -58,7 +59,7 @@ describe("polling-trigger", () => {
   });
 
   it("enqueuePollingJobs skips when polling disabled", async () => {
-    (isPollingEnabled as jest.Mock).mockReturnValue(false);
+    (isAnyPollingEnabled as jest.Mock).mockReturnValue(false);
     (prisma.integration.findMany as jest.Mock).mockResolvedValue([
       { id: "i1", userId: "u1", provider: "slack" },
     ]);

@@ -45,6 +45,10 @@ export function useIntegrations() {
     await disconnectMutation.mutateAsync(toDisconnect.map((i) => i.id));
   }
 
+  async function disconnectIntegration(integrationId: string) {
+    await disconnectMutation.mutateAsync([integrationId]);
+  }
+
   return {
     items: query.data ?? [],
     loading: query.isPending && !query.data,
@@ -55,6 +59,7 @@ export function useIntegrations() {
         : "Failed to load integrations"
       : null,
     disconnectProviders,
+    disconnectIntegration,
     isDisconnecting: disconnectMutation.isPending,
     disconnectError: disconnectMutation.error
       ? disconnectMutation.error instanceof Error

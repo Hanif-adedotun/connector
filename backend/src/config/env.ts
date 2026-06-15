@@ -80,6 +80,15 @@ const envSchema = z.object({
   VAPID_PRIVATE_KEY: z.string().optional(),
   VAPID_SUBJECT: z.string().default("mailto:brief@localhost"),
   PUSH_BATCH_DELAY_MS: z.coerce.number().default(30_000),
+
+  // Morning digest push (daily summary of open tasks)
+  MORNING_DIGEST_ENABLED: z
+    .enum(["true", "false"])
+    .default("true")
+    .transform((v) => v === "true"),
+  MORNING_DIGEST_HOUR: z.coerce.number().min(0).max(23).default(8),
+  MORNING_DIGEST_MINUTE: z.coerce.number().min(0).max(59).default(0),
+  MORNING_DIGEST_TIMEZONE: z.string().default("America/New_York"),
 });
 
 const parsed = envSchema.safeParse(process.env);

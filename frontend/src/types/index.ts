@@ -29,6 +29,11 @@ export interface FeedResponse {
   items: FeedItem[];
 }
 
+export interface SlackConfig {
+  channelIds: string[];
+  includeDms: boolean;
+}
+
 export interface Integration {
   id: string;
   provider: BriefSource;
@@ -36,4 +41,13 @@ export interface Integration {
   scope: string | null;
   lastPolledAt: string | null;
   createdAt: string;
+  slackTeamId?: string | null;
+  slackTeamName?: string | null;
+  slackConfig?: SlackConfig | null;
+}
+
+export interface SlackChannel {
+  id: string;
+  name: string;
+  isPrivate: boolean;
 }

@@ -1,14 +1,20 @@
 import { env } from "../config/env";
-import { isPollingEnabled } from "../config/polling";
+import { isAnyPollingEnabled } from "../config/polling";
 import { CLEANUP_JOB_NAME, cleanupQueue } from "../queues/cleanup.queue";
 import { logger } from "../utils/logger";
+import {
+  enqueueMorningDigestJobs,
+  shouldRunMorningDigest,
+} from "./morning-digest-trigger";
 import { enqueuePollingJobs } from "./polling-trigger";
 
 let timer: NodeJS.Timeout | undefined;
 let cleanupTimer: NodeJS.Timeout | undefined;
+let morningDigestTimer: NodeJS.Timeout | undefined;
+let morningDigestDateKey: string | undefined;
 
 export function startScheduler(): void {
-  if (isPollingEnabled()) {
+  if (isAnyPollingEnabled()) {
     void enqueuePollingJobs().catch((err) =>
       logger.error({ err }, "scheduler: initial enqueue failed"),
     );
@@ -33,6 +39,25 @@ export function startScheduler(): void {
     },
     24 * 60 * 60 * 1000,
   );
+
+  if (env.MORNING_DIGEST_ENABLED) {
+    morningDigestTimer = setInterval(() => {
+      void tickMorningDigest().catch((err) =>
+        logger.error({ err }, "scheduler: morning digest failed"),
+      );
+    }, 60_000);
+  } else {
+    logger.info("scheduler: morning digest disabled");
+  }
+}
+
+async function tickMorningDigest(): Promise<void> {
+  const check = shouldRunMorningDigest(new Date());
+  if (!check.run || !check.dateKey) return;
+  if (morningDigestDateKey === check.dateKey) return;
+
+  morningDigestDateKey = check.dateKey;
+  await enqueueMorningDigestJobs(check.dateKey);
 }
 
 async function enqueueDailyCleanup(): Promise<void> {
@@ -42,4 +67,5 @@ async function enqueueDailyCleanup(): Promise<void> {
 export async function stopScheduler(): Promise<void> {
   if (timer) clearInterval(timer);
   if (cleanupTimer) clearInterval(cleanupTimer);
+  if (morningDigestTimer) clearInterval(morningDigestTimer);
 }

@@ -66,12 +66,15 @@ model Integration {
   lastPolledAt          DateTime?         @map("last_polled_at")
   jiraCloudId           String?           @map("jira_cloud_id")
   jiraSiteUrl           String?           @map("jira_site_url")
+  slackTeamId           String            @default("") @map("slack_team_id")
+  slackTeamName         String?           @map("slack_team_name")
+  slackConfig           Json?             @map("slack_config")
   createdAt             DateTime          @default(now()) @map("created_at")
 
   user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   pollingJobs PollingJob[]
 
-  @@unique([userId, provider])
+  @@unique([userId, provider, slackTeamId])
   @@index([userId])
   @@map("integrations")
 }

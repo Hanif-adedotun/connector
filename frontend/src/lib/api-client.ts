@@ -1,4 +1,5 @@
 import { getAccessToken } from "@/lib/auth-session";
+import type { SlackChannel, SlackConfig } from "@/types";
 import { env } from "./env";
 
 export interface ApiError {
@@ -67,4 +68,33 @@ export async function getOAuthStartUrl(
   const url = (body as { url?: string } | undefined)?.url;
   if (!url) throw new Error("Missing OAuth redirect URL");
   return url;
+}
+
+export async function fetchSlackChannels(
+  integrationId: string,
+): Promise<SlackChannel[]> {
+  const res = await api<{ channels: SlackChannel[] }>(
+    `/api/integrations/${integrationId}/slack/channels`,
+  );
+  return res.channels;
+}
+
+export async function fetchSlackConfig(
+  integrationId: string,
+): Promise<SlackConfig> {
+  return api<SlackConfig>(`/api/integrations/${integrationId}/slack/config`);
+}
+
+export async function updateSlackConfig(
+  integrationId: string,
+  config: SlackConfig,
+): Promise<SlackConfig> {
+  const res = await api<{ config: SlackConfig }>(
+    `/api/integrations/${integrationId}/slack/config`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(config),
+    },
+  );
+  return res.config;
 }

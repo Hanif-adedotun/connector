@@ -1,5 +1,6 @@
 jest.mock("../config/polling", () => ({
-  isPollingEnabled: jest.fn(() => true),
+  isAnyPollingEnabled: jest.fn(() => true),
+  isProviderPollingEnabled: jest.fn(() => true),
 }));
 
 jest.mock("../workers/polling-trigger", () => ({
@@ -12,7 +13,7 @@ jest.mock("../services/integrations", () => ({
 }));
 
 import { PollingTestController } from "./polling-test.controller";
-import { isPollingEnabled } from "../config/polling";
+import { isAnyPollingEnabled } from "../config/polling";
 import {
   enqueuePollingJobs,
   listActiveIntegrations,
@@ -49,7 +50,7 @@ describe("PollingTestController", () => {
   });
 
   it("trigger returns 503 when polling disabled", async () => {
-    (isPollingEnabled as jest.Mock).mockReturnValue(false);
+    (isAnyPollingEnabled as jest.Mock).mockReturnValue(false);
     const res = mockResponse();
     await PollingTestController.trigger(mockRequest(), res, mockNext());
     expect(res.status).toHaveBeenCalledWith(503);
