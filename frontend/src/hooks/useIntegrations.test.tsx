@@ -46,7 +46,8 @@ describe("useIntegrations", () => {
           },
         ],
       })
-      .mockResolvedValue({});
+      .mockResolvedValueOnce({})
+      .mockResolvedValueOnce({ items: [] });
 
     const { result } = renderHook(() => useIntegrations(), {
       wrapper: createWrapper(),

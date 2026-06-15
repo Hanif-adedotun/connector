@@ -7,7 +7,7 @@ import type { BriefSource, Integration } from "@/types";
 
 export async function fetchIntegrations(): Promise<Integration[]> {
   const res = await api<{ items: Integration[] }>("/api/integrations");
-  return res.items;
+  return res.items ?? [];
 }
 
 export function useIntegrations() {
