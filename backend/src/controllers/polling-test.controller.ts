@@ -1,5 +1,8 @@
 import type { NextFunction, Request, Response } from "express";
-import { isPollingEnabled } from "../config/polling";
+import {
+  isAnyPollingEnabled,
+  isProviderPollingEnabled,
+} from "../config/polling";
 import { BadRequestError } from "../utils/errors";
 import {
   enqueuePollingJobs,
@@ -14,7 +17,7 @@ export const PollingTestController = {
    */
   async trigger(req: Request, res: Response, next: NextFunction) {
     try {
-      if (!isPollingEnabled()) {
+      if (!isAnyPollingEnabled()) {
         res.status(503).json({
           ok: false,
           error:
@@ -29,7 +32,9 @@ export const PollingTestController = {
       const sync = req.query.sync === "true" || req.query.sync === "1";
 
       if (sync) {
-        const integrations = await listActiveIntegrations({ integrationId });
+        const integrations = (
+          await listActiveIntegrations({ integrationId })
+        ).filter((i) => isProviderPollingEnabled(i.provider));
         if (integrations.length === 0) {
           res.json({ ok: true, mode: "sync", results: [] });
           return;
@@ -64,7 +69,7 @@ export const PollingTestController = {
 
   async triggerOne(req: Request, res: Response, next: NextFunction) {
     try {
-      if (!isPollingEnabled()) {
+      if (!isAnyPollingEnabled()) {
         res.status(503).json({
           ok: false,
           error:

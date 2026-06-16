@@ -57,12 +57,14 @@ describe("serializeUser", () => {
       email: "a@b.com",
       firstName: "Alice",
       notificationsEnabled: true,
+      timezone: null,
       createdAt: new Date(),
     };
     expect(serializeUser(user)).toEqual({
       id: "u1",
       email: "a@b.com",
       firstName: "Alice",
+      timezone: null,
     });
   });
 });

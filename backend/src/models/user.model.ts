@@ -9,10 +9,24 @@ export const UserModel = {
     return prisma.user.findUnique({ where: { email } });
   },
 
-  setNotificationsEnabled(userId: string, enabled: boolean) {
+  setNotificationsEnabled(
+    userId: string,
+    enabled: boolean,
+    timezone?: string,
+  ) {
     return prisma.user.update({
       where: { id: userId },
-      data: { notificationsEnabled: enabled },
+      data: {
+        notificationsEnabled: enabled,
+        ...(timezone !== undefined ? { timezone } : {}),
+      },
+    });
+  },
+
+  setTimezone(userId: string, timezone: string) {
+    return prisma.user.update({
+      where: { id: userId },
+      data: { timezone },
     });
   },
 

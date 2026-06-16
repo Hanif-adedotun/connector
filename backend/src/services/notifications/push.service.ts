@@ -3,9 +3,11 @@ import webpush from "web-push";
 import { env } from "../../config/env";
 import { redis } from "../../config/redis";
 import { PushSubscriptionModel } from "../../models/push-subscription.model";
+import { TaskModel } from "../../models/task.model";
 import { UserModel } from "../../models/user.model";
 import { schedulePushBatchFlush } from "../../queues/push-notify.queue";
 import { logger } from "../../utils/logger";
+import { buildMorningDigestMessage } from "./morning-digest.message";
 
 const BATCH_KEY_PREFIX = "push-batch:";
 
@@ -65,6 +67,45 @@ function buildSummaryMessage(tasks: PendingPushTask[]): {
   };
 }
 
+async function sendPushPayload(
+  userId: string,
+  payload: { title: string; body: string; url: string; tag: string },
+) {
+  if (!configureWebPush()) {
+    logger.warn("push skipped: VAPID keys not configured");
+    return;
+  }
+
+  const subscriptions = await PushSubscriptionModel.listForUser(userId);
+  if (subscriptions.length === 0) return;
+
+  const body = JSON.stringify(payload);
+
+  await Promise.all(
+    subscriptions.map(async (sub) => {
+      try {
+        await webpush.sendNotification(
+          {
+            endpoint: sub.endpoint,
+            keys: { p256dh: sub.p256dh, auth: sub.auth },
+          },
+          body,
+        );
+      } catch (err: unknown) {
+        const status = (err as { statusCode?: number }).statusCode;
+        if (status === 404 || status === 410) {
+          await PushSubscriptionModel.deleteById(sub.id);
+        } else {
+          logger.error(
+            { userId, subscriptionId: sub.id, err },
+            "push send failed",
+          );
+        }
+      }
+    }),
+  );
+}
+
 export const PushNotificationService = {
   async recordNewTask(
     userId: string,
@@ -92,44 +133,30 @@ export const PushNotificationService = {
     const user = await UserModel.findById(userId);
     if (!user?.notificationsEnabled) return;
 
-    if (!configureWebPush()) {
-      logger.warn("push skipped: VAPID keys not configured");
-      return;
-    }
-
-    const subscriptions = await PushSubscriptionModel.listForUser(userId);
-    if (subscriptions.length === 0) return;
-
     const { title, body } = buildSummaryMessage(tasks);
-    const payload = JSON.stringify({
+    await sendPushPayload(userId, {
       title,
       body,
       url: "/dashboard",
       tag: "new-tasks",
     });
+  },
 
-    await Promise.all(
-      subscriptions.map(async (sub) => {
-        try {
-          await webpush.sendNotification(
-            {
-              endpoint: sub.endpoint,
-              keys: { p256dh: sub.p256dh, auth: sub.auth },
-            },
-            payload,
-          );
-        } catch (err: unknown) {
-          const status = (err as { statusCode?: number }).statusCode;
-          if (status === 404 || status === 410) {
-            await PushSubscriptionModel.deleteById(sub.id);
-          } else {
-            logger.error(
-              { userId, subscriptionId: sub.id, err },
-              "push send failed",
-            );
-          }
-        }
-      }),
-    );
+  async sendMorningDigest(userId: string) {
+    const user = await UserModel.findById(userId);
+    if (!user?.notificationsEnabled) return;
+
+    const openTaskCount = await TaskModel.countOpen(userId);
+    const { title, body } = buildMorningDigestMessage({
+      firstName: user.firstName,
+      openTaskCount,
+    });
+
+    await sendPushPayload(userId, {
+      title,
+      body,
+      url: "/dashboard",
+      tag: "morning-digest",
+    });
   },
 };

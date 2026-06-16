@@ -37,6 +37,16 @@ export const PushSubscriptionModel = {
     return prisma.pushSubscription.findMany({ where: { userId } });
   },
 
+  listEligibleUsers() {
+    return prisma.user.findMany({
+      where: {
+        notificationsEnabled: true,
+        pushSubscriptions: { some: {} },
+      },
+      select: { id: true, timezone: true },
+    });
+  },
+
   deleteById(id: string) {
     return prisma.pushSubscription.delete({ where: { id } });
   },

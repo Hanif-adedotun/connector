@@ -1,6 +1,9 @@
 import { api } from "@/lib/api-client";
 import { env } from "@/lib/env";
+import { getBrowserTimezone } from "@/lib/timezone";
 import { registerServiceWorker } from "@/lib/service-worker";
+
+export { getBrowserTimezone };
 
 export interface PushStatus {
   enabled: boolean;
@@ -39,10 +42,16 @@ export async function fetchPushStatus(): Promise<PushStatus> {
   return api<PushStatus>("/api/push/status");
 }
 
-export async function setNotificationsEnabled(enabled: boolean): Promise<void> {
+export async function setNotificationsEnabled(
+  enabled: boolean,
+  timezone?: string,
+): Promise<void> {
   await api("/api/user/notifications", {
     method: "PATCH",
-    body: JSON.stringify({ enabled }),
+    body: JSON.stringify({
+      enabled,
+      ...(enabled && timezone ? { timezone } : {}),
+    }),
   });
 }
 

@@ -1,5 +1,25 @@
-import "dotenv/config";
 import { z } from "zod";
+
+/** Safe defaults when NODE_ENV=test so Jest workers don't exit on missing CI secrets. */
+const TEST_ENV_DEFAULTS: Record<string, string> = {
+  DATABASE_URL: "postgresql://test:test@localhost:5432/test",
+  SUPABASE_URL: "https://test.supabase.co",
+  SUPABASE_ANON_KEY: "test-anon-key",
+  SUPABASE_SERVICE_ROLE_KEY: "test-service-role-key",
+  ENCRYPTION_KEY: "a".repeat(64),
+  GROQ_API_KEY: "test-groq-key",
+  REDIS_URL: "redis://localhost:6379",
+  APP_URL: "http://localhost:4001",
+  API_URL: "http://localhost:4000",
+  APP_MODE: "production",
+};
+
+const isTestEnv = process.env.NODE_ENV === "test";
+
+if (!isTestEnv) {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  require("dotenv/config");
+}
 
 const envSchema = z.object({
   // App
@@ -80,13 +100,30 @@ const envSchema = z.object({
   VAPID_PRIVATE_KEY: z.string().optional(),
   VAPID_SUBJECT: z.string().default("mailto:brief@localhost"),
   PUSH_BATCH_DELAY_MS: z.coerce.number().default(30_000),
+
+  // Morning digest push (daily summary of open tasks)
+  MORNING_DIGEST_ENABLED: z
+    .enum(["true", "false"])
+    .default("true")
+    .transform((v) => v === "true"),
+  MORNING_DIGEST_HOUR: z.coerce.number().min(0).max(23).default(8),
+  MORNING_DIGEST_MINUTE: z.coerce.number().min(0).max(59).default(0),
+  MORNING_DIGEST_TIMEZONE: z.string().default("America/New_York"),
 });
 
-const parsed = envSchema.safeParse(process.env);
+const envInput = isTestEnv
+  ? { ...TEST_ENV_DEFAULTS, ...process.env }
+  : process.env;
+
+const parsed = envSchema.safeParse(envInput);
 
 if (!parsed.success) {
+  const message = JSON.stringify(parsed.error.flatten().fieldErrors, null, 2);
   console.error("Invalid environment variables:");
   console.error(parsed.error.flatten().fieldErrors);
+  if (isTestEnv) {
+    throw new Error(`Invalid environment variables in test:\n${message}`);
+  }
   process.exit(1);
 }
 

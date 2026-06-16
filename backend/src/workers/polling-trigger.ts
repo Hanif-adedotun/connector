@@ -1,6 +1,9 @@
 import type { Provider } from "@prisma/client";
 import { env } from "../config/env";
-import { isPollingEnabled } from "../config/polling";
+import {
+  isAnyPollingEnabled,
+  isProviderPollingEnabled,
+} from "../config/polling";
 import { prisma } from "../config/db";
 import { POLLING_JOB_NAME, pollingQueue } from "../queues/polling.queue";
 import { logger } from "../utils/logger";
@@ -41,7 +44,7 @@ export async function listActiveIntegrations(opts?: {
 export async function enqueuePollingJobs(opts?: {
   integrationId?: string;
 }): Promise<PollingTriggerResult> {
-  if (!isPollingEnabled()) {
+  if (!isAnyPollingEnabled()) {
     logger.debug(
       { appMode: env.APP_MODE },
       "polling trigger: skipped (APP_MODE is not production)",
@@ -49,7 +52,9 @@ export async function enqueuePollingJobs(opts?: {
     return { enqueued: 0, integrations: [] };
   }
 
-  const integrations = await listActiveIntegrations(opts);
+  const integrations = (await listActiveIntegrations(opts)).filter((i) =>
+    isProviderPollingEnabled(i.provider),
+  );
 
   if (integrations.length === 0) {
     logger.debug("polling trigger: no active integrations to enqueue");

@@ -4,6 +4,11 @@ import { env } from "../config/env";
 
 export const PUSH_NOTIFY_QUEUE = "push-notify";
 export const PUSH_NOTIFY_JOB_NAME = "flush" as const;
+export const PUSH_MORNING_DIGEST_JOB_NAME = "morning-digest" as const;
+
+export type PushNotifyJobName =
+  | typeof PUSH_NOTIFY_JOB_NAME
+  | typeof PUSH_MORNING_DIGEST_JOB_NAME;
 
 export interface PushNotifyJobData {
   userId: string;
@@ -12,7 +17,7 @@ export interface PushNotifyJobData {
 export const pushNotifyQueue = new Queue<
   PushNotifyJobData,
   unknown,
-  typeof PUSH_NOTIFY_JOB_NAME
+  PushNotifyJobName
 >(PUSH_NOTIFY_QUEUE, {
   connection: bullmqConnection,
   defaultJobOptions: {

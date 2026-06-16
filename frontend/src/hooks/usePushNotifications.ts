@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 import {
   fetchPushStatus,
+  getBrowserTimezone,
   getNotificationPermission,
   isPushSupported,
   setNotificationsEnabled,
@@ -45,7 +46,7 @@ export function usePushNotifications() {
         }
       }
       await subscribeToPush();
-      await setNotificationsEnabled(true);
+      await setNotificationsEnabled(true, getBrowserTimezone());
     },
     onMutate: async () => {
       setMutationError(null);

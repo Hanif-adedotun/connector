@@ -25,6 +25,10 @@ jest.mock("../../models/push-subscription.model", () => ({
   },
 }));
 
+jest.mock("../../models/task.model", () => ({
+  TaskModel: { countOpen: jest.fn() },
+}));
+
 jest.mock("../../queues/push-notify.queue", () => ({
   schedulePushBatchFlush: jest.fn(),
 }));
@@ -37,6 +41,7 @@ jest.mock("web-push", () => ({
 import { PushNotificationService } from "./push.service";
 import { redis } from "../../config/redis";
 import { UserModel } from "../../models/user.model";
+import { TaskModel } from "../../models/task.model";
 import { PushSubscriptionModel } from "../../models/push-subscription.model";
 import { schedulePushBatchFlush } from "../../queues/push-notify.queue";
 import webpush from "web-push";
@@ -117,5 +122,24 @@ describe("PushNotificationService", () => {
 
     await PushNotificationService.flushBatch("u1");
     expect(webpush.sendNotification).not.toHaveBeenCalled();
+  });
+
+  it("sendMorningDigest sends open task summary", async () => {
+    (UserModel.findById as jest.Mock).mockResolvedValue({
+      notificationsEnabled: true,
+      firstName: "Alice",
+    });
+    (TaskModel.countOpen as jest.Mock).mockResolvedValue(9);
+    (PushSubscriptionModel.listForUser as jest.Mock).mockResolvedValue([
+      { id: "s1", endpoint: "https://push/1", p256dh: "p", auth: "a" },
+    ]);
+    (webpush.sendNotification as jest.Mock).mockResolvedValue(undefined);
+
+    await PushNotificationService.sendMorningDigest("u1");
+
+    expect(webpush.sendNotification).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.stringContaining("You have 9 tasks to follow today"),
+    );
   });
 });

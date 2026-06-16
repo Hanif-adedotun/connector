@@ -5,6 +5,7 @@ jest.mock("../config/db", () => ({
       findMany: jest.fn(),
       upsert: jest.fn(),
       update: jest.fn(),
+      count: jest.fn(),
     },
   },
 }));
@@ -56,8 +57,16 @@ describe("IntegrationModel", () => {
     });
     expect(prisma.integration.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
+        where: {
+          userId_provider_slackTeamId: {
+            userId: "u1",
+            provider: "gmail",
+            slackTeamId: "",
+          },
+        },
         create: expect.objectContaining({
           encryptedAccessToken: expect.any(String),
+          slackTeamId: "",
         }),
       }),
     );
@@ -80,6 +89,42 @@ describe("IntegrationModel", () => {
         }),
       }),
     );
+  });
+
+  it("upsertSlackTokens uses team-specific unique key", async () => {
+    (prisma.integration.upsert as jest.Mock).mockResolvedValue({ id: "i1" });
+    await IntegrationModel.upsertSlackTokens({
+      userId: "u1",
+      slackTeamId: "T1",
+      slackTeamName: "Acme",
+      authedUserId: "U123",
+      tokens: { accessToken: "token" },
+    });
+    expect(prisma.integration.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          userId_provider_slackTeamId: {
+            userId: "u1",
+            provider: "slack",
+            slackTeamId: "T1",
+          },
+        },
+      }),
+    );
+  });
+
+  it("countActiveSlack excludes empty team id rows", async () => {
+    (prisma.integration.count as jest.Mock).mockResolvedValue(1);
+    const count = await IntegrationModel.countActiveSlack("u1");
+    expect(count).toBe(1);
+    expect(prisma.integration.count).toHaveBeenCalledWith({
+      where: {
+        userId: "u1",
+        provider: "slack",
+        status: "active",
+        slackTeamId: { not: "" },
+      },
+    });
   });
 
   it("findActive and markPolled", async () => {

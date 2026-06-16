@@ -11,6 +11,8 @@ import {
   MoonIcon,
 } from "lucide-react";
 import { BriefWordmark } from "@/components/brand/BriefWordmark";
+import { SettingsSkeleton } from "@/components/settings/SettingsSkeleton";
+import { SettingsTimezoneField } from "@/components/settings/SettingsTimezoneField";
 import { useTheme } from "@/hooks/useTheme";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
@@ -90,23 +92,20 @@ export default function SettingsPage() {
         <InstallPrompt />
       </div>
 
+      {loading ? (
+        <SettingsSkeleton />
+      ) : (
+        <>
       <section className="mt-10 rounded-lg border border-neutral-200 p-4 dark:border-neutral-800">
         <p className="font-mono text-xs uppercase tracking-wider text-neutral-500">
           Profile
         </p>
-        {loading ? (
-          <div className="mt-3 space-y-2">
-            <div className="h-5 w-32 animate-pulse rounded bg-neutral-200 dark:bg-neutral-800" />
-            <div className="h-4 w-48 animate-pulse rounded bg-neutral-200 dark:bg-neutral-800" />
-          </div>
-        ) : (
-          <div className="mt-3">
-            <p className="font-medium">{displayName}</p>
-            <p className="mt-0.5 text-sm text-neutral-600 dark:text-neutral-400">
-              {user?.email ?? "—"}
-            </p>
-          </div>
-        )}
+        <div className="mt-3">
+          <p className="font-medium">{displayName}</p>
+          <p className="mt-0.5 text-sm text-neutral-600 dark:text-neutral-400">
+            {user?.email ?? "—"}
+          </p>
+        </div>
       </section>
 
       <nav className="mt-6 overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800">
@@ -211,10 +210,13 @@ export default function SettingsPage() {
 
           {pushSupported && swReady && !pushError && pushEnabled && (
             <p className="mt-2 text-xs text-neutral-500">
-              You&apos;ll get one summary when new tasks are added to your feed.
+              You&apos;ll get a morning summary and a notification when new
+              tasks are added to your feed.
             </p>
           )}
         </div>
+
+        {user && <SettingsTimezoneField user={user} />}
 
         <Link
           href="/integrations"
@@ -227,6 +229,8 @@ export default function SettingsPage() {
           <ChevronRightIcon className="h-4 w-4 text-neutral-400" />
         </Link>
       </nav>
+        </>
+      )}
 
       <div className="mt-auto pt-16">
         <button

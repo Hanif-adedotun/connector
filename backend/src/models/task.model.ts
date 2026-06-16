@@ -151,6 +151,12 @@ export const TaskModel = {
     });
   },
 
+  countOpen(userId: string) {
+    return prisma.extractedTask.count({
+      where: { userId, status: "open" },
+    });
+  },
+
   updateStatus(id: string, userId: string, status: TaskStatus) {
     return prisma.extractedTask.update({
       where: { id, userId },
