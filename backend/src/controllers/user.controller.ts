@@ -19,6 +19,13 @@ const notificationsSchema = z
     }
   });
 
+const timezoneSchema = z.object({
+  timezone: z
+    .string()
+    .min(1)
+    .refine(isValidIanaTimeZone, "Invalid timezone"),
+});
+
 export const UserController = {
   async updateNotifications(req: Request, res: Response, next: NextFunction) {
     try {
@@ -33,6 +40,17 @@ export const UserController = {
         notificationsEnabled: user.notificationsEnabled,
         timezone: user.timezone,
       });
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async updateTimezone(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.userId) throw new UnauthorizedError();
+      const { timezone } = timezoneSchema.parse(req.body);
+      const user = await UserModel.setTimezone(req.userId, timezone);
+      res.json({ timezone: user.timezone });
     } catch (err) {
       next(err);
     }

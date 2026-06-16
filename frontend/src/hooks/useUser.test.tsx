@@ -12,13 +12,13 @@ import { createWrapper } from "../__tests__/helpers/wrapper";
 describe("displayFirstName", () => {
   it("uses firstName when available", () => {
     expect(
-      displayFirstName({ id: "1", email: "a@b.com", firstName: "Alice Smith" }),
+      displayFirstName({ id: "1", email: "a@b.com", firstName: "Alice Smith", timezone: null }),
     ).toBe("Alice");
   });
 
   it("falls back to email local part", () => {
     expect(
-      displayFirstName({ id: "1", email: "bob@example.com", firstName: null }),
+      displayFirstName({ id: "1", email: "bob@example.com", firstName: null, timezone: null }),
     ).toBe("bob");
   });
 
@@ -30,7 +30,7 @@ describe("displayFirstName", () => {
 describe("useUser", () => {
   it("fetchUser returns user from api", async () => {
     (api as jest.Mock).mockResolvedValue({
-      user: { id: "1", email: "a@b.com", firstName: "Alice" },
+      user: { id: "1", email: "a@b.com", firstName: "Alice", timezone: null },
     });
     const user = await fetchUser();
     expect(user.firstName).toBe("Alice");
@@ -38,7 +38,7 @@ describe("useUser", () => {
 
   it("loads user in hook", async () => {
     (api as jest.Mock).mockResolvedValue({
-      user: { id: "1", email: "a@b.com", firstName: "Alice" },
+      user: { id: "1", email: "a@b.com", firstName: "Alice", timezone: null },
     });
     const { result } = renderHook(() => useUser(), {
       wrapper: createWrapper(),

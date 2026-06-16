@@ -4,6 +4,7 @@ export interface UserView {
   id: string;
   email: string;
   firstName: string | null;
+  timezone: string | null;
 }
 
 export function serializeUser(user: User): UserView {
@@ -11,5 +12,6 @@ export function serializeUser(user: User): UserView {
     id: user.id,
     email: user.email,
     firstName: user.firstName,
+    timezone: user.timezone,
   };
 }

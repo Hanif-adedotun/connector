@@ -34,6 +34,7 @@ export function SettingsSkeleton() {
       <nav className="mt-6 overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800">
         <NavRowSkeleton />
         <NavRowSkeleton />
+        <NavRowSkeleton />
         <div className="flex items-center justify-between px-4 py-3.5">
           <SkeletonLine className="h-4 w-40" />
           <SkeletonLine className="h-4 w-4 shrink-0 rounded" />

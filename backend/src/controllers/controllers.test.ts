@@ -36,13 +36,14 @@ describe("AuthController", () => {
       id: "u1",
       email: "a@b.com",
       firstName: "Alice",
+      timezone: null,
     });
     const req = mockRequest({ userId: "u1" });
     const res = mockResponse();
     const next = mockNext();
     await AuthController.me(req, res, next);
     expect(res.json).toHaveBeenCalledWith({
-      user: { id: "u1", email: "a@b.com", firstName: "Alice" },
+      user: { id: "u1", email: "a@b.com", firstName: "Alice", timezone: null },
     });
   });
 
@@ -180,6 +181,20 @@ describe("UserController", () => {
     const next = mockNext();
     await UserController.updateNotifications(mockRequest(), mockResponse(), next);
     expect(next).toHaveBeenCalledWith(expect.any(UnauthorizedError));
+  });
+
+  it("updates timezone", async () => {
+    (UserModel.setTimezone as jest.Mock).mockResolvedValue({
+      timezone: "Europe/London",
+    });
+    const req = mockRequest({
+      userId: "u1",
+      body: { timezone: "Europe/London" },
+    });
+    const res = mockResponse();
+    await UserController.updateTimezone(req, res, mockNext());
+    expect(UserModel.setTimezone).toHaveBeenCalledWith("u1", "Europe/London");
+    expect(res.json).toHaveBeenCalledWith({ timezone: "Europe/London" });
   });
 });
 

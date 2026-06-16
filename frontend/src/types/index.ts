@@ -2,6 +2,7 @@ export interface User {
   id: string;
   email: string;
   firstName: string | null;
+  timezone: string | null;
 }
 
 export type BriefSource =

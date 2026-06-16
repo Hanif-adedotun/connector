@@ -1,6 +1,9 @@
 import { api } from "@/lib/api-client";
 import { env } from "@/lib/env";
+import { getBrowserTimezone } from "@/lib/timezone";
 import { registerServiceWorker } from "@/lib/service-worker";
+
+export { getBrowserTimezone };
 
 export interface PushStatus {
   enabled: boolean;
@@ -37,10 +40,6 @@ export function getNotificationPermission(): NotificationPermission | "unsupport
 
 export async function fetchPushStatus(): Promise<PushStatus> {
   return api<PushStatus>("/api/push/status");
-}
-
-export function getBrowserTimezone(): string {
-  return Intl.DateTimeFormat().resolvedOptions().timeZone;
 }
 
 export async function setNotificationsEnabled(

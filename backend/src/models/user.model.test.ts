@@ -38,6 +38,14 @@ describe("UserModel", () => {
     });
   });
 
+  it("setTimezone", async () => {
+    await UserModel.setTimezone("u1", "Europe/London");
+    expect(prisma.user.update).toHaveBeenCalledWith({
+      where: { id: "u1" },
+      data: { timezone: "Europe/London" },
+    });
+  });
+
   it("upsertFromAuth trims firstName", async () => {
     await UserModel.upsertFromAuth({
       id: "u1",

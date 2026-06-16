@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { BriefWordmark } from "@/components/brand/BriefWordmark";
 import { SettingsSkeleton } from "@/components/settings/SettingsSkeleton";
+import { SettingsTimezoneField } from "@/components/settings/SettingsTimezoneField";
 import { useTheme } from "@/hooks/useTheme";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
@@ -214,6 +215,8 @@ export default function SettingsPage() {
             </p>
           )}
         </div>
+
+        {user && <SettingsTimezoneField user={user} />}
 
         <Link
           href="/integrations"

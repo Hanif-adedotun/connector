@@ -9,3 +9,5 @@ userRouter.patch(
   requireAuth,
   UserController.updateNotifications,
 );
+
+userRouter.patch("/timezone", requireAuth, UserController.updateTimezone);
