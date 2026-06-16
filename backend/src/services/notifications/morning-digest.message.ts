@@ -46,3 +46,24 @@ export function digestLocalTime(
 export function morningDigestSentKey(userId: string, dateKey: string) {
   return `morning-digest:sent:${userId}:${dateKey}`;
 }
+
+export function resolveDigestTimeZone(
+  userTimezone: string | null | undefined,
+  fallback: string,
+): string {
+  const trimmed = userTimezone?.trim();
+  return trimmed || fallback;
+}
+
+export function isMorningDigestDue(
+  now: Date,
+  timeZone: string,
+  hour: number,
+  minute: number,
+): { due: boolean; dateKey?: string } {
+  const local = digestLocalTime(now, timeZone);
+  if (local.hour !== hour || local.minute !== minute) {
+    return { due: false };
+  }
+  return { due: true, dateKey: local.dateKey };
+}

@@ -43,7 +43,7 @@ export const PushSubscriptionModel = {
         notificationsEnabled: true,
         pushSubscriptions: { some: {} },
       },
-      select: { id: true },
+      select: { id: true, timezone: true },
     });
   },
 

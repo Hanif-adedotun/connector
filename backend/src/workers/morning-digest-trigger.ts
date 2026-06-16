@@ -6,29 +6,33 @@ import {
   pushNotifyQueue,
 } from "../queues/push-notify.queue";
 import {
-  digestLocalTime,
+  isMorningDigestDue,
   morningDigestSentKey,
+  resolveDigestTimeZone,
 } from "../services/notifications/morning-digest.message";
 import { logger } from "../utils/logger";
 
-export function shouldRunMorningDigest(now: Date): {
-  run: boolean;
-  dateKey?: string;
-} {
-  if (!env.MORNING_DIGEST_ENABLED) return { run: false };
-
-  const local = digestLocalTime(now, env.MORNING_DIGEST_TIMEZONE);
-  if (
-    local.hour !== env.MORNING_DIGEST_HOUR ||
-    local.minute !== env.MORNING_DIGEST_MINUTE
-  ) {
-    return { run: false };
-  }
-
-  return { run: true, dateKey: local.dateKey };
+export function isMorningDigestDueForUser(
+  user: { timezone: string | null },
+  now: Date,
+): { due: boolean; dateKey?: string } {
+  const timeZone = resolveDigestTimeZone(
+    user.timezone,
+    env.MORNING_DIGEST_TIMEZONE,
+  );
+  return isMorningDigestDue(
+    now,
+    timeZone,
+    env.MORNING_DIGEST_HOUR,
+    env.MORNING_DIGEST_MINUTE,
+  );
 }
 
-export async function enqueueMorningDigestJobs(dateKey: string): Promise<number> {
+export async function enqueueMorningDigestJobs(
+  now: Date = new Date(),
+): Promise<number> {
+  if (!env.MORNING_DIGEST_ENABLED) return 0;
+
   const users = await PushSubscriptionModel.listEligibleUsers();
   if (users.length === 0) {
     logger.debug("morning digest: no eligible users");
@@ -38,18 +42,24 @@ export async function enqueueMorningDigestJobs(dateKey: string): Promise<number>
   let enqueued = 0;
 
   for (const user of users) {
-    const sentKey = morningDigestSentKey(user.id, dateKey);
+    const check = isMorningDigestDueForUser(user, now);
+    if (!check.due || !check.dateKey) continue;
+
+    const sentKey = morningDigestSentKey(user.id, check.dateKey);
     const reserved = await redis.set(sentKey, "1", "EX", 86_400, "NX");
     if (!reserved) continue;
 
     await pushNotifyQueue.add(
       PUSH_MORNING_DIGEST_JOB_NAME,
       { userId: user.id },
-      { jobId: `morning-digest-${user.id}-${dateKey}` },
+      { jobId: `morning-digest-${user.id}-${check.dateKey}` },
     );
     enqueued += 1;
   }
 
-  logger.info({ count: enqueued, dateKey }, "morning digest: enqueued jobs");
+  if (enqueued > 0) {
+    logger.info({ count: enqueued }, "morning digest: enqueued jobs");
+  }
+
   return enqueued;
 }

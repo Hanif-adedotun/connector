@@ -33,47 +33,71 @@ import { PushSubscriptionModel } from "../models/push-subscription.model";
 import { pushNotifyQueue } from "../queues/push-notify.queue";
 import {
   enqueueMorningDigestJobs,
-  shouldRunMorningDigest,
+  isMorningDigestDueForUser,
 } from "./morning-digest-trigger";
 
-describe("shouldRunMorningDigest", () => {
-  it("runs at configured local time", () => {
+describe("isMorningDigestDueForUser", () => {
+  it("uses user timezone when set", () => {
     expect(
-      shouldRunMorningDigest(new Date("2026-06-14T08:00:00.000Z")),
-    ).toEqual({ run: true, dateKey: "2026-06-14" });
+      isMorningDigestDueForUser(
+        { timezone: "America/Los_Angeles" },
+        new Date("2026-06-14T15:00:00.000Z"),
+      ),
+    ).toEqual({ due: true, dateKey: "2026-06-14" });
   });
 
-  it("skips other times", () => {
-    expect(shouldRunMorningDigest(new Date("2026-06-14T09:00:00.000Z"))).toEqual(
-      { run: false },
-    );
+  it("falls back to env default timezone", () => {
+    expect(
+      isMorningDigestDueForUser(
+        { timezone: null },
+        new Date("2026-06-14T08:00:00.000Z"),
+      ),
+    ).toEqual({ due: true, dateKey: "2026-06-14" });
+  });
+
+  it("skips when not the configured minute", () => {
+    expect(
+      isMorningDigestDueForUser(
+        { timezone: "UTC" },
+        new Date("2026-06-14T09:00:00.000Z"),
+      ),
+    ).toEqual({ due: false });
   });
 });
 
 describe("enqueueMorningDigestJobs", () => {
   beforeEach(() => jest.clearAllMocks());
 
-  it("enqueues one job per eligible user", async () => {
+  it("enqueues only users due in their timezone", async () => {
     (PushSubscriptionModel.listEligibleUsers as jest.Mock).mockResolvedValue([
-      { id: "u1" },
-      { id: "u2" },
+      { id: "u1", timezone: "UTC" },
+      { id: "u2", timezone: "America/Los_Angeles" },
     ]);
     (redis.set as jest.Mock).mockResolvedValue("OK");
     (pushNotifyQueue.add as jest.Mock).mockResolvedValue(undefined);
 
-    const count = await enqueueMorningDigestJobs("2026-06-14");
+    const count = await enqueueMorningDigestJobs(
+      new Date("2026-06-14T08:00:00.000Z"),
+    );
 
-    expect(count).toBe(2);
-    expect(pushNotifyQueue.add).toHaveBeenCalledTimes(2);
+    expect(count).toBe(1);
+    expect(pushNotifyQueue.add).toHaveBeenCalledTimes(1);
+    expect(pushNotifyQueue.add).toHaveBeenCalledWith(
+      "morning-digest",
+      { userId: "u1" },
+      { jobId: "morning-digest-u1-2026-06-14" },
+    );
   });
 
   it("skips users already sent today", async () => {
     (PushSubscriptionModel.listEligibleUsers as jest.Mock).mockResolvedValue([
-      { id: "u1" },
+      { id: "u1", timezone: "UTC" },
     ]);
     (redis.set as jest.Mock).mockResolvedValue(null);
 
-    const count = await enqueueMorningDigestJobs("2026-06-14");
+    const count = await enqueueMorningDigestJobs(
+      new Date("2026-06-14T08:00:00.000Z"),
+    );
 
     expect(count).toBe(0);
     expect(pushNotifyQueue.add).not.toHaveBeenCalled();

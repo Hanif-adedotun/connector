@@ -143,11 +143,37 @@ describe("UserController", () => {
   it("updates notifications", async () => {
     (UserModel.setNotificationsEnabled as jest.Mock).mockResolvedValue({
       notificationsEnabled: false,
+      timezone: null,
     });
     const req = mockRequest({ userId: "u1", body: { enabled: false } });
     const res = mockResponse();
     await UserController.updateNotifications(req, res, mockNext());
-    expect(res.json).toHaveBeenCalledWith({ notificationsEnabled: false });
+    expect(res.json).toHaveBeenCalledWith({
+      notificationsEnabled: false,
+      timezone: null,
+    });
+  });
+
+  it("stores timezone when enabling notifications", async () => {
+    (UserModel.setNotificationsEnabled as jest.Mock).mockResolvedValue({
+      notificationsEnabled: true,
+      timezone: "America/Chicago",
+    });
+    const req = mockRequest({
+      userId: "u1",
+      body: { enabled: true, timezone: "America/Chicago" },
+    });
+    const res = mockResponse();
+    await UserController.updateNotifications(req, res, mockNext());
+    expect(UserModel.setNotificationsEnabled).toHaveBeenCalledWith(
+      "u1",
+      true,
+      "America/Chicago",
+    );
+    expect(res.json).toHaveBeenCalledWith({
+      notificationsEnabled: true,
+      timezone: "America/Chicago",
+    });
   });
 
   it("requires auth", async () => {

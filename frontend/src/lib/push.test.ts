@@ -11,6 +11,7 @@ jest.mock("./service-worker", () => ({
 import { api } from "./api-client";
 import {
   fetchPushStatus,
+  getBrowserTimezone,
   getNotificationPermission,
   isPushSupported,
   setNotificationsEnabled,
@@ -61,5 +62,22 @@ describe("push helpers", () => {
       method: "PATCH",
       body: JSON.stringify({ enabled: false }),
     });
+  });
+
+  it("setNotificationsEnabled sends timezone when enabling", async () => {
+    (api as jest.Mock).mockResolvedValue(undefined);
+    await setNotificationsEnabled(true, "America/New_York");
+    expect(api).toHaveBeenCalledWith("/api/user/notifications", {
+      method: "PATCH",
+      body: JSON.stringify({
+        enabled: true,
+        timezone: "America/New_York",
+      }),
+    });
+  });
+
+  it("getBrowserTimezone returns IANA timezone", () => {
+    expect(getBrowserTimezone()).toEqual(expect.any(String));
+    expect(getBrowserTimezone().length).toBeGreaterThan(0);
   });
 });

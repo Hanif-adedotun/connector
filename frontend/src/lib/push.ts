@@ -39,10 +39,20 @@ export async function fetchPushStatus(): Promise<PushStatus> {
   return api<PushStatus>("/api/push/status");
 }
 
-export async function setNotificationsEnabled(enabled: boolean): Promise<void> {
+export function getBrowserTimezone(): string {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone;
+}
+
+export async function setNotificationsEnabled(
+  enabled: boolean,
+  timezone?: string,
+): Promise<void> {
   await api("/api/user/notifications", {
     method: "PATCH",
-    body: JSON.stringify({ enabled }),
+    body: JSON.stringify({
+      enabled,
+      ...(enabled && timezone ? { timezone } : {}),
+    }),
   });
 }
 
