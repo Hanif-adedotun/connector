@@ -82,9 +82,9 @@ export function SettingsTimezoneField({ user }: { user: User }) {
           ))}
         </select>
       </label>
-      <p className="mt-2 text-xs text-neutral-500">
+      {/* <p className="mt-2 text-xs text-neutral-500">
         Used for your morning digest. Defaults to your browser time zone.
-      </p>
+      </p> */}
       {error && (
         <p className="mt-2 text-xs text-red-600 dark:text-red-400">{error}</p>
       )}
