@@ -7,20 +7,23 @@ export function isPollingEnabled(): boolean {
 }
 
 /** TEMP: Slack polling in development. Set to false to revert. */
-export const ALLOW_SLACK_POLLING_IN_DEV = true;
+export const ALLOW_SLACK_POLLING_IN_DEV = false;
+
+/** TEMP: Discord polling in development. Set to false to revert. */
+export const ALLOW_DISCORD_POLLING_IN_DEV = true;
 
 export function isProviderPollingEnabled(provider: Provider): boolean {
-  return (
-    isPollingEnabled() ||
-    (ALLOW_SLACK_POLLING_IN_DEV &&
-      env.APP_MODE === "development" &&
-      provider === "slack")
-  );
+  if (isPollingEnabled()) return true;
+  if (env.APP_MODE !== "development") return false;
+  if (ALLOW_SLACK_POLLING_IN_DEV && provider === "slack") return true;
+  if (ALLOW_DISCORD_POLLING_IN_DEV && provider === "discord") return true;
+  return false;
 }
 
 export function isAnyPollingEnabled(): boolean {
   return (
     isPollingEnabled() ||
-    (ALLOW_SLACK_POLLING_IN_DEV && env.APP_MODE === "development")
+    (env.APP_MODE === "development" &&
+      (ALLOW_SLACK_POLLING_IN_DEV || ALLOW_DISCORD_POLLING_IN_DEV))
   );
 }
