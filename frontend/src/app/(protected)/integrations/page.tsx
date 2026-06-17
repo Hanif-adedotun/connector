@@ -202,7 +202,10 @@ function IntegrationsContent() {
       const url = new URL(window.location.href);
       url.searchParams.delete("code");
       window.history.replaceState({}, "", url.pathname + url.search);
-      void queryClient.invalidateQueries({ queryKey: queryKeys.integrations });
+      void Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.integrations }),
+        queryClient.invalidateQueries({ queryKey: ["discord"] }),
+      ]);
     }
   }, [searchParams, queryClient]);
 

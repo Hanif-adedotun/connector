@@ -1,25 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  fetchDiscordBotInviteUrl,
-  fetchDiscordChannels,
-  fetchDiscordConfig,
-  fetchDiscordGuilds,
-  updateDiscordConfig,
-  type ApiError,
-} from "@/lib/api-client";
+import { useEffect, useMemo, useState } from "react";
+import type { DiscordChannelOption } from "@/lib/api-client";
+import { useDiscordIntegration } from "@/hooks/useDiscordIntegration";
 import type { DiscordConfig, Integration } from "@/types";
 import { ExternalLink, RefreshCw, Unlink } from "lucide-react";
 
 const MAX_DISCORD_SERVERS = 2;
-
-interface DiscordChannelOption {
-  id: string;
-  name: string;
-  guildId: string;
-  guildName: string;
-}
 
 interface DiscordIntegrationCardProps {
   integration: Integration;
@@ -61,116 +48,48 @@ export function DiscordIntegrationCard({
   onDisconnect,
   disabled = false,
 }: DiscordIntegrationCardProps) {
-  const [channels, setChannels] = useState<DiscordChannelOption[]>([]);
-  const [config, setConfig] = useState<DiscordConfig>({
-    guilds: integration.discordConfig?.guilds ?? [],
-    includeDms: integration.discordConfig?.includeDms ?? false,
-  });
-  const [loading, setLoading] = useState(true);
-  const [loadingChannels, setLoadingChannels] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const {
+    botInviteUrl,
+    config: remoteConfig,
+    channels,
+    loading,
+    loadingChannels,
+    error: loadError,
+    saveError,
+    saving,
+    refreshChannels,
+    saveConfig,
+  } = useDiscordIntegration(integration.id);
+
+  const [config, setConfig] = useState<DiscordConfig | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
-  const [botInviteUrl, setBotInviteUrl] = useState<string | null>(null);
-
-  const loadChannelsForGuilds = useCallback(
-    async (
-      guildList: Array<{ id: string; name: string }>,
-    ): Promise<DiscordChannelOption[]> => {
-      const channelOptions: DiscordChannelOption[] = [];
-
-      for (const guild of guildList) {
-        try {
-          const guildChannels = await fetchDiscordChannels(
-            integration.id,
-            guild.id,
-          );
-          for (const channel of guildChannels) {
-            channelOptions.push({
-              id: channel.id,
-              name: channel.name,
-              guildId: guild.id,
-              guildName: guild.name,
-            });
-          }
-        } catch {
-          // Skip guilds where the bot is not installed yet.
-        }
-      }
-
-      return channelOptions.sort((a, b) => {
-        const byGuild = a.guildName.localeCompare(b.guildName);
-        return byGuild !== 0 ? byGuild : a.name.localeCompare(b.name);
-      });
-    },
-    [integration.id],
-  );
-
-  const refreshChannels = useCallback(async () => {
-    setLoadingChannels(true);
-    setError(null);
-    try {
-      const guildList = await fetchDiscordGuilds(integration.id);
-      const channelOptions = await loadChannelsForGuilds(guildList);
-      setChannels(channelOptions);
-      if (channelOptions.length === 0) {
-        setError(
-          "No channels found. Invite the bot to your server, then refresh channels.",
-        );
-      }
-    } catch (err) {
-      const apiErr = err as ApiError;
-      setError(apiErr.message ?? "Failed to load Discord channels");
-    } finally {
-      setLoadingChannels(false);
-    }
-  }, [integration.id, loadChannelsForGuilds]);
 
   useEffect(() => {
-    let cancelled = false;
+    setConfig(null);
+    setSaved(false);
+    setError(null);
+  }, [integration.id]);
 
-    async function load() {
-      setLoading(true);
-      setError(null);
-      try {
-        const [guildList, remoteConfig, invite] = await Promise.all([
-          fetchDiscordGuilds(integration.id),
-          fetchDiscordConfig(integration.id),
-          fetchDiscordBotInviteUrl(),
-        ]);
-        if (cancelled) return;
-
-        setConfig(remoteConfig);
-        setBotInviteUrl(invite);
-
-        setLoadingChannels(true);
-        const channelOptions = await loadChannelsForGuilds(guildList);
-        if (cancelled) return;
-
-        setChannels(channelOptions);
-        if (channelOptions.length === 0) {
-          setError(
-            "No channels found. Invite the bot to your server, then refresh channels.",
-          );
-        }
-      } catch (err) {
-        if (!cancelled) {
-          const apiErr = err as ApiError;
-          setError(apiErr.message ?? "Failed to load Discord settings");
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-          setLoadingChannels(false);
-        }
-      }
+  useEffect(() => {
+    if (remoteConfig && config === null) {
+      setConfig(remoteConfig);
     }
+  }, [remoteConfig, config]);
 
-    void load();
-    return () => {
-      cancelled = true;
-    };
-  }, [integration.id, loadChannelsForGuilds]);
+  useEffect(() => {
+    if (loadError) {
+      setError(loadError);
+    }
+  }, [loadError]);
+
+  useEffect(() => {
+    if (!loading && !loadingChannels && channels.length === 0 && !loadError) {
+      setError(
+        "No channels found. Invite the bot to your server, then refresh channels.",
+      );
+    }
+  }, [loading, loadingChannels, channels.length, loadError]);
 
   const channelsByGuild = useMemo(() => {
     const grouped = new Map<string, DiscordChannelOption[]>();
@@ -182,9 +101,11 @@ export function DiscordIntegrationCard({
     return grouped;
   }, [channels]);
 
-  const selectedIds = selectedChannelIds(config);
+  const selectedIds = config ? selectedChannelIds(config) : [];
 
   function toggleChannel(channel: DiscordChannelOption) {
+    if (!config) return;
+
     setSaved(false);
     setError(null);
 
@@ -202,29 +123,32 @@ export function DiscordIntegrationCard({
       ? selectedIds.filter((id) => id !== channel.id)
       : [...selectedIds, channel.id];
 
-    setConfig((prev) => ({
-      ...prev,
+    setConfig({
+      ...config,
       guilds: buildGuildConfig(channels, nextIds),
-    }));
+    });
   }
 
   async function handleSave() {
-    setSaving(true);
+    if (!config) return;
+
     setError(null);
     setSaved(false);
     try {
-      const updated = await updateDiscordConfig(integration.id, config);
+      const updated = await saveConfig(config);
       setConfig(updated);
       setSaved(true);
     } catch (err) {
-      const apiErr = err as ApiError;
-      setError(apiErr.message ?? "Failed to save Discord settings");
-    } finally {
-      setSaving(false);
+      setError(
+        err && typeof err === "object" && "message" in err
+          ? String((err as { message: string }).message)
+          : "Failed to save Discord settings",
+      );
     }
   }
 
-  const showChannelList = !loading && !loadingChannels;
+  const displayError = error ?? saveError;
+  const showChannelList = !loading && !loadingChannels && config;
 
   return (
     <div className="rounded-lg border border-neutral-200 p-4 dark:border-neutral-800">
@@ -233,7 +157,7 @@ export function DiscordIntegrationCard({
           <p className="font-medium">Discord</p>
           <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
             Monitor @mentions in selected channels
-            {config.includeDms ? " and bot DMs" : ""} (up to{" "}
+            {config?.includeDms ? " and bot DMs" : ""} (up to{" "}
             {MAX_DISCORD_SERVERS} servers).
           </p>
         </div>
@@ -266,10 +190,12 @@ export function DiscordIntegrationCard({
         <label className="flex items-center gap-2 text-sm">
           <input
             type="checkbox"
-            checked={config.includeDms}
+            checked={config?.includeDms ?? false}
+            disabled={!config}
             onChange={(e) => {
+              if (!config) return;
               setSaved(false);
-              setConfig((prev) => ({ ...prev, includeDms: e.target.checked }));
+              setConfig({ ...config, includeDms: e.target.checked });
             }}
             className="rounded border-neutral-300"
           />
@@ -285,7 +211,9 @@ export function DiscordIntegrationCard({
               disabled={loading || loadingChannels}
               className="inline-flex items-center gap-1 text-xs text-neutral-600 hover:text-neutral-900 disabled:opacity-50 dark:text-neutral-400 dark:hover:text-neutral-100"
             >
-              <RefreshCw className="h-3 w-3" />
+              <RefreshCw
+                className={`h-3 w-3 ${loadingChannels ? "animate-spin" : ""}`}
+              />
               Refresh
             </button>
           </div>
@@ -315,6 +243,7 @@ export function DiscordIntegrationCard({
                             type="checkbox"
                             checked={selectedIds.includes(channel.id)}
                             onChange={() => toggleChannel(channel)}
+                            disabled={!config}
                             className="rounded border-neutral-300"
                           />
                           <span>#{channel.name}</span>
@@ -332,7 +261,7 @@ export function DiscordIntegrationCard({
           <button
             type="button"
             onClick={() => void handleSave()}
-            disabled={saving || loading || loadingChannels}
+            disabled={saving || loading || loadingChannels || !config}
             className="rounded-md bg-neutral-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-neutral-800 disabled:opacity-50 dark:bg-white dark:text-neutral-900"
           >
             {saving ? "Saving…" : "Save settings"}
@@ -345,7 +274,7 @@ export function DiscordIntegrationCard({
         </div>
       </div>
 
-      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+      {displayError && <p className="mt-2 text-sm text-red-600">{displayError}</p>}
     </div>
   );
 }
