@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   fetchDiscordBotInviteUrl,
   fetchDiscordChannels,
@@ -10,9 +10,16 @@ import {
   type ApiError,
 } from "@/lib/api-client";
 import type { DiscordConfig, Integration } from "@/types";
-import { ExternalLink, Unlink } from "lucide-react";
+import { ExternalLink, RefreshCw, Unlink } from "lucide-react";
 
 const MAX_DISCORD_SERVERS = 2;
+
+interface DiscordChannelOption {
+  id: string;
+  name: string;
+  guildId: string;
+  guildName: string;
+}
 
 interface DiscordIntegrationCardProps {
   integration: Integration;
@@ -20,26 +27,104 @@ interface DiscordIntegrationCardProps {
   disabled?: boolean;
 }
 
+function selectedChannelIds(config: DiscordConfig): string[] {
+  return config.guilds.flatMap((guild) => guild.channelIds);
+}
+
+function buildGuildConfig(
+  channels: DiscordChannelOption[],
+  selectedIds: string[],
+): DiscordConfig["guilds"] {
+  const guildMap = new Map<string, DiscordConfig["guilds"][number]>();
+
+  for (const channel of channels) {
+    if (!selectedIds.includes(channel.id)) continue;
+
+    const existing = guildMap.get(channel.guildId);
+    if (existing) {
+      existing.channelIds.push(channel.id);
+      continue;
+    }
+
+    guildMap.set(channel.guildId, {
+      guildId: channel.guildId,
+      guildName: channel.guildName,
+      channelIds: [channel.id],
+    });
+  }
+
+  return Array.from(guildMap.values());
+}
+
 export function DiscordIntegrationCard({
   integration,
   onDisconnect,
   disabled = false,
 }: DiscordIntegrationCardProps) {
-  const [guilds, setGuilds] = useState<
-    Array<{ id: string; name: string; icon: string | null }>
-  >([]);
-  const [channelsByGuild, setChannelsByGuild] = useState<
-    Record<string, Array<{ id: string; name: string }>>
-  >({});
+  const [channels, setChannels] = useState<DiscordChannelOption[]>([]);
   const [config, setConfig] = useState<DiscordConfig>({
     guilds: integration.discordConfig?.guilds ?? [],
     includeDms: integration.discordConfig?.includeDms ?? false,
   });
   const [loading, setLoading] = useState(true);
+  const [loadingChannels, setLoadingChannels] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [botInviteUrl, setBotInviteUrl] = useState<string | null>(null);
+
+  const loadChannelsForGuilds = useCallback(
+    async (
+      guildList: Array<{ id: string; name: string }>,
+    ): Promise<DiscordChannelOption[]> => {
+      const channelOptions: DiscordChannelOption[] = [];
+
+      for (const guild of guildList) {
+        try {
+          const guildChannels = await fetchDiscordChannels(
+            integration.id,
+            guild.id,
+          );
+          for (const channel of guildChannels) {
+            channelOptions.push({
+              id: channel.id,
+              name: channel.name,
+              guildId: guild.id,
+              guildName: guild.name,
+            });
+          }
+        } catch {
+          // Skip guilds where the bot is not installed yet.
+        }
+      }
+
+      return channelOptions.sort((a, b) => {
+        const byGuild = a.guildName.localeCompare(b.guildName);
+        return byGuild !== 0 ? byGuild : a.name.localeCompare(b.name);
+      });
+    },
+    [integration.id],
+  );
+
+  const refreshChannels = useCallback(async () => {
+    setLoadingChannels(true);
+    setError(null);
+    try {
+      const guildList = await fetchDiscordGuilds(integration.id);
+      const channelOptions = await loadChannelsForGuilds(guildList);
+      setChannels(channelOptions);
+      if (channelOptions.length === 0) {
+        setError(
+          "No channels found. Invite the bot to your server, then refresh channels.",
+        );
+      }
+    } catch (err) {
+      const apiErr = err as ApiError;
+      setError(apiErr.message ?? "Failed to load Discord channels");
+    } finally {
+      setLoadingChannels(false);
+    }
+  }, [integration.id, loadChannelsForGuilds]);
 
   useEffect(() => {
     let cancelled = false;
@@ -54,25 +139,19 @@ export function DiscordIntegrationCard({
           fetchDiscordBotInviteUrl(),
         ]);
         if (cancelled) return;
-        setGuilds(guildList);
+
         setConfig(remoteConfig);
         setBotInviteUrl(invite);
 
-        const channelEntries = await Promise.all(
-          remoteConfig.guilds.map(async (guild) => {
-            try {
-              const channels = await fetchDiscordChannels(
-                integration.id,
-                guild.guildId,
-              );
-              return [guild.guildId, channels] as const;
-            } catch {
-              return [guild.guildId, []] as const;
-            }
-          }),
-        );
-        if (!cancelled) {
-          setChannelsByGuild(Object.fromEntries(channelEntries));
+        setLoadingChannels(true);
+        const channelOptions = await loadChannelsForGuilds(guildList);
+        if (cancelled) return;
+
+        setChannels(channelOptions);
+        if (channelOptions.length === 0) {
+          setError(
+            "No channels found. Invite the bot to your server, then refresh channels.",
+          );
         }
       } catch (err) {
         if (!cancelled) {
@@ -80,7 +159,10 @@ export function DiscordIntegrationCard({
           setError(apiErr.message ?? "Failed to load Discord settings");
         }
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+          setLoadingChannels(false);
+        }
       }
     }
 
@@ -88,57 +170,41 @@ export function DiscordIntegrationCard({
     return () => {
       cancelled = true;
     };
-  }, [integration.id]);
+  }, [integration.id, loadChannelsForGuilds]);
 
-  async function loadChannelsForGuild(guildId: string) {
-    try {
-      const channels = await fetchDiscordChannels(integration.id, guildId);
-      setChannelsByGuild((prev) => ({ ...prev, [guildId]: channels }));
-    } catch (err) {
-      const apiErr = err as ApiError;
-      setError(apiErr.message ?? "Failed to load channels");
+  const channelsByGuild = useMemo(() => {
+    const grouped = new Map<string, DiscordChannelOption[]>();
+    for (const channel of channels) {
+      const existing = grouped.get(channel.guildId) ?? [];
+      existing.push(channel);
+      grouped.set(channel.guildId, existing);
     }
-  }
+    return grouped;
+  }, [channels]);
 
-  function addGuild(guildId: string) {
-    const guild = guilds.find((g) => g.id === guildId);
-    if (!guild) return;
-    if (config.guilds.some((g) => g.guildId === guildId)) return;
-    if (config.guilds.length >= MAX_DISCORD_SERVERS) return;
+  const selectedIds = selectedChannelIds(config);
 
+  function toggleChannel(channel: DiscordChannelOption) {
     setSaved(false);
+    setError(null);
+
+    const isSelected = selectedIds.includes(channel.id);
+    if (!isSelected) {
+      const selectedGuildIds = new Set(config.guilds.map((guild) => guild.guildId));
+      const isNewGuild = !selectedGuildIds.has(channel.guildId);
+      if (isNewGuild && selectedGuildIds.size >= MAX_DISCORD_SERVERS) {
+        setError(`You can monitor up to ${MAX_DISCORD_SERVERS} servers.`);
+        return;
+      }
+    }
+
+    const nextIds = isSelected
+      ? selectedIds.filter((id) => id !== channel.id)
+      : [...selectedIds, channel.id];
+
     setConfig((prev) => ({
       ...prev,
-      guilds: [
-        ...prev.guilds,
-        { guildId: guild.id, guildName: guild.name, channelIds: [] },
-      ],
-    }));
-    void loadChannelsForGuild(guildId);
-  }
-
-  function removeGuild(guildId: string) {
-    setSaved(false);
-    setConfig((prev) => ({
-      ...prev,
-      guilds: prev.guilds.filter((g) => g.guildId !== guildId),
-    }));
-  }
-
-  function toggleChannel(guildId: string, channelId: string) {
-    setSaved(false);
-    setConfig((prev) => ({
-      ...prev,
-      guilds: prev.guilds.map((guild) => {
-        if (guild.guildId !== guildId) return guild;
-        const selected = guild.channelIds.includes(channelId);
-        return {
-          ...guild,
-          channelIds: selected
-            ? guild.channelIds.filter((id) => id !== channelId)
-            : [...guild.channelIds, channelId],
-        };
-      }),
+      guilds: buildGuildConfig(channels, nextIds),
     }));
   }
 
@@ -158,9 +224,7 @@ export function DiscordIntegrationCard({
     }
   }
 
-  const availableGuilds = guilds.filter(
-    (g) => !config.guilds.some((selected) => selected.guildId === g.id),
-  );
+  const showChannelList = !loading && !loadingChannels;
 
   return (
     <div className="rounded-lg border border-neutral-200 p-4 dark:border-neutral-800">
@@ -212,87 +276,63 @@ export function DiscordIntegrationCard({
           Include direct messages to the bot
         </label>
 
-        {loading ? (
-          <p className="text-sm text-neutral-500">Loading servers…</p>
-        ) : (
-          <>
-            {availableGuilds.length > 0 &&
-              config.guilds.length < MAX_DISCORD_SERVERS && (
-                <div>
-                  <p className="text-sm font-medium">Add server</p>
-                  <select
-                    className="mt-2 w-full rounded-md border border-neutral-300 bg-white px-2 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-950"
-                    defaultValue=""
-                    onChange={(e) => {
-                      if (e.target.value) addGuild(e.target.value);
-                      e.target.value = "";
-                    }}
-                  >
-                    <option value="" disabled>
-                      Select a server…
-                    </option>
-                    {availableGuilds.map((guild) => (
-                      <option key={guild.id} value={guild.id}>
-                        {guild.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
+        <div>
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-sm font-medium">Channels</p>
+            <button
+              type="button"
+              onClick={() => void refreshChannels()}
+              disabled={loading || loadingChannels}
+              className="inline-flex items-center gap-1 text-xs text-neutral-600 hover:text-neutral-900 disabled:opacity-50 dark:text-neutral-400 dark:hover:text-neutral-100"
+            >
+              <RefreshCw className="h-3 w-3" />
+              Refresh
+            </button>
+          </div>
 
-            {config.guilds.map((guild) => {
-              const channels = channelsByGuild[guild.guildId] ?? [];
-              return (
-                <div
-                  key={guild.guildId}
-                  className="rounded-md border border-neutral-200 p-3 dark:border-neutral-800"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-medium">{guild.guildName}</p>
-                    <button
-                      type="button"
-                      onClick={() => removeGuild(guild.guildId)}
-                      className="text-xs text-red-600 hover:underline"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                  {channels.length === 0 ? (
-                    <p className="mt-2 text-sm text-neutral-500">
-                      No channels available. Invite the bot to this server and
-                      ensure it can view channels.
+          {loading || loadingChannels ? (
+            <p className="mt-2 text-sm text-neutral-500">Loading channels…</p>
+          ) : showChannelList && channels.length === 0 ? (
+            <p className="mt-2 text-sm text-neutral-500">
+              No channels available. Invite the bot to your server, then click
+              Refresh.
+            </p>
+          ) : (
+            <div className="mt-2 max-h-48 space-y-3 overflow-y-auto rounded-md border border-neutral-200 p-2 dark:border-neutral-800">
+              {Array.from(channelsByGuild.entries()).map(
+                ([guildId, guildChannels]) => (
+                  <div key={guildId}>
+                    <p className="px-1 text-xs font-medium text-neutral-500">
+                      {guildChannels[0]?.guildName}
                     </p>
-                  ) : (
-                    <div className="mt-2 max-h-40 space-y-1 overflow-y-auto">
-                      {channels.map((channel) => (
+                    <div className="mt-1 space-y-1">
+                      {guildChannels.map((channel) => (
                         <label
                           key={channel.id}
                           className="flex items-center gap-2 text-sm"
                         >
                           <input
                             type="checkbox"
-                            checked={guild.channelIds.includes(channel.id)}
-                            onChange={() =>
-                              toggleChannel(guild.guildId, channel.id)
-                            }
+                            checked={selectedIds.includes(channel.id)}
+                            onChange={() => toggleChannel(channel)}
                             className="rounded border-neutral-300"
                           />
                           <span>#{channel.name}</span>
                         </label>
                       ))}
                     </div>
-                  )}
-                </div>
-              );
-            })}
-          </>
-        )}
+                  </div>
+                ),
+              )}
+            </div>
+          )}
+        </div>
 
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={() => void handleSave()}
-            disabled={saving || loading}
+            disabled={saving || loading || loadingChannels}
             className="rounded-md bg-neutral-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-neutral-800 disabled:opacity-50 dark:bg-white dark:text-neutral-900"
           >
             {saving ? "Saving…" : "Save settings"}

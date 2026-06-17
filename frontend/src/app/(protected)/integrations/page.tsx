@@ -183,6 +183,8 @@ function IntegrationsContent() {
   useEffect(() => {
     const connected = searchParams.get("connected");
     const oauthError = searchParams.get("error");
+    const botInviteCode = searchParams.get("code");
+
     if (connected) {
       setBanner(
         `${CONNECTED_LABELS[connected] ?? connected} connected successfully`,
@@ -193,6 +195,14 @@ function IntegrationsContent() {
       ]);
     } else if (oauthError) {
       setBanner(`Connection failed: ${oauthError}`);
+    } else if (botInviteCode) {
+      setBanner(
+        "Discord bot added. Open your Discord card and click Refresh to load channels.",
+      );
+      const url = new URL(window.location.href);
+      url.searchParams.delete("code");
+      window.history.replaceState({}, "", url.pathname + url.search);
+      void queryClient.invalidateQueries({ queryKey: queryKeys.integrations });
     }
   }, [searchParams, queryClient]);
 

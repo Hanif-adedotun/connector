@@ -78,7 +78,12 @@ export const DiscordIntegrationsController = {
       if (!env.DISCORD_CLIENT_ID) {
         throw new BadRequestError("Discord OAuth is not configured");
       }
-      res.json({ url: discordBotInviteUrl(env.DISCORD_CLIENT_ID) });
+      res.json({
+        url: discordBotInviteUrl(
+          env.DISCORD_CLIENT_ID,
+          `${env.APP_URL}/integrations`,
+        ),
+      });
     } catch (err) {
       next(err);
     }

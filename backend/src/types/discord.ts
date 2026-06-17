@@ -19,6 +19,12 @@ export const MAX_DISCORD_SERVERS = 2;
 
 export const DISCORD_OAUTH_SCOPES = ["identify", "guilds"] as const;
 
+/** User OAuth + bot install in one authorize step. */
+export const DISCORD_CONNECT_SCOPES = [
+  ...DISCORD_OAUTH_SCOPES,
+  "bot",
+] as const;
+
 /** VIEW_CHANNEL | READ_MESSAGE_HISTORY */
 export const DISCORD_BOT_PERMISSIONS = 66560;
 
@@ -47,11 +53,16 @@ export function parseDiscordConfig(raw: unknown): DiscordConfig {
   };
 }
 
-export function discordBotInviteUrl(clientId: string): string {
+export function discordBotInviteUrl(
+  clientId: string,
+  redirectUri: string,
+): string {
   const params = new URLSearchParams({
     client_id: clientId,
     scope: "bot",
     permissions: String(DISCORD_BOT_PERMISSIONS),
+    response_type: "code",
+    redirect_uri: redirectUri,
   });
   return `https://discord.com/api/oauth2/authorize?${params.toString()}`;
 }

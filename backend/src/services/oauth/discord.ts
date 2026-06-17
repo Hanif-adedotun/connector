@@ -3,7 +3,8 @@ import { env } from "../../config/env";
 import { IntegrationModel } from "../../models/integration.model";
 import {
   DEFAULT_DISCORD_CONFIG,
-  DISCORD_OAUTH_SCOPES,
+  DISCORD_BOT_PERMISSIONS,
+  DISCORD_CONNECT_SCOPES,
   parseDiscordConfig,
   type DiscordConfig,
 } from "../../types/discord";
@@ -32,7 +33,8 @@ export async function startDiscordOAuth(userId: string): Promise<string> {
     client_id: env.DISCORD_CLIENT_ID,
     redirect_uri: env.DISCORD_REDIRECT_URI,
     response_type: "code",
-    scope: DISCORD_OAUTH_SCOPES.join(" "),
+    scope: DISCORD_CONNECT_SCOPES.join(" "),
+    permissions: String(DISCORD_BOT_PERMISSIONS),
     state: encodeState({ userId, provider: "discord" }),
   });
   return `https://discord.com/api/oauth2/authorize?${params.toString()}`;
@@ -104,4 +106,4 @@ export async function completeDiscordOAuth(
   return { redirectUrl: integrationsRedirectUrl({ connected: "discord" }) };
 }
 
-export { DISCORD_OAUTH_SCOPES };
+export { DISCORD_CONNECT_SCOPES, DISCORD_OAUTH_SCOPES } from "../../types/discord";
