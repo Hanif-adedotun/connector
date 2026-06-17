@@ -1,5 +1,5 @@
 import { getAccessToken } from "@/lib/auth-session";
-import type { SlackChannel, SlackConfig } from "@/types";
+import type { DiscordConfig, SlackChannel, SlackConfig } from "@/types";
 import { env } from "./env";
 
 export interface ApiError {
@@ -91,6 +91,50 @@ export async function updateSlackConfig(
 ): Promise<SlackConfig> {
   const res = await api<{ config: SlackConfig }>(
     `/api/integrations/${integrationId}/slack/config`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(config),
+    },
+  );
+  return res.config;
+}
+
+export async function fetchDiscordBotInviteUrl(): Promise<string> {
+  const res = await api<{ url: string }>("/api/integrations/discord/bot-invite");
+  return res.url;
+}
+
+export async function fetchDiscordGuilds(
+  integrationId: string,
+): Promise<Array<{ id: string; name: string; icon: string | null }>> {
+  const res = await api<{
+    guilds: Array<{ id: string; name: string; icon: string | null }>;
+  }>(`/api/integrations/${integrationId}/discord/guilds`);
+  return res.guilds;
+}
+
+export async function fetchDiscordChannels(
+  integrationId: string,
+  guildId: string,
+): Promise<Array<{ id: string; name: string; type: number }>> {
+  const res = await api<{
+    channels: Array<{ id: string; name: string; type: number }>;
+  }>(`/api/integrations/${integrationId}/discord/guilds/${guildId}/channels`);
+  return res.channels;
+}
+
+export async function fetchDiscordConfig(
+  integrationId: string,
+): Promise<DiscordConfig> {
+  return api<DiscordConfig>(`/api/integrations/${integrationId}/discord/config`);
+}
+
+export async function updateDiscordConfig(
+  integrationId: string,
+  config: DiscordConfig,
+): Promise<DiscordConfig> {
+  const res = await api<{ config: DiscordConfig }>(
+    `/api/integrations/${integrationId}/discord/config`,
     {
       method: "PATCH",
       body: JSON.stringify(config),

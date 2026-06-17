@@ -35,6 +35,17 @@ export interface SlackConfig {
   includeDms: boolean;
 }
 
+export interface DiscordGuildSelection {
+  guildId: string;
+  guildName: string;
+  channelIds: string[];
+}
+
+export interface DiscordConfig {
+  guilds: DiscordGuildSelection[];
+  includeDms: boolean;
+}
+
 export interface Integration {
   id: string;
   provider: BriefSource;
@@ -45,6 +56,7 @@ export interface Integration {
   slackTeamId?: string | null;
   slackTeamName?: string | null;
   slackConfig?: SlackConfig | null;
+  discordConfig?: DiscordConfig | null;
 }
 
 export interface SlackChannel {

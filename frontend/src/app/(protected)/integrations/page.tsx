@@ -9,6 +9,7 @@ import { ProviderCard } from "@/components/integrations/ProviderCard";
 import { ReconnectGoogleBanner } from "@/components/integrations/ReconnectGoogleBanner";
 import { IntegrationsSkeleton } from "@/components/integrations/IntegrationsSkeleton";
 import { SlackWorkspaceCard } from "@/components/integrations/SlackWorkspaceCard";
+import { DiscordIntegrationCard } from "@/components/integrations/DiscordIntegrationCard";
 import { useIntegrations } from "@/hooks/useIntegrations";
 import { getOAuthStartUrl, type ApiError } from "@/lib/api-client";
 import { googleNeedsReconnect, isGoogleConnected } from "@/lib/integrations";
@@ -48,7 +49,6 @@ const PROVIDERS: Array<{
     providerKey: ["discord"],
     label: "Discord",
     description: "Pull action items from selected servers and channels.",
-    comingSoon: true,
   },
 ];
 
@@ -58,6 +58,35 @@ const CONNECTED_LABELS: Record<string, string> = {
   jira: "Jira",
   discord: "Discord",
 };
+
+function DiscordSection({
+  items,
+  onDisconnect,
+  disabled,
+}: {
+  items: ReturnType<typeof useIntegrations>["items"];
+  onDisconnect: (id: string) => void;
+  disabled: boolean;
+}) {
+  const discordIntegrations = items.filter(
+    (i) => i.provider === "discord" && i.status === "active",
+  );
+
+  if (discordIntegrations.length === 0) return null;
+
+  return (
+    <div className="space-y-3">
+      {discordIntegrations.map((integration) => (
+        <DiscordIntegrationCard
+          key={integration.id}
+          integration={integration}
+          onDisconnect={() => onDisconnect(integration.id)}
+          disabled={disabled}
+        />
+      ))}
+    </div>
+  );
+}
 
 function SlackSection({
   items,
@@ -214,7 +243,7 @@ function IntegrationsContent() {
           <IntegrationsSkeleton />
         ) : (
           <>
-            {PROVIDERS.map((p) => (
+            {PROVIDERS.filter((p) => p.id !== "discord").map((p) => (
               <ProviderCard
                 key={p.id}
                 id={p.id}
@@ -228,6 +257,23 @@ function IntegrationsContent() {
                 disabled={isDisconnecting}
               />
             ))}
+            {PROVIDERS.filter((p) => p.id === "discord").map((p) => (
+              <ProviderCard
+                key={p.id}
+                id={p.id}
+                icon={p.icon}
+                label={p.label}
+                description={p.description}
+                connected={isConnected(p.providerKey)}
+                onDisconnect={() => void disconnectProviders(p.providerKey)}
+                disabled={isDisconnecting}
+              />
+            ))}
+            <DiscordSection
+              items={items}
+              onDisconnect={(id) => void disconnectIntegration(id)}
+              disabled={isDisconnecting}
+            />
             <SlackSection
               items={items}
               onDisconnect={(id) => void disconnectIntegration(id)}
