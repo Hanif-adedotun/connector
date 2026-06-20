@@ -80,7 +80,7 @@ describe("serializeTask", () => {
         },
       },
     });
-    expect(view.contextLine).toBe("DM · from Alex · Acme");
+    expect(view.contextLine).toBe("from Alex · Acme");
   });
 
   it("omits missing Slack context parts", () => {

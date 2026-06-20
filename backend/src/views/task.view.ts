@@ -39,9 +39,7 @@ export function formatSlackContextLine(
 ): string | null {
   const parts: string[] = [];
 
-  if (meta.isDm) {
-    parts.push("DM");
-  } else if (meta.channelName) {
+  if (!meta.isDm && meta.channelName) {
     parts.push(`#${meta.channelName}`);
   }
 
