@@ -23,6 +23,7 @@ export interface FeedItem {
   status: "open" | "done" | "dismissed";
   createdAt: string;
   sourceUrl: string | null;
+  contextLine: string | null;
 }
 
 export interface FeedResponse {

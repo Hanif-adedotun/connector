@@ -105,6 +105,8 @@ describe("mapSlackMessageToPersistParams", () => {
       isDm: false,
       permalink: "https://slack.com/archives/C1/p123",
       parentText: "Original thread",
+      senderName: "Alex",
+      senderUserId: "U_OTHER",
     });
 
     expect(params).toMatchObject({
@@ -119,6 +121,27 @@ describe("mapSlackMessageToPersistParams", () => {
       channelName: "general",
       workspaceName: "Acme",
       slackTeamId: "T1",
+      senderName: "Alex",
+      senderUserId: "U_OTHER",
+    });
+  });
+
+  it("stores sender metadata when provided", () => {
+    const params = mapSlackMessageToPersistParams({
+      userId: "user-1",
+      teamId: "T1",
+      teamName: "Acme",
+      channelId: "C1",
+      channelName: "general",
+      message: message(),
+      isDm: false,
+      senderName: "Alex",
+      senderUserId: "U_OTHER",
+    });
+
+    expect(params?.metadata).toMatchObject({
+      senderName: "Alex",
+      senderUserId: "U_OTHER",
     });
   });
 });

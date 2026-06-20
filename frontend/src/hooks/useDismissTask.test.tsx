@@ -27,6 +27,7 @@ describe("useDismissTask", () => {
           status: "open",
           createdAt: "2024-06-01",
           sourceUrl: null,
+          contextLine: null,
         },
         {
           id: "t2",
@@ -38,6 +39,7 @@ describe("useDismissTask", () => {
           status: "open",
           createdAt: "2024-06-01",
           sourceUrl: null,
+          contextLine: null,
         },
       ],
     };

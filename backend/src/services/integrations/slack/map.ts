@@ -9,6 +9,8 @@ export interface SlackEventMetadata {
   isDm?: boolean;
   workspaceName?: string;
   slackTeamId?: string;
+  senderName?: string;
+  senderUserId?: string;
 }
 
 export function buildSlackExternalId(
@@ -69,6 +71,8 @@ export function mapSlackMessageToPersistParams(params: {
   isDm: boolean;
   permalink?: string;
   parentText?: string;
+  senderName?: string;
+  senderUserId?: string;
 }): Parameters<typeof EventModel.upsertByExternalId>[0] | null {
   const {
     userId,
@@ -80,6 +84,8 @@ export function mapSlackMessageToPersistParams(params: {
     isDm,
     permalink,
     parentText,
+    senderName,
+    senderUserId,
   } = params;
 
   if (!message.ts) return null;
@@ -99,6 +105,8 @@ export function mapSlackMessageToPersistParams(params: {
     isDm,
     workspaceName: teamName ?? undefined,
     slackTeamId: teamId,
+    senderName,
+    senderUserId,
   };
 
   const titlePrefix = isDm ? "DM" : channelName ? `#${channelName}` : "Slack";

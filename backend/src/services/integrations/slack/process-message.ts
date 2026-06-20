@@ -32,6 +32,7 @@ export async function processSlackMessage(event: ConnectorEvent): Promise<void> 
       externalId: event.externalId,
       title: event.title ?? undefined,
       content: event.content,
+      actor: meta.senderName,
       occurredAt: event.occurredAt,
       metadata: meta as Record<string, unknown>,
     },

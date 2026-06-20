@@ -11,6 +11,7 @@ import {
   fetchThreadReplies,
   listSlackDmChannels,
   resolveChannelName,
+  resolveUserDisplayName,
   type SlackMessage,
 } from "./client";
 import {
@@ -62,6 +63,7 @@ export async function pollSlack(ctx: PollContext): Promise<PollResult> {
   const oldestDate = integration.lastPolledAt ?? defaultPollSince();
   const oldest = dateToSlackTs(oldestDate);
   const channelNameCache = new Map<string, string>();
+  const userNameCache = new Map<string, string>();
   let eventsFetched = 0;
 
   async function persistMessage(
@@ -91,6 +93,11 @@ export async function pollSlack(ctx: PollContext): Promise<PollResult> {
 
     const parentText = await resolveParentText(integration, channelId, message);
 
+    const senderUserId = message.user;
+    const senderName = senderUserId
+      ? await resolveUserDisplayName(integration!, senderUserId, userNameCache)
+      : undefined;
+
     const params = mapSlackMessageToPersistParams({
       userId: ctx.userId,
       teamId: integration!.slackTeamId,
@@ -101,6 +108,8 @@ export async function pollSlack(ctx: PollContext): Promise<PollResult> {
       isDm,
       permalink,
       parentText,
+      senderName,
+      senderUserId,
     });
     if (!params) return;
 
