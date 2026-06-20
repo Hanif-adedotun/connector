@@ -30,6 +30,7 @@ describe("serializeTask", () => {
       status: "open",
       createdAt: "2024-06-01T08:00:00.000Z",
       sourceUrl: null,
+      contextLine: null,
     });
   });
 
@@ -39,6 +40,60 @@ describe("serializeTask", () => {
       sourceEvent: { metadataJson: { htmlLink: "https://mail.google.com/m/1" } },
     });
     expect(view.sourceUrl).toBe("https://mail.google.com/m/1");
+  });
+
+  it("extracts Slack permalink as sourceUrl", () => {
+    const view = serializeTask({
+      ...base,
+      provider: "slack",
+      sourceEvent: {
+        metadataJson: { permalink: "https://slack.com/archives/C1/p123" },
+      },
+    });
+    expect(view.sourceUrl).toBe("https://slack.com/archives/C1/p123");
+  });
+
+  it("builds Slack contextLine from metadata", () => {
+    const view = serializeTask({
+      ...base,
+      provider: "slack",
+      sourceEvent: {
+        metadataJson: {
+          channelName: "general",
+          senderName: "Alex",
+          workspaceName: "Acme",
+        },
+      },
+    });
+    expect(view.contextLine).toBe("#general · from Alex · Acme");
+  });
+
+  it("formats DM Slack contextLine", () => {
+    const view = serializeTask({
+      ...base,
+      provider: "slack",
+      sourceEvent: {
+        metadataJson: {
+          isDm: true,
+          senderName: "Alex",
+          workspaceName: "Acme",
+        },
+      },
+    });
+    expect(view.contextLine).toBe("from Alex · Acme");
+  });
+
+  it("omits missing Slack context parts", () => {
+    const view = serializeTask({
+      ...base,
+      provider: "slack",
+      sourceEvent: {
+        metadataJson: {
+          senderName: "Alex",
+        },
+      },
+    });
+    expect(view.contextLine).toBe("from Alex");
   });
 });
 

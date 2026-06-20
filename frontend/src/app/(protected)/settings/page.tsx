@@ -14,6 +14,7 @@ import { BriefWordmark } from "@/components/brand/BriefWordmark";
 import { SettingsSkeleton } from "@/components/settings/SettingsSkeleton";
 import { SettingsTimezoneField } from "@/components/settings/SettingsTimezoneField";
 import { useTheme } from "@/hooks/useTheme";
+import { useHydrated } from "@/hooks/useHydrated";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { displayFirstName, useUser } from "@/hooks/useUser";
@@ -26,6 +27,7 @@ import { cn } from "@/lib/utils";
 export default function SettingsPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const hydrated = useHydrated();
   const { user, loading } = useUser();
   const { isDark, toggle, ready } = useTheme();
   const {
@@ -66,6 +68,7 @@ export default function SettingsPage() {
   }
 
   const displayName = displayFirstName(user);
+  const showSettings = hydrated && !loading;
 
   return (
     <main className="mx-auto flex min-h-screen max-w-3xl flex-col px-6 py-16">
@@ -92,9 +95,7 @@ export default function SettingsPage() {
         <InstallPrompt />
       </div>
 
-      {loading ? (
-        <SettingsSkeleton />
-      ) : (
+      {showSettings ? (
         <>
       <section className="mt-10 rounded-lg border border-neutral-200 p-4 dark:border-neutral-800">
         <p className="font-mono text-xs uppercase tracking-wider text-neutral-500">
@@ -230,6 +231,8 @@ export default function SettingsPage() {
         </Link>
       </nav>
         </>
+      ) : (
+        <SettingsSkeleton />
       )}
 
       <div className="mt-auto pt-16">

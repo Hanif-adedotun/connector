@@ -7,8 +7,14 @@ import {
   updateSlackConfig,
   type ApiError,
 } from "@/lib/api-client";
+import { toast } from "sonner";
 import type { Integration, SlackConfig } from "@/types";
 import { Unlink } from "lucide-react";
+import {
+  ChannelList,
+  SettingToggleRow,
+  ToggleRow,
+} from "./IntegrationToggle";
 
 interface SlackWorkspaceCardProps {
   integration: Integration;
@@ -30,15 +36,12 @@ export function SlackWorkspaceCard({
   });
   const [loadingChannels, setLoadingChannels] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
 
     async function load() {
       setLoadingChannels(true);
-      setError(null);
       try {
         const [channelList, remoteConfig] = await Promise.all([
           fetchSlackChannels(integration.id),
@@ -50,7 +53,7 @@ export function SlackWorkspaceCard({
       } catch (err) {
         if (!cancelled) {
           const apiErr = err as ApiError;
-          setError(apiErr.message ?? "Failed to load Slack settings");
+          toast.error(apiErr.message ?? "Failed to load Slack settings");
         }
       } finally {
         if (!cancelled) setLoadingChannels(false);
@@ -64,7 +67,6 @@ export function SlackWorkspaceCard({
   }, [integration.id]);
 
   function toggleChannel(channelId: string) {
-    setSaved(false);
     setConfig((prev) => {
       const selected = prev.channelIds.includes(channelId);
       return {
@@ -78,15 +80,13 @@ export function SlackWorkspaceCard({
 
   async function handleSave() {
     setSaving(true);
-    setError(null);
-    setSaved(false);
     try {
       const updated = await updateSlackConfig(integration.id, config);
       setConfig(updated);
-      setSaved(true);
+      toast.success("Slack settings saved");
     } catch (err) {
       const apiErr = err as ApiError;
-      setError(apiErr.message ?? "Failed to save Slack settings");
+      toast.error(apiErr.message ?? "Failed to save Slack settings");
     } finally {
       setSaving(false);
     }
@@ -116,18 +116,13 @@ export function SlackWorkspaceCard({
       </div>
 
       <div className="mt-4 space-y-3">
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={config.includeDms}
-            onChange={(e) => {
-              setSaved(false);
-              setConfig((prev) => ({ ...prev, includeDms: e.target.checked }));
-            }}
-            className="rounded border-neutral-300"
-          />
-          Include direct messages
-        </label>
+        <SettingToggleRow
+          label="Include direct messages"
+          checked={config.includeDms}
+          onChange={(includeDms) =>
+            setConfig((prev) => ({ ...prev, includeDms }))
+          }
+        />
 
         <div>
           <p className="text-sm font-medium">Channels</p>
@@ -139,46 +134,29 @@ export function SlackWorkspaceCard({
               channels.
             </p>
           ) : (
-            <div className="mt-2 max-h-48 space-y-1 overflow-y-auto rounded-md border border-neutral-200 p-2 dark:border-neutral-800">
+            <ChannelList>
               {channels.map((channel) => (
-                <label
+                <ToggleRow
                   key={channel.id}
-                  className="flex items-center gap-2 text-sm"
-                >
-                  <input
-                    type="checkbox"
-                    checked={config.channelIds.includes(channel.id)}
-                    onChange={() => toggleChannel(channel.id)}
-                    className="rounded border-neutral-300"
-                  />
-                  <span>
-                    {channel.isPrivate ? "🔒" : "#"}
-                    {channel.name}
-                  </span>
-                </label>
+                  label={channel.name}
+                  checked={config.channelIds.includes(channel.id)}
+                  isPrivate={channel.isPrivate}
+                  onChange={() => toggleChannel(channel.id)}
+                />
               ))}
-            </div>
+            </ChannelList>
           )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={() => void handleSave()}
-            disabled={saving || loadingChannels}
-            className="rounded-md bg-neutral-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-neutral-800 disabled:opacity-50 dark:bg-white dark:text-neutral-900"
-          >
-            {saving ? "Saving…" : "Save settings"}
-          </button>
-          {saved && (
-            <span className="text-xs text-emerald-600 dark:text-emerald-400">
-              Saved
-            </span>
-          )}
-        </div>
+        <button
+          type="button"
+          onClick={() => void handleSave()}
+          disabled={saving || loadingChannels}
+          className="rounded-md bg-neutral-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-neutral-800 disabled:opacity-50 dark:bg-white dark:text-neutral-900"
+        >
+          {saving ? "Saving…" : "Save settings"}
+        </button>
       </div>
-
-      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
     </div>
   );
 }

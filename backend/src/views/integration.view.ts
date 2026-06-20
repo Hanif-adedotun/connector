@@ -1,4 +1,5 @@
 import type { Integration } from "@prisma/client";
+import { parseDiscordConfig } from "../types/discord";
 import { parseSlackConfig } from "../types/slack";
 
 export interface IntegrationView {
@@ -12,6 +13,14 @@ export interface IntegrationView {
   slackTeamName?: string | null;
   slackConfig?: {
     channelIds: string[];
+    includeDms: boolean;
+  } | null;
+  discordConfig?: {
+    guilds: Array<{
+      guildId: string;
+      guildName: string;
+      channelIds: string[];
+    }>;
     includeDms: boolean;
   } | null;
 }
@@ -32,6 +41,14 @@ export function serializeIntegration(i: Integration): IntegrationView {
     base.slackTeamName = i.slackTeamName;
     base.slackConfig = {
       channelIds: config.channelIds,
+      includeDms: config.includeDms,
+    };
+  }
+
+  if (i.provider === "discord") {
+    const config = parseDiscordConfig(i.slackConfig);
+    base.discordConfig = {
+      guilds: config.guilds,
       includeDms: config.includeDms,
     };
   }

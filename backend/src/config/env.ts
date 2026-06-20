@@ -91,6 +91,8 @@ const envSchema = z.object({
     .string()
     .url()
     .default("http://localhost:4000/api/oauth/discord/callback"),
+  /** Application bot token — required for reading channel messages. */
+  DISCORD_BOT_TOKEN: z.string().optional(),
 
   // Polling
   POLLING_INTERVAL_MS: z.coerce.number().default(5 * 60 * 1000),

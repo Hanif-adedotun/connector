@@ -150,3 +150,27 @@ export async function resolveChannelName(
     return undefined;
   }
 }
+
+export async function resolveUserDisplayName(
+  integration: Integration,
+  userId: string,
+  cache: Map<string, string>,
+): Promise<string | undefined> {
+  const cached = cache.get(userId);
+  if (cached) return cached;
+
+  const client = getSlackClient(integration);
+  try {
+    const result = await client.users.info({ user: userId });
+    const user = result.user;
+    const name =
+      user?.profile?.display_name ||
+      user?.profile?.real_name ||
+      user?.real_name ||
+      user?.name;
+    if (name) cache.set(userId, name);
+    return name;
+  } catch {
+    return undefined;
+  }
+}

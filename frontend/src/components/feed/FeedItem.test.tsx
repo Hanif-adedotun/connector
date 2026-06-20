@@ -14,6 +14,7 @@ const baseItem: FeedItemType = {
   status: "open",
   createdAt: "2024-06-01",
   sourceUrl: null,
+  contextLine: null,
 };
 
 describe("FeedItem", () => {
@@ -45,5 +46,39 @@ describe("FeedItem", () => {
       />,
     );
     expect(screen.getByText(/Overdue/)).toBeInTheDocument();
+  });
+
+  it("shows Slack context line below title", () => {
+    render(
+      <FeedItem
+        item={{
+          ...baseItem,
+          source: "slack",
+          task: "Follow up with him",
+          summary: "Needs a response",
+          contextLine: "#general · from Alex · Acme",
+        }}
+        onDismiss={jest.fn()}
+      />,
+    );
+    expect(screen.getByText("Follow up with him")).toBeInTheDocument();
+    expect(
+      screen.getByText("#general · from Alex · Acme"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Needs a response")).toBeInTheDocument();
+  });
+
+  it("hides Slack context line when absent", () => {
+    render(
+      <FeedItem
+        item={{
+          ...baseItem,
+          source: "slack",
+          contextLine: null,
+        }}
+        onDismiss={jest.fn()}
+      />,
+    );
+    expect(screen.queryByText(/from Alex/)).not.toBeInTheDocument();
   });
 });

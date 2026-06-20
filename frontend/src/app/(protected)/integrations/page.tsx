@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
@@ -9,14 +9,16 @@ import { ProviderCard } from "@/components/integrations/ProviderCard";
 import { ReconnectGoogleBanner } from "@/components/integrations/ReconnectGoogleBanner";
 import { IntegrationsSkeleton } from "@/components/integrations/IntegrationsSkeleton";
 import { SlackWorkspaceCard } from "@/components/integrations/SlackWorkspaceCard";
+import { DiscordIntegrationCard } from "@/components/integrations/DiscordIntegrationCard";
 import { useIntegrations } from "@/hooks/useIntegrations";
 import { getOAuthStartUrl, type ApiError } from "@/lib/api-client";
 import { googleNeedsReconnect, isGoogleConnected } from "@/lib/integrations";
 import { queryKeys } from "@/lib/query-keys";
+import { toast } from "sonner";
 import type { BriefSource } from "@/types";
 
 import { SiGooglecalendar, SiGmail, SiSlack, SiJira, SiDiscord } from "react-icons/si";
-import { InfoIcon, LinkIcon } from "lucide-react";
+import { LinkIcon } from "lucide-react";
 
 const MAX_SLACK_WORKSPACES = 2;
 
@@ -48,7 +50,6 @@ const PROVIDERS: Array<{
     providerKey: ["discord"],
     label: "Discord",
     description: "Pull action items from selected servers and channels.",
-    comingSoon: true,
   },
 ];
 
@@ -58,6 +59,35 @@ const CONNECTED_LABELS: Record<string, string> = {
   jira: "Jira",
   discord: "Discord",
 };
+
+function DiscordSection({
+  items,
+  onDisconnect,
+  disabled,
+}: {
+  items: ReturnType<typeof useIntegrations>["items"];
+  onDisconnect: (id: string) => void;
+  disabled: boolean;
+}) {
+  const discordIntegrations = items.filter(
+    (i) => i.provider === "discord" && i.status === "active",
+  );
+
+  if (discordIntegrations.length === 0) return null;
+
+  return (
+    <div className="space-y-3">
+      {discordIntegrations.map((integration) => (
+        <DiscordIntegrationCard
+          key={integration.id}
+          integration={integration}
+          onDisconnect={() => onDisconnect(integration.id)}
+          disabled={disabled}
+        />
+      ))}
+    </div>
+  );
+}
 
 function SlackSection({
   items,
@@ -69,7 +99,6 @@ function SlackSection({
   disabled: boolean;
 }) {
   const [connecting, setConnecting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const slackIntegrations = items.filter(
     (i) => i.provider === "slack" && i.status === "active" && i.slackTeamId,
@@ -78,13 +107,14 @@ function SlackSection({
 
   async function handleConnect() {
     setConnecting(true);
-    setError(null);
     try {
       const url = await getOAuthStartUrl("slack");
       window.location.href = url;
     } catch (err) {
       const apiErr = err as ApiError;
-      setError(apiErr.message ?? "Failed to start Slack connection");
+      toast.error(
+        apiErr.message ?? "Failed to start Slack connection",
+      );
       setConnecting(false);
     }
   }
@@ -123,7 +153,6 @@ function SlackSection({
             </button>
           ) : null}
         </div>
-        {error && <p className="text-sm text-red-600">{error}</p>}
       </div>
 
       {slackIntegrations.map((integration) => (
@@ -149,23 +178,57 @@ function IntegrationsContent() {
     isDisconnecting,
     disconnectError,
   } = useIntegrations();
-  const [banner, setBanner] = useState<string | null>(null);
+  const oauthToastShown = useRef(false);
 
   useEffect(() => {
+    if (oauthToastShown.current) return;
+
     const connected = searchParams.get("connected");
     const oauthError = searchParams.get("error");
+    const botInviteCode = searchParams.get("code");
+
     if (connected) {
-      setBanner(
+      oauthToastShown.current = true;
+      toast.success(
         `${CONNECTED_LABELS[connected] ?? connected} connected successfully`,
+        {
+          description: "You should see new tasks in your feed shortly.",
+        },
       );
       void Promise.all([
         queryClient.invalidateQueries({ queryKey: queryKeys.integrations }),
         queryClient.invalidateQueries({ queryKey: queryKeys.feed }),
       ]);
     } else if (oauthError) {
-      setBanner(`Connection failed: ${oauthError}`);
+      oauthToastShown.current = true;
+      toast.error("Connection failed", { description: oauthError });
+    } else if (botInviteCode) {
+      oauthToastShown.current = true;
+      toast.success("Discord bot added", {
+        description:
+          "Open your Discord card and click Refresh to load channels.",
+      });
+      const url = new URL(window.location.href);
+      url.searchParams.delete("code");
+      window.history.replaceState({}, "", url.pathname + url.search);
+      void Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.integrations }),
+        queryClient.invalidateQueries({ queryKey: ["discord"] }),
+      ]);
     }
   }, [searchParams, queryClient]);
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+    }
+  }, [error]);
+
+  useEffect(() => {
+    if (disconnectError) {
+      toast.error(disconnectError);
+    }
+  }, [disconnectError]);
 
   function isConnected(providerKeys: BriefSource[]) {
     if (providerKeys.includes("google_calendar") && providerKeys.includes("gmail")) {
@@ -177,7 +240,6 @@ function IntegrationsContent() {
   }
 
   const showGoogleReconnect = googleNeedsReconnect(items);
-  const displayError = error ?? disconnectError;
 
   async function disconnectProviders(providerKeys: BriefSource[]) {
     const toDisconnect = items.filter(
@@ -192,29 +254,14 @@ function IntegrationsContent() {
 
   return (
     <>
-      {banner && (
-        <div className="mt-6 flex items-start gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
-            <InfoIcon className="h-4 w-4 mt-0.5 font-light" />
-            <div className=" ">
-              {banner}
-              <p className="mt-0.5 text-sm text-neutral-500">
-                You should see new tasks in your feed shortly.
-              </p>
-            </div>
-        </div>
-      )}
       {showGoogleReconnect && <ReconnectGoogleBanner className="mt-6" />}
-
-      {displayError && (
-        <p className="mt-6 text-sm text-red-600">{displayError}</p>
-      )}
 
       <section className="mt-10 space-y-3">
         {loading ? (
           <IntegrationsSkeleton />
         ) : (
           <>
-            {PROVIDERS.map((p) => (
+            {PROVIDERS.filter((p) => p.id !== "discord").map((p) => (
               <ProviderCard
                 key={p.id}
                 id={p.id}
@@ -228,6 +275,23 @@ function IntegrationsContent() {
                 disabled={isDisconnecting}
               />
             ))}
+            {PROVIDERS.filter((p) => p.id === "discord").map((p) => (
+              <ProviderCard
+                key={p.id}
+                id={p.id}
+                icon={p.icon}
+                label={p.label}
+                description={p.description}
+                connected={isConnected(p.providerKey)}
+                onDisconnect={() => void disconnectProviders(p.providerKey)}
+                disabled={isDisconnecting}
+              />
+            ))}
+            <DiscordSection
+              items={items}
+              onDisconnect={(id) => void disconnectIntegration(id)}
+              disabled={isDisconnecting}
+            />
             <SlackSection
               items={items}
               onDisconnect={(id) => void disconnectIntegration(id)}

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { getOAuthStartUrl, type ApiError } from "@/lib/api-client";
+import { toast } from "sonner";
 import { LinkIcon, Unlink } from "lucide-react";
 
 export interface ProviderCardProps {
@@ -28,18 +29,16 @@ export function ProviderCard({
   disabled = false,
 }: ProviderCardProps) {
   const [connecting, setConnecting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   async function handleConnect() {
     if (comingSoon) return;
     setConnecting(true);
-    setError(null);
     try {
       const url = await getOAuthStartUrl(id);
       window.location.href = url;
     } catch (err) {
       const apiErr = err as ApiError;
-      setError(apiErr.message ?? "Failed to start connection");
+      toast.error(apiErr.message ?? "Failed to start connection");
       setConnecting(false);
     }
   }
@@ -98,7 +97,6 @@ export function ProviderCard({
           </button>
         )}
       </div>
-      {error && <p className="text-sm text-red-600">{error}</p>}
     </div>
   );
 }

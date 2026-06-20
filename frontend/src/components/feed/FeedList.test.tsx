@@ -21,6 +21,7 @@ const item = (overrides: Partial<FeedItem> = {}): FeedItem => ({
   status: "open",
   createdAt: "2024-06-01",
   sourceUrl: null,
+  contextLine: null,
   ...overrides,
 });
 

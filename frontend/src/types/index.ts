@@ -23,6 +23,7 @@ export interface FeedItem {
   status: "open" | "done" | "dismissed";
   createdAt: string;
   sourceUrl: string | null;
+  contextLine: string | null;
 }
 
 export interface FeedResponse {
@@ -32,6 +33,17 @@ export interface FeedResponse {
 
 export interface SlackConfig {
   channelIds: string[];
+  includeDms: boolean;
+}
+
+export interface DiscordGuildSelection {
+  guildId: string;
+  guildName: string;
+  channelIds: string[];
+}
+
+export interface DiscordConfig {
+  guilds: DiscordGuildSelection[];
   includeDms: boolean;
 }
 
@@ -45,6 +57,7 @@ export interface Integration {
   slackTeamId?: string | null;
   slackTeamName?: string | null;
   slackConfig?: SlackConfig | null;
+  discordConfig?: DiscordConfig | null;
 }
 
 export interface SlackChannel {

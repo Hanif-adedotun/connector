@@ -46,6 +46,7 @@ describe("countFeedDeadlines", () => {
         status: "open",
         createdAt: now.toISOString(),
         sourceUrl: null,
+        contextLine: null,
       },
       {
         id: "2",
@@ -57,6 +58,7 @@ describe("countFeedDeadlines", () => {
         status: "open",
         createdAt: now.toISOString(),
         sourceUrl: null,
+        contextLine: null,
       },
       {
         id: "3",
@@ -68,6 +70,7 @@ describe("countFeedDeadlines", () => {
         status: "open",
         createdAt: now.toISOString(),
         sourceUrl: null,
+        contextLine: null,
       },
     ];
     expect(countFeedDeadlines(items, now)).toEqual({

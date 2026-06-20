@@ -3,6 +3,10 @@ import { prisma } from "../config/db";
 import { encrypt } from "../utils/encryption";
 import type { OAuthTokens } from "../types";
 import {
+  DEFAULT_DISCORD_CONFIG,
+  type DiscordConfig,
+} from "../types/discord";
+import {
   DEFAULT_SLACK_CONFIG,
   MAX_SLACK_WORKSPACES,
   NON_SLACK_TEAM_ID,
@@ -178,6 +182,52 @@ export const IntegrationModel = {
   },
 
   updateSlackConfig(integrationId: string, config: SlackConfig) {
+    return prisma.integration.update({
+      where: { id: integrationId },
+      data: { slackConfig: config as unknown as Prisma.InputJsonValue },
+    });
+  },
+
+  upsertDiscordTokens(params: {
+    userId: string;
+    tokens: OAuthTokens;
+    config?: DiscordConfig;
+  }) {
+    const { userId, tokens, config } = params;
+    const discordConfig = config ?? { ...DEFAULT_DISCORD_CONFIG };
+
+    return prisma.integration.upsert({
+      where: {
+        userId_provider_slackTeamId: {
+          userId,
+          provider: "discord",
+          slackTeamId: NON_SLACK_TEAM_ID,
+        },
+      },
+      update: {
+        encryptedAccessToken: encrypt(tokens.accessToken),
+        encryptedRefreshToken: tokens.refreshToken
+          ? encrypt(tokens.refreshToken)
+          : null,
+        scope: tokens.scope ?? null,
+        status: "active",
+        slackConfig: discordConfig as unknown as Prisma.InputJsonValue,
+      },
+      create: {
+        userId,
+        provider: "discord",
+        slackTeamId: NON_SLACK_TEAM_ID,
+        slackConfig: discordConfig as unknown as Prisma.InputJsonValue,
+        encryptedAccessToken: encrypt(tokens.accessToken),
+        encryptedRefreshToken: tokens.refreshToken
+          ? encrypt(tokens.refreshToken)
+          : null,
+        scope: tokens.scope ?? null,
+      },
+    });
+  },
+
+  updateDiscordConfig(integrationId: string, config: DiscordConfig) {
     return prisma.integration.update({
       where: { id: integrationId },
       data: { slackConfig: config as unknown as Prisma.InputJsonValue },

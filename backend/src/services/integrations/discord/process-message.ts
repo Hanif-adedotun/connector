@@ -5,16 +5,18 @@ import { EventModel } from "../../../models/event.model";
 import { TaskModel } from "../../../models/task.model";
 import { enqueueAiExtractionJob } from "../../../queues/ai-extraction.queue";
 import { logger } from "../../../utils/logger";
-import type { SlackEventMetadata } from "./map";
+import type { DiscordEventMetadata } from "./map";
 
-function parseMetadata(event: ConnectorEvent): SlackEventMetadata {
-  return (event.metadataJson as SlackEventMetadata | null) ?? {};
+function parseMetadata(event: ConnectorEvent): DiscordEventMetadata {
+  return (event.metadataJson as DiscordEventMetadata | null) ?? {};
 }
 
 /**
- * Gated Slack processing: keyword filter → AI extraction queue.
+ * Gated Discord processing: keyword filter → AI extraction queue.
  */
-export async function processSlackMessage(event: ConnectorEvent): Promise<void> {
+export async function processDiscordMessage(
+  event: ConnectorEvent,
+): Promise<void> {
   if (event.processed) return;
 
   const existing = await TaskModel.findBySourceEventId(event.id);
@@ -32,7 +34,6 @@ export async function processSlackMessage(event: ConnectorEvent): Promise<void> 
       externalId: event.externalId,
       title: event.title ?? undefined,
       content: event.content,
-      actor: meta.senderName,
       occurredAt: event.occurredAt,
       metadata: meta as Record<string, unknown>,
     },
@@ -43,7 +44,7 @@ export async function processSlackMessage(event: ConnectorEvent): Promise<void> 
     await EventModel.markProcessed(event.id);
     logger.debug(
       { eventId: event.id, reason: decision.reason },
-      "slack: not a candidate",
+      "discord: not a candidate",
     );
     return;
   }
@@ -52,5 +53,5 @@ export async function processSlackMessage(event: ConnectorEvent): Promise<void> 
     { eventId: event.id, userId: event.userId },
     { jobId: `extract-${event.id}` },
   );
-  logger.debug({ eventId: event.id }, "slack: enqueued AI extraction");
+  logger.debug({ eventId: event.id }, "discord: enqueued AI extraction");
 }

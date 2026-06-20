@@ -1,5 +1,5 @@
 import { getAccessToken } from "@/lib/auth-session";
-import type { SlackChannel, SlackConfig } from "@/types";
+import type { DiscordConfig, SlackChannel, SlackConfig } from "@/types";
 import { env } from "./env";
 
 export interface ApiError {
@@ -91,6 +91,92 @@ export async function updateSlackConfig(
 ): Promise<SlackConfig> {
   const res = await api<{ config: SlackConfig }>(
     `/api/integrations/${integrationId}/slack/config`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(config),
+    },
+  );
+  return res.config;
+}
+
+export async function fetchDiscordBotInviteUrl(): Promise<string> {
+  const res = await api<{ url: string }>("/api/integrations/discord/bot-invite");
+  return res.url;
+}
+
+export async function fetchDiscordGuilds(
+  integrationId: string,
+): Promise<DiscordGuildSummary[]> {
+  const res = await api<{ guilds: DiscordGuildSummary[] }>(
+    `/api/integrations/${integrationId}/discord/guilds`,
+  );
+  return res.guilds;
+}
+
+export async function fetchDiscordChannels(
+  integrationId: string,
+  guildId: string,
+): Promise<Array<{ id: string; name: string; type: number }>> {
+  const res = await api<{
+    channels: Array<{ id: string; name: string; type: number }>;
+  }>(`/api/integrations/${integrationId}/discord/guilds/${guildId}/channels`);
+  return res.channels;
+}
+
+export interface DiscordGuildSummary {
+  id: string;
+  name: string;
+  icon: string | null;
+}
+
+export interface DiscordChannelOption {
+  id: string;
+  name: string;
+  guildId: string;
+  guildName: string;
+}
+
+/** Loads text channels from every guild the user is in (skips guilds without the bot). */
+export async function fetchDiscordChannelOptions(
+  integrationId: string,
+): Promise<DiscordChannelOption[]> {
+  const guilds = await fetchDiscordGuilds(integrationId);
+  const channelOptions: DiscordChannelOption[] = [];
+
+  for (const guild of guilds) {
+    try {
+      const guildChannels = await fetchDiscordChannels(integrationId, guild.id);
+      for (const channel of guildChannels) {
+        channelOptions.push({
+          id: channel.id,
+          name: channel.name,
+          guildId: guild.id,
+          guildName: guild.name,
+        });
+      }
+    } catch {
+      // Bot is not installed in this guild yet.
+    }
+  }
+
+  return channelOptions.sort((a, b) => {
+    const byGuild = a.guildName.localeCompare(b.guildName);
+    return byGuild !== 0 ? byGuild : a.name.localeCompare(b.name);
+  });
+}
+
+export async function fetchDiscordConfig(
+  integrationId: string,
+): Promise<DiscordConfig> {
+  return api<DiscordConfig>(`/api/integrations/${integrationId}/discord/config`);
+}
+
+export async function updateDiscordConfig(
+  integrationId: string,
+  config: DiscordConfig,
+): Promise<DiscordConfig> {
+  const res = await api<{ config: DiscordConfig }>(
+    `/api/integrations/${integrationId}/discord/config`,
     {
       method: "PATCH",
       body: JSON.stringify(config),

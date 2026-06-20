@@ -48,6 +48,11 @@ function TaskContent({ item }: { item: FeedItemType }) {
           {item.task}
         </p>
       )}
+      {item.source === "slack" && item.contextLine && (
+        <p className="mt-1 text-[13px] leading-relaxed text-neutral-500 dark:text-neutral-400">
+          {item.contextLine}
+        </p>
+      )}
       {item.summary && (
         <p className="mt-1.5 line-clamp-2 text-[13px] leading-relaxed text-neutral-500 dark:text-neutral-400">
           {item.summary}
