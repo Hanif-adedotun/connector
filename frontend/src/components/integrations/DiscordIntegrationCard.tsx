@@ -6,6 +6,12 @@ import { useDiscordIntegration } from "@/hooks/useDiscordIntegration";
 import { toast } from "sonner";
 import type { DiscordConfig, Integration } from "@/types";
 import { ExternalLink, RefreshCw, Unlink } from "lucide-react";
+import {
+  ChannelGroup,
+  ChannelList,
+  SettingToggleRow,
+  ToggleRow,
+} from "./IntegrationToggle";
 
 const MAX_DISCORD_SERVERS = 2;
 
@@ -169,19 +175,15 @@ export function DiscordIntegrationCard({
       )}
 
       <div className="mt-4 space-y-3">
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={config?.includeDms ?? false}
-            disabled={!config}
-            onChange={(e) => {
-              if (!config) return;
-              setConfig({ ...config, includeDms: e.target.checked });
-            }}
-            className="rounded border-neutral-300"
-          />
-          Include direct messages to the bot
-        </label>
+        <SettingToggleRow
+          label="Include direct messages to the bot"
+          checked={config?.includeDms ?? false}
+          disabled={!config}
+          onChange={(includeDms) => {
+            if (!config) return;
+            setConfig({ ...config, includeDms });
+          }}
+        />
 
         <div>
           <div className="flex items-center justify-between gap-2">
@@ -207,34 +209,26 @@ export function DiscordIntegrationCard({
               Refresh.
             </p>
           ) : (
-            <div className="mt-2 max-h-48 space-y-3 overflow-y-auto rounded-md border border-neutral-200 p-2 dark:border-neutral-800">
+            <ChannelList>
               {Array.from(channelsByGuild.entries()).map(
                 ([guildId, guildChannels]) => (
-                  <div key={guildId}>
-                    <p className="px-1 text-xs font-medium text-neutral-500">
-                      {guildChannels[0]?.guildName}
-                    </p>
-                    <div className="mt-1 space-y-1">
-                      {guildChannels.map((channel) => (
-                        <label
-                          key={channel.id}
-                          className="flex items-center gap-2 text-sm"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={selectedIds.includes(channel.id)}
-                            onChange={() => toggleChannel(channel)}
-                            disabled={!config}
-                            className="rounded border-neutral-300"
-                          />
-                          <span>#{channel.name}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
+                  <ChannelGroup
+                    key={guildId}
+                    title={guildChannels[0]?.guildName ?? "Server"}
+                  >
+                    {guildChannels.map((channel) => (
+                      <ToggleRow
+                        key={channel.id}
+                        label={channel.name}
+                        checked={selectedIds.includes(channel.id)}
+                        disabled={!config}
+                        onChange={() => toggleChannel(channel)}
+                      />
+                    ))}
+                  </ChannelGroup>
                 ),
               )}
-            </div>
+            </ChannelList>
           )}
         </div>
 

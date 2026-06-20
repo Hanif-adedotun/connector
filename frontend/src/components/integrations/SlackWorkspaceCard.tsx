@@ -10,6 +10,11 @@ import {
 import { toast } from "sonner";
 import type { Integration, SlackConfig } from "@/types";
 import { Unlink } from "lucide-react";
+import {
+  ChannelList,
+  SettingToggleRow,
+  ToggleRow,
+} from "./IntegrationToggle";
 
 interface SlackWorkspaceCardProps {
   integration: Integration;
@@ -111,17 +116,13 @@ export function SlackWorkspaceCard({
       </div>
 
       <div className="mt-4 space-y-3">
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={config.includeDms}
-            onChange={(e) => {
-              setConfig((prev) => ({ ...prev, includeDms: e.target.checked }));
-            }}
-            className="rounded border-neutral-300"
-          />
-          Include direct messages
-        </label>
+        <SettingToggleRow
+          label="Include direct messages"
+          checked={config.includeDms}
+          onChange={(includeDms) =>
+            setConfig((prev) => ({ ...prev, includeDms }))
+          }
+        />
 
         <div>
           <p className="text-sm font-medium">Channels</p>
@@ -133,25 +134,17 @@ export function SlackWorkspaceCard({
               channels.
             </p>
           ) : (
-            <div className="mt-2 max-h-48 space-y-1 overflow-y-auto rounded-md border border-neutral-200 p-2 dark:border-neutral-800">
+            <ChannelList>
               {channels.map((channel) => (
-                <label
+                <ToggleRow
                   key={channel.id}
-                  className="flex items-center gap-2 text-sm"
-                >
-                  <input
-                    type="checkbox"
-                    checked={config.channelIds.includes(channel.id)}
-                    onChange={() => toggleChannel(channel.id)}
-                    className="rounded border-neutral-300"
-                  />
-                  <span>
-                    {channel.isPrivate ? "🔒" : "#"}
-                    {channel.name}
-                  </span>
-                </label>
+                  label={channel.name}
+                  checked={config.channelIds.includes(channel.id)}
+                  isPrivate={channel.isPrivate}
+                  onChange={() => toggleChannel(channel.id)}
+                />
               ))}
-            </div>
+            </ChannelList>
           )}
         </div>
 
