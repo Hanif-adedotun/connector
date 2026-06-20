@@ -4,10 +4,18 @@ jest.mock("../../lib/api-client", () => ({
   getOAuthStartUrl: jest.fn(),
 }));
 
+jest.mock("sonner", () => ({
+  toast: {
+    error: jest.fn(),
+    success: jest.fn(),
+  },
+}));
+
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ProviderCard } from "./ProviderCard";
 import { getOAuthStartUrl } from "../../lib/api-client";
+import { toast } from "sonner";
 
 describe("ProviderCard", () => {
   it("shows connect button when disconnected", () => {
@@ -51,7 +59,7 @@ describe("ProviderCard", () => {
     expect(screen.getByText(/Coming soon/i)).toBeInTheDocument();
   });
 
-  it("shows error on connect failure", async () => {
+  it("shows toast on connect failure", async () => {
     (getOAuthStartUrl as jest.Mock).mockRejectedValue({
       message: "OAuth failed",
     });
@@ -66,6 +74,6 @@ describe("ProviderCard", () => {
       />,
     );
     await user.click(screen.getByRole("button", { name: /Connect/i }));
-    expect(await screen.findByText("OAuth failed")).toBeInTheDocument();
+    expect(toast.error).toHaveBeenCalledWith("OAuth failed");
   });
 });

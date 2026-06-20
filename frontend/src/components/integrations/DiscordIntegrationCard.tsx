@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { DiscordChannelOption } from "@/lib/api-client";
 import { useDiscordIntegration } from "@/hooks/useDiscordIntegration";
+import { toast } from "sonner";
 import type { DiscordConfig, Integration } from "@/types";
 import { ExternalLink, RefreshCw, Unlink } from "lucide-react";
 
@@ -55,20 +56,15 @@ export function DiscordIntegrationCard({
     loading,
     loadingChannels,
     error: loadError,
-    saveError,
     saving,
     refreshChannels,
     saveConfig,
   } = useDiscordIntegration(integration.id);
 
   const [config, setConfig] = useState<DiscordConfig | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     setConfig(null);
-    setSaved(false);
-    setError(null);
   }, [integration.id]);
 
   useEffect(() => {
@@ -79,17 +75,9 @@ export function DiscordIntegrationCard({
 
   useEffect(() => {
     if (loadError) {
-      setError(loadError);
+      toast.error(loadError);
     }
   }, [loadError]);
-
-  useEffect(() => {
-    if (!loading && !loadingChannels && channels.length === 0 && !loadError) {
-      setError(
-        "No channels found. Invite the bot to your server, then refresh channels.",
-      );
-    }
-  }, [loading, loadingChannels, channels.length, loadError]);
 
   const channelsByGuild = useMemo(() => {
     const grouped = new Map<string, DiscordChannelOption[]>();
@@ -106,15 +94,12 @@ export function DiscordIntegrationCard({
   function toggleChannel(channel: DiscordChannelOption) {
     if (!config) return;
 
-    setSaved(false);
-    setError(null);
-
     const isSelected = selectedIds.includes(channel.id);
     if (!isSelected) {
       const selectedGuildIds = new Set(config.guilds.map((guild) => guild.guildId));
       const isNewGuild = !selectedGuildIds.has(channel.guildId);
       if (isNewGuild && selectedGuildIds.size >= MAX_DISCORD_SERVERS) {
-        setError(`You can monitor up to ${MAX_DISCORD_SERVERS} servers.`);
+        toast.error(`You can monitor up to ${MAX_DISCORD_SERVERS} servers.`);
         return;
       }
     }
@@ -132,14 +117,12 @@ export function DiscordIntegrationCard({
   async function handleSave() {
     if (!config) return;
 
-    setError(null);
-    setSaved(false);
     try {
       const updated = await saveConfig(config);
       setConfig(updated);
-      setSaved(true);
+      toast.success("Discord settings saved");
     } catch (err) {
-      setError(
+      toast.error(
         err && typeof err === "object" && "message" in err
           ? String((err as { message: string }).message)
           : "Failed to save Discord settings",
@@ -147,7 +130,6 @@ export function DiscordIntegrationCard({
     }
   }
 
-  const displayError = error ?? saveError;
   const showChannelList = !loading && !loadingChannels && config;
 
   return (
@@ -194,7 +176,6 @@ export function DiscordIntegrationCard({
             disabled={!config}
             onChange={(e) => {
               if (!config) return;
-              setSaved(false);
               setConfig({ ...config, includeDms: e.target.checked });
             }}
             className="rounded border-neutral-300"
@@ -257,24 +238,15 @@ export function DiscordIntegrationCard({
           )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={() => void handleSave()}
-            disabled={saving || loading || loadingChannels || !config}
-            className="rounded-md bg-neutral-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-neutral-800 disabled:opacity-50 dark:bg-white dark:text-neutral-900"
-          >
-            {saving ? "Saving…" : "Save settings"}
-          </button>
-          {saved && (
-            <span className="text-xs text-emerald-600 dark:text-emerald-400">
-              Saved
-            </span>
-          )}
-        </div>
+        <button
+          type="button"
+          onClick={() => void handleSave()}
+          disabled={saving || loading || loadingChannels || !config}
+          className="rounded-md bg-neutral-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-neutral-800 disabled:opacity-50 dark:bg-white dark:text-neutral-900"
+        >
+          {saving ? "Saving…" : "Save settings"}
+        </button>
       </div>
-
-      {displayError && <p className="mt-2 text-sm text-red-600">{displayError}</p>}
     </div>
   );
 }

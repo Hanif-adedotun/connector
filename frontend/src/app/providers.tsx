@@ -11,6 +11,7 @@ import { clearLocalAppData } from "@/lib/query-cache";
 import { createIdbPersister } from "@/lib/query-persister";
 import { queryKeys } from "@/lib/query-keys";
 import { shouldReloadOnOnline } from "@/lib/pwa";
+import { Toaster } from "@/components/ui/sonner";
 
 const STALE_TIME_MS = 60_000;
 const PERSIST_MAX_AGE_MS = 1000 * 60 * 60 * 24 * 7;
@@ -66,6 +67,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         }}
       >
         {children}
+        <Toaster />
       </PersistQueryClientProvider>
     </SerwistProvider>
   );
