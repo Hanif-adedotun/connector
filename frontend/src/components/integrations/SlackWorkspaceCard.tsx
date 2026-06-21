@@ -101,7 +101,7 @@ export function SlackWorkspaceCard({
         <div>
           <p className="font-medium">{workspaceName}</p>
           <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-            Monitor @mentions in selected channels
+            Monitor @mentions, @channel, and @here in selected channels
             {config.includeDms ? " and incoming DMs" : ""}.
           </p>
         </div>

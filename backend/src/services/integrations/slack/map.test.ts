@@ -46,6 +46,25 @@ describe("shouldIncludeSlackMessage", () => {
     ).toBe(false);
   });
 
+  it("includes channel messages with @channel or @here", () => {
+    expect(
+      shouldIncludeSlackMessage({
+        message: message({ text: "Deploying <!channel>" }),
+        authedUserId: "U123",
+        isDm: false,
+        inSelectedChannel: true,
+      }),
+    ).toBe(true);
+    expect(
+      shouldIncludeSlackMessage({
+        message: message({ text: "Standup <!here|here>" }),
+        authedUserId: "U123",
+        isDm: false,
+        inSelectedChannel: true,
+      }),
+    ).toBe(true);
+  });
+
   it("includes incoming human DMs", () => {
     expect(
       shouldIncludeSlackMessage({
@@ -81,9 +100,27 @@ describe("shouldIncludeSlackMessage", () => {
 });
 
 describe("messageMentionsUser", () => {
-  it("detects mention tokens", () => {
+  it("detects direct user mention tokens", () => {
     expect(messageMentionsUser(message(), "U123")).toBe(true);
     expect(messageMentionsUser(message({ text: "hello" }), "U123")).toBe(false);
+  });
+
+  it("detects @channel and @here broadcast tokens", () => {
+    expect(
+      messageMentionsUser(message({ text: "Heads up <!channel>" }), "U123"),
+    ).toBe(true);
+    expect(
+      messageMentionsUser(message({ text: "Ping <!here>" }), "U123"),
+    ).toBe(true);
+    expect(
+      messageMentionsUser(
+        message({ text: "Alert <!channel|channel>" }),
+        "U123",
+      ),
+    ).toBe(true);
+    expect(
+      messageMentionsUser(message({ text: "Alert <!here|here>" }), "U123"),
+    ).toBe(true);
   });
 });
 

@@ -46,6 +46,25 @@ describe("shouldIncludeDiscordMessage", () => {
     ).toBe(false);
   });
 
+  it("includes channel messages with @here or @everyone", () => {
+    expect(
+      shouldIncludeDiscordMessage({
+        message: message({ content: "Deploying @everyone" }),
+        authedUserId: "123456789",
+        isDm: false,
+        inSelectedChannel: true,
+      }),
+    ).toBe(true);
+    expect(
+      shouldIncludeDiscordMessage({
+        message: message({ content: "Quick sync @here" }),
+        authedUserId: "123456789",
+        isDm: false,
+        inSelectedChannel: true,
+      }),
+    ).toBe(true);
+  });
+
   it("includes human DMs", () => {
     expect(
       shouldIncludeDiscordMessage({
@@ -73,10 +92,28 @@ describe("shouldIncludeDiscordMessage", () => {
 });
 
 describe("messageMentionsUser", () => {
-  it("detects mention tokens", () => {
+  it("detects direct user mention tokens", () => {
     expect(messageMentionsUser(message(), "123456789")).toBe(true);
     expect(
       messageMentionsUser(message({ content: "hello" }), "123456789"),
+    ).toBe(false);
+  });
+
+  it("detects @here and @everyone broadcast mentions", () => {
+    expect(
+      messageMentionsUser(message({ content: "Standup @here" }), "123456789"),
+    ).toBe(true);
+    expect(
+      messageMentionsUser(
+        message({ content: "Maintenance @everyone" }),
+        "123456789",
+      ),
+    ).toBe(true);
+    expect(
+      messageMentionsUser(
+        message({ content: "foo@here is not a mention" }),
+        "123456789",
+      ),
     ).toBe(false);
   });
 });

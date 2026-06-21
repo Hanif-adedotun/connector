@@ -144,7 +144,7 @@ export function DiscordIntegrationCard({
         <div>
           <p className="font-medium">Discord</p>
           <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-            Monitor @mentions in selected channels
+            Monitor @mentions, @here, and @everyone in selected channels
             {config?.includeDms ? " and bot DMs" : ""} (up to{" "}
             {MAX_DISCORD_SERVERS} servers).
           </p>
