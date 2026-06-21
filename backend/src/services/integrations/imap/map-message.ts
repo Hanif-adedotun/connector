@@ -66,6 +66,7 @@ export function mapImapMessageToPersistParams(
   userId: string,
   message: FetchMessageObject,
   mailboxId: string,
+  mailboxDisplayName?: string,
 ): Parameters<typeof EventModel.upsertByExternalId>[0] | null {
   const uid = message.uid;
   const envelope = message.envelope;
@@ -94,6 +95,8 @@ export function mapImapMessageToPersistParams(
     from,
     subject,
     hasListUnsubscribe,
+    mailboxId,
+    ...(mailboxDisplayName ? { mailboxDisplayName } : {}),
   };
 
   const content = `Subject: ${subject}\n\n${body}`;

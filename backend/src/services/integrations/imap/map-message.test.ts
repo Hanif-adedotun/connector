@@ -26,6 +26,7 @@ describe("mapImapMessageToPersistParams", () => {
       "u1",
       imapMessage(),
       "alice@example.com",
+      "Work Inbox",
     );
 
     expect(params).toEqual(
@@ -36,6 +37,10 @@ describe("mapImapMessageToPersistParams", () => {
         eventType: "imap.message",
         title: "Please review the doc",
         content: expect.stringContaining("Can you review the doc by Friday?"),
+        metadata: expect.objectContaining({
+          mailboxId: "alice@example.com",
+          mailboxDisplayName: "Work Inbox",
+        }),
       }),
     );
   });

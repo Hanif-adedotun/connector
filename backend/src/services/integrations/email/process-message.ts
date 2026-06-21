@@ -15,6 +15,8 @@ export interface EmailEventMetadata {
   from?: string;
   subject?: string;
   hasListUnsubscribe?: boolean;
+  mailboxId?: string;
+  mailboxDisplayName?: string;
 }
 
 function parseMetadata(event: ConnectorEvent): EmailEventMetadata {

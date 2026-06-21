@@ -28,6 +28,7 @@ export async function pollImap(ctx: PollContext): Promise<PollResult> {
   }
 
   const mailboxId = integration.imapMailboxId || credentials.config.username;
+  const mailboxDisplayName = credentials.config.displayName;
   const since = imapSearchSince();
   let eventsFetched = 0;
 
@@ -53,6 +54,7 @@ export async function pollImap(ctx: PollContext): Promise<PollResult> {
             ctx.userId,
             message,
             mailboxId,
+            mailboxDisplayName,
           );
           if (!params) continue;
 

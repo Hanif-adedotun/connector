@@ -25,6 +25,7 @@ export interface FeedItem {
   createdAt: string;
   sourceUrl: string | null;
   contextLine: string | null;
+  groupLabel: string | null;
 }
 
 export interface FeedResponse {

@@ -28,6 +28,7 @@ describe("useDismissTask", () => {
           createdAt: "2024-06-01",
           sourceUrl: null,
           contextLine: null,
+          groupLabel: null,
         },
         {
           id: "t2",
@@ -40,6 +41,7 @@ describe("useDismissTask", () => {
           createdAt: "2024-06-01",
           sourceUrl: null,
           contextLine: null,
+          groupLabel: null,
         },
       ],
     };

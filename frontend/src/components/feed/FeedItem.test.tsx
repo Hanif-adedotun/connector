@@ -15,6 +15,7 @@ const baseItem: FeedItemType = {
   createdAt: "2024-06-01",
   sourceUrl: null,
   contextLine: null,
+  groupLabel: null,
 };
 
 describe("FeedItem", () => {
