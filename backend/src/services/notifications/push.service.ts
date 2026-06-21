@@ -23,6 +23,7 @@ function batchKey(userId: string) {
 function providerLabel(provider: Provider): string {
   const labels: Record<Provider, string> = {
     gmail: "Gmail",
+    imap: "Email",
     google_calendar: "Google Calendar",
     slack: "Slack",
     jira: "Jira",

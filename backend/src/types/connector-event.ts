@@ -1,5 +1,6 @@
 export type ConnectorSource =
   | "gmail"
+  | "imap"
   | "slack"
   | "jira"
   | "calendar"

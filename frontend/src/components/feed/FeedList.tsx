@@ -9,6 +9,7 @@ import { FeedItem } from "./FeedItem";
 
 const SOURCE_LABEL: Record<string, string> = {
   gmail: "Gmail",
+  imap: "Email",
   slack: "Slack",
   jira: "Jira",
   calendar: "Calendar",
@@ -18,6 +19,7 @@ const SOURCE_LABEL: Record<string, string> = {
 
 const SOURCE_ORDER: BriefSource[] = [
   "gmail",
+  "imap",
   "calendar",
   "slack",
   "jira",

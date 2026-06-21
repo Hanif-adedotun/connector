@@ -94,7 +94,7 @@ export function buildGmailExtractionUserPrompt(event: ConnectorEvent): string {
   const from = typeof meta.from === "string" ? meta.from : event.actor;
 
   const header = [
-    "Source: gmail",
+    `Source: ${event.source}`,
     from ? `From: ${from}` : null,
     event.title ? `Subject: ${event.title}` : null,
     `Received: ${event.occurredAt}`,

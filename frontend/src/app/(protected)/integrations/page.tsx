@@ -10,6 +10,7 @@ import { ReconnectGoogleBanner } from "@/components/integrations/ReconnectGoogle
 import { IntegrationsSkeleton } from "@/components/integrations/IntegrationsSkeleton";
 import { SlackWorkspaceCard } from "@/components/integrations/SlackWorkspaceCard";
 import { DiscordIntegrationCard } from "@/components/integrations/DiscordIntegrationCard";
+import { ImapSection } from "@/components/integrations/ImapSection";
 import { useIntegrations } from "@/hooks/useIntegrations";
 import { getOAuthStartUrl, type ApiError } from "@/lib/api-client";
 import { googleNeedsReconnect, isGoogleConnected } from "@/lib/integrations";
@@ -287,7 +288,18 @@ function IntegrationsContent() {
                 disabled={isDisconnecting}
               />
             ))}
-            <DiscordSection
+           
+            <ImapSection
+              items={items}
+              onConnected={() =>
+                void queryClient.invalidateQueries({
+                  queryKey: queryKeys.integrations,
+                })
+              }
+              onDisconnect={(id) => void disconnectIntegration(id)}
+              disabled={isDisconnecting}
+            />
+             <DiscordSection
               items={items}
               onDisconnect={(id) => void disconnectIntegration(id)}
               disabled={isDisconnecting}

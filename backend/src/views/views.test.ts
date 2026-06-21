@@ -137,6 +137,11 @@ describe("serializeIntegration", () => {
       lastPolledAt: new Date("2024-01-01T00:00:00Z"),
       jiraCloudId: null,
       jiraSiteUrl: null,
+      slackTeamId: "",
+      slackTeamName: null,
+      slackConfig: null,
+      imapMailboxId: "",
+      imapConfig: null,
       createdAt: new Date("2024-01-01T00:00:00Z"),
     };
     expect(serializeIntegration(integration)).toEqual({

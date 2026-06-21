@@ -12,6 +12,22 @@ import {
   NON_SLACK_TEAM_ID,
   type SlackConfig,
 } from "../types/slack";
+import {
+  NON_IMAP_MAILBOX_ID,
+  normalizeImapMailboxId,
+  type ImapConfig,
+} from "../types/imap";
+
+function defaultIntegrationKey(userId: string, provider: Provider) {
+  return {
+    userId_provider_slackTeamId_imapMailboxId: {
+      userId,
+      provider,
+      slackTeamId: NON_SLACK_TEAM_ID,
+      imapMailboxId: NON_IMAP_MAILBOX_ID,
+    },
+  };
+}
 
 export const IntegrationModel = {
   findById(id: string) {
@@ -27,23 +43,18 @@ export const IntegrationModel = {
 
   findActive(userId: string, provider: Provider) {
     return prisma.integration.findUnique({
-      where: {
-        userId_provider_slackTeamId: {
-          userId,
-          provider,
-          slackTeamId: NON_SLACK_TEAM_ID,
-        },
-      },
+      where: defaultIntegrationKey(userId, provider),
     });
   },
 
   findSlackByTeamId(userId: string, slackTeamId: string) {
     return prisma.integration.findUnique({
       where: {
-        userId_provider_slackTeamId: {
+        userId_provider_slackTeamId_imapMailboxId: {
           userId,
           provider: "slack",
           slackTeamId,
+          imapMailboxId: NON_IMAP_MAILBOX_ID,
         },
       },
     });
@@ -89,13 +100,7 @@ export const IntegrationModel = {
         : {};
 
     return prisma.integration.upsert({
-      where: {
-        userId_provider_slackTeamId: {
-          userId,
-          provider,
-          slackTeamId: NON_SLACK_TEAM_ID,
-        },
-      },
+      where: defaultIntegrationKey(userId, provider),
       update: {
         encryptedAccessToken: encrypt(tokens.accessToken),
         encryptedRefreshToken: tokens.refreshToken
@@ -109,6 +114,7 @@ export const IntegrationModel = {
         userId,
         provider,
         slackTeamId: NON_SLACK_TEAM_ID,
+        imapMailboxId: NON_IMAP_MAILBOX_ID,
         encryptedAccessToken: encrypt(tokens.accessToken),
         encryptedRefreshToken: tokens.refreshToken
           ? encrypt(tokens.refreshToken)
@@ -141,10 +147,11 @@ export const IntegrationModel = {
 
     return prisma.integration.upsert({
       where: {
-        userId_provider_slackTeamId: {
+        userId_provider_slackTeamId_imapMailboxId: {
           userId,
           provider: "slack",
           slackTeamId,
+          imapMailboxId: NON_IMAP_MAILBOX_ID,
         },
       },
       update: {
@@ -160,6 +167,7 @@ export const IntegrationModel = {
         userId,
         provider: "slack",
         slackTeamId,
+        imapMailboxId: NON_IMAP_MAILBOX_ID,
         slackTeamName,
         slackConfig: slackConfig as unknown as Prisma.InputJsonValue,
         encryptedAccessToken: encrypt(tokens.accessToken),
@@ -197,13 +205,7 @@ export const IntegrationModel = {
     const discordConfig = config ?? { ...DEFAULT_DISCORD_CONFIG };
 
     return prisma.integration.upsert({
-      where: {
-        userId_provider_slackTeamId: {
-          userId,
-          provider: "discord",
-          slackTeamId: NON_SLACK_TEAM_ID,
-        },
-      },
+      where: defaultIntegrationKey(userId, "discord"),
       update: {
         encryptedAccessToken: encrypt(tokens.accessToken),
         encryptedRefreshToken: tokens.refreshToken
@@ -217,6 +219,7 @@ export const IntegrationModel = {
         userId,
         provider: "discord",
         slackTeamId: NON_SLACK_TEAM_ID,
+        imapMailboxId: NON_IMAP_MAILBOX_ID,
         slackConfig: discordConfig as unknown as Prisma.InputJsonValue,
         encryptedAccessToken: encrypt(tokens.accessToken),
         encryptedRefreshToken: tokens.refreshToken
@@ -231,6 +234,53 @@ export const IntegrationModel = {
     return prisma.integration.update({
       where: { id: integrationId },
       data: { slackConfig: config as unknown as Prisma.InputJsonValue },
+    });
+  },
+
+  upsertImapCredentials(params: {
+    userId: string;
+    config: ImapConfig;
+    password: string;
+  }) {
+    const { userId, config, password } = params;
+    const imapMailboxId = normalizeImapMailboxId(config.username);
+
+    return prisma.integration.upsert({
+      where: {
+        userId_provider_slackTeamId_imapMailboxId: {
+          userId,
+          provider: "imap",
+          slackTeamId: NON_SLACK_TEAM_ID,
+          imapMailboxId,
+        },
+      },
+      update: {
+        encryptedAccessToken: encrypt(password),
+        encryptedRefreshToken: null,
+        scope: null,
+        status: "active",
+        imapConfig: config as unknown as Prisma.InputJsonValue,
+      },
+      create: {
+        userId,
+        provider: "imap",
+        slackTeamId: NON_SLACK_TEAM_ID,
+        imapMailboxId,
+        imapConfig: config as unknown as Prisma.InputJsonValue,
+        encryptedAccessToken: encrypt(password),
+      },
+    });
+  },
+
+  listActiveImapByUser(userId: string) {
+    return prisma.integration.findMany({
+      where: {
+        userId,
+        provider: "imap",
+        status: "active",
+        imapMailboxId: { not: NON_IMAP_MAILBOX_ID },
+      },
+      orderBy: { createdAt: "asc" },
     });
   },
 

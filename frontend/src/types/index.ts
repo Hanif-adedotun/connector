@@ -7,6 +7,7 @@ export interface User {
 
 export type BriefSource =
   | "gmail"
+  | "imap"
   | "slack"
   | "jira"
   | "calendar"
@@ -58,6 +59,14 @@ export interface Integration {
   slackTeamName?: string | null;
   slackConfig?: SlackConfig | null;
   discordConfig?: DiscordConfig | null;
+  imapMailboxId?: string | null;
+  imapConfig?: {
+    host: string;
+    port: number;
+    secure: boolean;
+    username: string;
+    displayName?: string;
+  } | null;
 }
 
 export interface SlackChannel {

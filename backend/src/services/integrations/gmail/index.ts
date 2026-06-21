@@ -7,6 +7,7 @@ import { getGmailClient } from "../google/client";
 import { logger } from "../../../utils/logger";
 import type { PollContext, PollResult } from "..";
 import { preprocessEmailBody } from "./preprocess";
+import { stripHtml } from "../email/strip-html";
 import { processGmailMessage, type GmailEventMetadata } from "./process-message";
 
 const GMAIL_QUERY =
@@ -16,19 +17,6 @@ const MAX_RESULTS = 50;
 function decodeBase64Url(data: string): string {
   const padded = data.replace(/-/g, "+").replace(/_/g, "/");
   return Buffer.from(padded, "base64").toString("utf-8");
-}
-
-function stripHtml(html: string): string {
-  return html
-    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
-    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/&nbsp;/gi, " ")
-    .replace(/&amp;/gi, "&")
-    .replace(/&lt;/gi, "<")
-    .replace(/&gt;/gi, ">")
-    .replace(/\s+/g, " ")
-    .trim();
 }
 
 function getHeader(

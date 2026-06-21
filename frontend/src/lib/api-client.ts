@@ -184,3 +184,21 @@ export async function updateDiscordConfig(
   );
   return res.config;
 }
+
+export interface ImapConnectPayload {
+  host: string;
+  port: number;
+  secure: boolean;
+  username: string;
+  password: string;
+  displayName?: string;
+}
+
+export async function connectImapMailbox(
+  payload: ImapConnectPayload,
+): Promise<{ integration: import("@/types").Integration }> {
+  return api("/api/integrations/imap/connect", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
