@@ -2,6 +2,7 @@
 
 import { Check, ChevronsUpDown, Search } from "lucide-react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { filterTimeZoneOptions } from "@/lib/timezone";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +19,53 @@ interface TimezoneComboboxProps {
   placeholder?: string;
 }
 
+interface PanelPosition {
+  top: number;
+  left: number;
+  width: number;
+}
+
+function usePanelPosition(
+  open: boolean,
+  triggerRef: React.RefObject<HTMLButtonElement | null>,
+) {
+  const [position, setPosition] = useState<PanelPosition | null>(null);
+
+  useEffect(() => {
+    if (!open || !triggerRef.current) {
+      setPosition(null);
+      return;
+    }
+
+    function updatePosition() {
+      const trigger = triggerRef.current;
+      if (!trigger) return;
+
+      const rect = trigger.getBoundingClientRect();
+      const width = Math.max(rect.width, 256);
+      const maxLeft = window.innerWidth - width - 8;
+      const left = Math.min(Math.max(8, rect.right - width), maxLeft);
+
+      setPosition({
+        top: rect.bottom + 6,
+        left,
+        width,
+      });
+    }
+
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [open, triggerRef]);
+
+  return position;
+}
+
 export function TimezoneCombobox({
   options,
   value,
@@ -27,9 +75,12 @@ export function TimezoneCombobox({
 }: TimezoneComboboxProps) {
   const listId = useId();
   const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [mounted, setMounted] = useState(false);
+  const position = usePanelPosition(open, triggerRef);
 
   const selected = useMemo(
     () => options.find((option) => option.value === value),
@@ -42,18 +93,27 @@ export function TimezoneCombobox({
   );
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
     if (!open) return;
 
     const onPointerDown = (event: MouseEvent) => {
-      if (!containerRef.current?.contains(event.target as Node)) {
-        setOpen(false);
-        setQuery("");
+      const target = event.target as Node;
+      if (
+        containerRef.current?.contains(target) ||
+        document.getElementById(listId)?.contains(target)
+      ) {
+        return;
       }
+      setOpen(false);
+      setQuery("");
     };
 
     document.addEventListener("pointerdown", onPointerDown);
     return () => document.removeEventListener("pointerdown", onPointerDown);
-  }, [open]);
+  }, [open, listId]);
 
   useEffect(() => {
     if (open) {
@@ -69,13 +129,89 @@ export function TimezoneCombobox({
     setQuery("");
   }
 
+  const panel =
+    open && position && mounted ? (
+      <div
+        id={listId}
+        style={{
+          position: "fixed",
+          top: position.top,
+          left: position.left,
+          width: position.width,
+        }}
+        className={cn(
+          "z-[100] overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-lg",
+          "dark:border-neutral-800 dark:bg-neutral-950",
+        )}
+      >
+        <div className="flex items-center gap-2 border-b border-neutral-200 px-2.5 py-2 dark:border-neutral-800">
+          <Search className="h-4 w-4 shrink-0 text-neutral-400" />
+          <input
+            ref={searchRef}
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={placeholder}
+            className="w-full bg-transparent text-sm outline-none placeholder:text-neutral-400"
+          />
+        </div>
+
+        <ul
+          role="listbox"
+          aria-label="Time zones"
+          className="max-h-64 overflow-y-auto p-1"
+        >
+          {filtered.length === 0 ? (
+            <li className="px-2.5 py-6 text-center text-sm text-neutral-500">
+              No time zones match &ldquo;{query}&rdquo;
+            </li>
+          ) : (
+            filtered.map((option) => {
+              const isSelected = option.value === value;
+              return (
+                <li key={option.value} role="presentation">
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={isSelected}
+                    onClick={() => selectOption(option.value)}
+                    className={cn(
+                      "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors",
+                      isSelected
+                        ? "bg-neutral-100 font-medium text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100"
+                        : "text-neutral-700 hover:bg-neutral-50 dark:text-neutral-300 dark:hover:bg-neutral-900",
+                    )}
+                  >
+                    <Check
+                      className={cn(
+                        "h-4 w-4 shrink-0",
+                        isSelected ? "opacity-100" : "opacity-0",
+                      )}
+                    />
+                    <span className="truncate">{option.label}</span>
+                  </button>
+                </li>
+              );
+            })
+          )}
+        </ul>
+
+        {!query.trim() && options.length > filtered.length && (
+          <p className="border-t border-neutral-200 px-2.5 py-2 text-xs text-neutral-500 dark:border-neutral-800">
+            Type to search {options.length} time zones
+          </p>
+        )}
+      </div>
+    ) : null;
+
   return (
     <div ref={containerRef} className="relative w-full max-w-xs">
       <button
+        ref={triggerRef}
         type="button"
         role="combobox"
         aria-expanded={open}
-        aria-controls={listId}
+        aria-controls={open ? listId : undefined}
         aria-label="Time zone"
         disabled={disabled}
         onClick={() => setOpen((current) => !current)}
@@ -92,74 +228,7 @@ export function TimezoneCombobox({
         <ChevronsUpDown className="h-4 w-4 shrink-0 text-neutral-400" />
       </button>
 
-      {open && (
-        <div
-          className={cn(
-            "absolute right-0 z-50 mt-1.5 w-full min-w-[16rem] overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-lg",
-            "dark:border-neutral-800 dark:bg-neutral-950",
-          )}
-        >
-          <div className="flex items-center gap-2 border-b border-neutral-200 px-2.5 py-2 dark:border-neutral-800">
-            <Search className="h-4 w-4 shrink-0 text-neutral-400" />
-            <input
-              ref={searchRef}
-              type="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder={placeholder}
-              aria-controls={listId}
-              className="w-full bg-transparent text-sm outline-none placeholder:text-neutral-400"
-            />
-          </div>
-
-          <ul
-            id={listId}
-            role="listbox"
-            aria-label="Time zones"
-            className="max-h-56 overflow-y-auto p-1"
-          >
-            {filtered.length === 0 ? (
-              <li className="px-2.5 py-6 text-center text-sm text-neutral-500">
-                No time zones match &ldquo;{query}&rdquo;
-              </li>
-            ) : (
-              filtered.map((option) => {
-                const isSelected = option.value === value;
-                return (
-                  <li key={option.value} role="presentation">
-                    <button
-                      type="button"
-                      role="option"
-                      aria-selected={isSelected}
-                      onClick={() => selectOption(option.value)}
-                      className={cn(
-                        "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors",
-                        isSelected
-                          ? "bg-neutral-100 font-medium text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100"
-                          : "text-neutral-700 hover:bg-neutral-50 dark:text-neutral-300 dark:hover:bg-neutral-900",
-                      )}
-                    >
-                      <Check
-                        className={cn(
-                          "h-4 w-4 shrink-0",
-                          isSelected ? "opacity-100" : "opacity-0",
-                        )}
-                      />
-                      <span className="truncate">{option.label}</span>
-                    </button>
-                  </li>
-                );
-              })
-            )}
-          </ul>
-
-          {!query.trim() && options.length > filtered.length && (
-            <p className="border-t border-neutral-200 px-2.5 py-2 text-xs text-neutral-500 dark:border-neutral-800">
-              Type to search {options.length} time zones
-            </p>
-          )}
-        </div>
-      )}
+      {mounted && panel ? createPortal(panel, document.body) : null}
     </div>
   );
 }

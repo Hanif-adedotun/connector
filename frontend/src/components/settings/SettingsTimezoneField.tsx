@@ -3,6 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ClockIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { TimezoneCombobox } from "@/components/settings/TimezoneCombobox";
 import { api } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
@@ -55,7 +56,11 @@ export function SettingsTimezoneField({ user }: { user: User }) {
 
   function onChange(next: string) {
     setValue(next);
-    saveMutation.mutate(next);
+    saveMutation.mutate(next, {
+      onSuccess: () => {
+        toast.success("Time zone updated");
+      },
+    });
   }
 
   return (
