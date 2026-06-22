@@ -25,15 +25,21 @@ describe("polling config", () => {
   });
 
   it("only enables allowlisted providers in development", async () => {
-    const { isProviderPollingEnabled, DEV_POLLING } =
+    const { isProviderPollingEnabled, DEV_POLLING, PollingProvider: providers } =
       await loadPolling("development");
+
+    const enabled = new Set(DEV_POLLING.enabled);
+    const allProviders = Object.values(providers);
 
     for (const provider of DEV_POLLING.enabled) {
       expect(isProviderPollingEnabled(provider)).toBe(true);
     }
 
-    expect(isProviderPollingEnabled(PollingProvider.Slack)).toBe(false);
-    expect(isProviderPollingEnabled(PollingProvider.Imap)).toBe(false);
+    for (const provider of allProviders) {
+      if (!enabled.has(provider)) {
+        expect(isProviderPollingEnabled(provider)).toBe(false);
+      }
+    }
   });
 
   it("isAnyPollingEnabled reflects whether the dev allowlist is non-empty", async () => {
