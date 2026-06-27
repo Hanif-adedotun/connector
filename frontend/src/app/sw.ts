@@ -10,12 +10,19 @@ declare global {
 
 declare const self: ServiceWorkerGlobalScope;
 
+const runtimeCaching = defaultCache.filter(
+  (entry) =>
+    !(typeof entry.matcher === "function"
+      ? entry.matcher.toString().includes("/api/")
+      : String(entry.matcher).includes("/api/")),
+);
+
 const serwist = new Serwist({
   precacheEntries: self.__SW_MANIFEST,
   skipWaiting: true,
   clientsClaim: true,
   navigationPreload: true,
-  runtimeCaching: defaultCache,
+  runtimeCaching,
   fallbacks: {
     entries: [
       {

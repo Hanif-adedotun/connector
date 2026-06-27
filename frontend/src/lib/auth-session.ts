@@ -30,3 +30,8 @@ export function resetAuthSession(): void {
 export function resetAuthSessionForTests(): void {
   resetAuthSession();
 }
+
+// Pre-warm at module load time so the session promise is in-flight before React mounts
+if (typeof window !== 'undefined') {
+  void warmAuthSession();
+}

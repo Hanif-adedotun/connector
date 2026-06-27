@@ -1,14 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
+
+const subscribe = (cb: () => void) => {
+  const t = setTimeout(cb, 0);
+  return () => clearTimeout(t);
+};
 
 /** True after the first client paint — use to avoid SSR/client mismatches from persisted state. */
 export function useHydrated(): boolean {
-  const [hydrated, setHydrated] = useState(false);
-
-  useEffect(() => {
-    setHydrated(true);
-  }, []);
-
-  return hydrated;
+  return useSyncExternalStore(subscribe, () => true, () => false);
 }
