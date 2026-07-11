@@ -31,6 +31,7 @@ describe("serializeTask", () => {
       createdAt: "2024-06-01T08:00:00.000Z",
       sourceUrl: null,
       contextLine: null,
+      groupLabel: null,
     });
   });
 
@@ -95,6 +96,36 @@ describe("serializeTask", () => {
     });
     expect(view.contextLine).toBe("from Alex");
   });
+
+  it("uses IMAP mailbox display name as groupLabel", () => {
+    const view = serializeTask({
+      ...base,
+      provider: "imap",
+      sourceEvent: {
+        metadataJson: {
+          mailboxId: "alice@example.com",
+          mailboxDisplayName: "Adept Engineering",
+        },
+      },
+    });
+    expect(view.groupLabel).toBe("Adept Engineering");
+  });
+
+  it("falls back to integration mailbox labels for IMAP tasks", () => {
+    const view = serializeTask(
+      {
+        ...base,
+        provider: "imap",
+        sourceEvent: {
+          metadataJson: { mailboxId: "alice@example.com" },
+        },
+      },
+      {
+        imapMailboxLabels: new Map([["alice@example.com", "Work Inbox"]]),
+      },
+    );
+    expect(view.groupLabel).toBe("Work Inbox");
+  });
 });
 
 describe("serializeFeed", () => {
@@ -137,6 +168,11 @@ describe("serializeIntegration", () => {
       lastPolledAt: new Date("2024-01-01T00:00:00Z"),
       jiraCloudId: null,
       jiraSiteUrl: null,
+      slackTeamId: "",
+      slackTeamName: null,
+      slackConfig: null,
+      imapMailboxId: "",
+      imapConfig: null,
       createdAt: new Date("2024-01-01T00:00:00Z"),
     };
     expect(serializeIntegration(integration)).toEqual({

@@ -23,6 +23,8 @@ export function discordMentionToken(userId: string): string {
   return `<@${userId}>`;
 }
 
+const DISCORD_BROADCAST_MENTION_RE = /(?<![\w])@(?:here|everyone)\b/;
+
 export function messageMentionsUser(
   message: DiscordMessage,
   authedUserId: string,
@@ -30,7 +32,8 @@ export function messageMentionsUser(
   const content = message.content ?? "";
   return (
     content.includes(discordMentionToken(authedUserId)) ||
-    content.includes(`<@!${authedUserId}>`)
+    content.includes(`<@!${authedUserId}>`) ||
+    DISCORD_BROADCAST_MENTION_RE.test(content)
   );
 }
 

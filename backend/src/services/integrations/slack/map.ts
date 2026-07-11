@@ -25,12 +25,17 @@ export function slackMentionToken(userId: string): string {
   return `<@${userId}>`;
 }
 
+const SLACK_BROADCAST_MENTION_RE = /<!channel(?:\|[^>]*)?>|<!here(?:\|[^>]*)?>/;
+
 export function messageMentionsUser(
   message: SlackMessage,
   authedUserId: string,
 ): boolean {
   const text = message.text ?? "";
-  return text.includes(slackMentionToken(authedUserId));
+  return (
+    text.includes(slackMentionToken(authedUserId)) ||
+    SLACK_BROADCAST_MENTION_RE.test(text)
+  );
 }
 
 export function isHumanIncomingDm(message: SlackMessage): boolean {

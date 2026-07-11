@@ -1,4 +1,5 @@
 import type { ExtractedTask, Prisma } from "@prisma/client";
+import type { EmailEventMetadata } from "../services/integrations/email/process-message";
 
 export interface TaskView {
   id: string;
@@ -11,6 +12,11 @@ export interface TaskView {
   createdAt: string;
   sourceUrl: string | null;
   contextLine: string | null;
+  groupLabel: string | null;
+}
+
+export interface SerializeTaskOptions {
+  imapMailboxLabels?: Map<string, string>;
 }
 
 type TaskWithSourceEvent = ExtractedTask & {
@@ -63,7 +69,35 @@ function contextLineFromTask(t: TaskWithSourceEvent): string | null {
   return formatSlackContextLine(meta);
 }
 
-export function serializeTask(t: TaskWithSourceEvent): TaskView {
+export function imapGroupLabel(
+  t: TaskWithSourceEvent,
+  mailboxLabels?: Map<string, string>,
+): string | null {
+  if (t.provider !== "imap") return null;
+
+  const meta = t.sourceEvent?.metadataJson as EmailEventMetadata | null;
+  if (meta?.mailboxDisplayName?.trim()) {
+    return meta.mailboxDisplayName.trim();
+  }
+
+  const mailboxId = meta?.mailboxId?.trim();
+  if (mailboxId && mailboxLabels?.get(mailboxId)) {
+    return mailboxLabels.get(mailboxId)!;
+  }
+
+  if (!mailboxId && mailboxLabels?.size === 1) {
+    return [...mailboxLabels.values()][0]!;
+  }
+
+  if (mailboxId) return mailboxId;
+
+  return "Email";
+}
+
+export function serializeTask(
+  t: TaskWithSourceEvent,
+  options?: SerializeTaskOptions,
+): TaskView {
   return {
     id: t.id,
     source: t.provider,
@@ -75,5 +109,6 @@ export function serializeTask(t: TaskWithSourceEvent): TaskView {
     createdAt: t.createdAt.toISOString(),
     sourceUrl: sourceUrlFromTask(t),
     contextLine: contextLineFromTask(t),
+    groupLabel: imapGroupLabel(t, options?.imapMailboxLabels) ?? null,
   };
 }

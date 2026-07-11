@@ -22,6 +22,7 @@ const item = (overrides: Partial<FeedItem> = {}): FeedItem => ({
   createdAt: "2024-06-01",
   sourceUrl: null,
   contextLine: null,
+  groupLabel: null,
   ...overrides,
 });
 
@@ -51,5 +52,29 @@ describe("FeedList", () => {
     expect(screen.getByText("Jira task")).toBeInTheDocument();
     expect(screen.getByText("Gmail")).toBeInTheDocument();
     expect(screen.getByText("Jira")).toBeInTheDocument();
+  });
+
+  it("groups IMAP tasks by mailbox display name", () => {
+    render(
+      <FeedList
+        items={[
+          item({
+            id: "1",
+            source: "imap",
+            groupLabel: "Adept Engineering",
+            task: "Work email task",
+          }),
+          item({
+            id: "2",
+            source: "imap",
+            groupLabel: "Personal",
+            task: "Personal email task",
+          }),
+        ]}
+      />,
+    );
+    expect(screen.getByText("Adept Engineering")).toBeInTheDocument();
+    expect(screen.getByText("Personal")).toBeInTheDocument();
+    expect(screen.queryByText("Email")).not.toBeInTheDocument();
   });
 });

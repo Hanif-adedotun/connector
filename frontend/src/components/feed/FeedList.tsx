@@ -9,6 +9,7 @@ import { FeedItem } from "./FeedItem";
 
 const SOURCE_LABEL: Record<string, string> = {
   gmail: "Gmail",
+  imap: "Email",
   slack: "Slack",
   jira: "Jira",
   calendar: "Calendar",
@@ -18,6 +19,7 @@ const SOURCE_LABEL: Record<string, string> = {
 
 const SOURCE_ORDER: BriefSource[] = [
   "gmail",
+  "imap",
   "calendar",
   "slack",
   "jira",
@@ -53,27 +55,66 @@ function normalizeSource(source: BriefSource): string {
   return source === "google_calendar" ? "calendar" : source;
 }
 
+function feedGroupKey(item: FeedItemType): string {
+  if (item.groupLabel) {
+    return `${item.source}:${item.groupLabel}`;
+  }
+  return normalizeSource(item.source);
+}
+
+function feedGroupLabel(item: FeedItemType, key: string): string {
+  if (item.groupLabel) return item.groupLabel;
+  return SOURCE_LABEL[key] ?? key;
+}
+
 function groupItemsBySource(items: FeedItemType[]) {
   const groups = new Map<string, FeedItemType[]>();
 
   for (const item of items) {
-    const key = normalizeSource(item.source);
+    const key = feedGroupKey(item);
     const list = groups.get(key) ?? [];
     list.push(item);
     groups.set(key, list);
   }
 
-  const ordered = SOURCE_ORDER.filter((key) => groups.has(key)).map((key) => ({
-    key,
-    label: SOURCE_LABEL[key] ?? key,
-    items: groups.get(key)!,
-  }));
+  const ordered: Array<{ key: string; label: string; items: FeedItemType[] }> =
+    [];
 
+  for (const source of SOURCE_ORDER) {
+    if (source === "imap") {
+      const imapKeys = [...groups.keys()]
+        .filter((key) => key.startsWith("imap:"))
+        .sort((a, b) => {
+          const labelA = feedGroupLabel(groups.get(a)![0]!, a);
+          const labelB = feedGroupLabel(groups.get(b)![0]!, b);
+          return labelA.localeCompare(labelB);
+        });
+      for (const key of imapKeys) {
+        const groupItems = groups.get(key)!;
+        ordered.push({
+          key,
+          label: feedGroupLabel(groupItems[0]!, key),
+          items: groupItems,
+        });
+      }
+      continue;
+    }
+
+    if (groups.has(source)) {
+      ordered.push({
+        key: source,
+        label: feedGroupLabel(groups.get(source)![0]!, source),
+        items: groups.get(source)!,
+      });
+    }
+  }
+
+  const knownKeys = new Set(ordered.map((group) => group.key));
   const remaining = [...groups.keys()]
-    .filter((key) => !SOURCE_ORDER.includes(key as BriefSource))
+    .filter((key) => !knownKeys.has(key))
     .map((key) => ({
       key,
-      label: SOURCE_LABEL[key] ?? key,
+      label: feedGroupLabel(groups.get(key)![0]!, key),
       items: groups.get(key)!,
     }));
 

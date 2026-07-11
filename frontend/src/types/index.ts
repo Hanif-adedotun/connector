@@ -7,6 +7,7 @@ export interface User {
 
 export type BriefSource =
   | "gmail"
+  | "imap"
   | "slack"
   | "jira"
   | "calendar"
@@ -24,6 +25,7 @@ export interface FeedItem {
   createdAt: string;
   sourceUrl: string | null;
   contextLine: string | null;
+  groupLabel: string | null;
 }
 
 export interface FeedResponse {
@@ -58,6 +60,14 @@ export interface Integration {
   slackTeamName?: string | null;
   slackConfig?: SlackConfig | null;
   discordConfig?: DiscordConfig | null;
+  imapMailboxId?: string | null;
+  imapConfig?: {
+    host: string;
+    port: number;
+    secure: boolean;
+    username: string;
+    displayName?: string;
+  } | null;
 }
 
 export interface SlackChannel {

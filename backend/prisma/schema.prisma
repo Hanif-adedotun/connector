@@ -45,6 +45,7 @@ model PushSubscription {
 enum Provider {
   google_calendar
   gmail
+  imap
   slack
   jira
   discord
@@ -70,12 +71,14 @@ model Integration {
   slackTeamId           String            @default("") @map("slack_team_id")
   slackTeamName         String?           @map("slack_team_name")
   slackConfig           Json?             @map("slack_config")
+  imapMailboxId         String            @default("") @map("imap_mailbox_id")
+  imapConfig            Json?             @map("imap_config")
   createdAt             DateTime          @default(now()) @map("created_at")
 
   user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   pollingJobs PollingJob[]
 
-  @@unique([userId, provider, slackTeamId])
+  @@unique([userId, provider, slackTeamId, imapMailboxId])
   @@index([userId])
   @@map("integrations")
 }

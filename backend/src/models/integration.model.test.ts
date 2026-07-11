@@ -58,15 +58,17 @@ describe("IntegrationModel", () => {
     expect(prisma.integration.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {
-          userId_provider_slackTeamId: {
+          userId_provider_slackTeamId_imapMailboxId: {
             userId: "u1",
             provider: "gmail",
             slackTeamId: "",
+            imapMailboxId: "",
           },
         },
         create: expect.objectContaining({
           encryptedAccessToken: expect.any(String),
           slackTeamId: "",
+          imapMailboxId: "",
         }),
       }),
     );
@@ -103,10 +105,11 @@ describe("IntegrationModel", () => {
     expect(prisma.integration.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {
-          userId_provider_slackTeamId: {
+          userId_provider_slackTeamId_imapMailboxId: {
             userId: "u1",
             provider: "slack",
             slackTeamId: "T1",
+            imapMailboxId: "",
           },
         },
       }),
@@ -125,6 +128,35 @@ describe("IntegrationModel", () => {
         slackTeamId: { not: "" },
       },
     });
+  });
+
+  it("upsertImapCredentials encrypts password", async () => {
+    (prisma.integration.upsert as jest.Mock).mockResolvedValue({ id: "i1" });
+    await IntegrationModel.upsertImapCredentials({
+      userId: "u1",
+      config: {
+        host: "imap.example.com",
+        port: 993,
+        secure: true,
+        username: "Alice@Example.com",
+      },
+      password: "secret",
+    });
+    expect(prisma.integration.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          userId_provider_slackTeamId_imapMailboxId: {
+            userId: "u1",
+            provider: "imap",
+            slackTeamId: "",
+            imapMailboxId: "alice@example.com",
+          },
+        },
+        create: expect.objectContaining({
+          encryptedAccessToken: expect.any(String),
+        }),
+      }),
+    );
   });
 
   it("findActive and markPolled", async () => {

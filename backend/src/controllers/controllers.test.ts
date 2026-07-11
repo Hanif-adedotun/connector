@@ -57,6 +57,7 @@ describe("AuthController", () => {
 describe("FeedController", () => {
   it("returns feed", async () => {
     (TaskModel.listForFeed as jest.Mock).mockResolvedValue([]);
+    (IntegrationModel.listActiveImapByUser as jest.Mock).mockResolvedValue([]);
     const req = mockRequest({ userId: "u1" });
     const res = mockResponse();
     await FeedController.list(req, res, mockNext());

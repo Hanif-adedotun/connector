@@ -1,7 +1,7 @@
 "use client";
 
 import { formatDistanceToNow, isPast, parseISO } from "date-fns";
-import { ClockIcon } from "lucide-react";
+import { ClockIcon, X } from "lucide-react";
 import {
   motion,
   useAnimationControls,
@@ -33,7 +33,7 @@ function TaskContent({ item }: { item: FeedItemType }) {
     item.dueDate != null && isPast(parseISO(item.dueDate));
 
   return (
-    <div className="min-w-0 flex-1">
+    <div className="min-w-0 flex-1 md:pr-5">
       {item.sourceUrl ? (
         <a
           href={item.sourceUrl}
@@ -167,11 +167,34 @@ export function FeedItem({
         initial={{ x: 0 }}
         onDragEnd={handleDragEnd}
         className={cn(
-          "relative flex cursor-grab gap-3 rounded-xl border border-neutral-200/90 bg-white p-3.5 shadow-[0_1px_0_rgba(0,0,0,0.04)]",
+          "group relative flex cursor-grab gap-3 rounded-xl border border-neutral-200/90 bg-white p-3.5 shadow-[0_1px_0_rgba(0,0,0,0.04)]",
           "transition-shadow active:cursor-grabbing",
           "dark:border-neutral-800 dark:bg-neutral-950 dark:shadow-[0_1px_0_rgba(255,255,255,0.04)]",
         )}
       >
+        <button
+          type="button"
+          aria-label="Dismiss task"
+          disabled={isDismissing}
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={(event) => {
+            event.stopPropagation();
+            onDismiss();
+          }}
+          className={cn(
+        "absolute right-2.5 top-2.5 z-20 hidden h-7 w-7 items-center justify-center rounded-full",
+            "border border-neutral-200 bg-white text-neutral-600 shadow-[0_2px_8px_rgba(0,0,0,0.12)]",
+            "opacity-0 transition-[opacity,transform,box-shadow] duration-150",
+            "hover:scale-105 hover:border-neutral-300 hover:bg-neutral-50 hover:text-neutral-900 hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)]",
+            "focus-visible:scale-105 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-neutral-950",
+            "group-hover:opacity-100 md:flex",
+            "dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-200 dark:shadow-[0_2px_8px_rgba(0,0,0,0.4)]",
+            "dark:hover:border-neutral-500 dark:hover:bg-neutral-800 dark:hover:text-white",
+            isDismissing && "pointer-events-none opacity-0",
+          )}
+        >
+          <X className="h-3.5 w-3.5" strokeWidth={1.75} />
+        </button>
         <TodoMarker />
         <TaskContent item={item} />
       </motion.div>
