@@ -4,6 +4,7 @@ import type { ConnectorEvent, ConnectorSource } from "../../types";
 const PROVIDER_TO_SOURCE: Record<Provider, ConnectorSource> = {
   google_calendar: "calendar",
   gmail: "gmail",
+  imap: "imap",
   slack: "slack",
   jira: "jira",
   discord: "discord",

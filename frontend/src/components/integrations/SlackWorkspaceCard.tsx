@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   fetchSlackChannels,
   fetchSlackConfig,
@@ -9,23 +9,25 @@ import {
 } from "@/lib/api-client";
 import { toast } from "sonner";
 import type { Integration, SlackConfig } from "@/types";
-import { Unlink } from "lucide-react";
 import {
   ChannelList,
   SettingToggleRow,
   ToggleRow,
 } from "./IntegrationToggle";
+import { IntegrationWorkspaceAccordion } from "./IntegrationWorkspaceAccordion";
 
 interface SlackWorkspaceCardProps {
   integration: Integration;
   onDisconnect: () => void;
   disabled?: boolean;
+  defaultOpen?: boolean;
 }
 
 export function SlackWorkspaceCard({
   integration,
   onDisconnect,
   disabled = false,
+  defaultOpen = false,
 }: SlackWorkspaceCardProps) {
   const [channels, setChannels] = useState<
     Array<{ id: string; name: string; isPrivate: boolean }>
@@ -95,68 +97,65 @@ export function SlackWorkspaceCard({
   const workspaceName =
     integration.slackTeamName ?? integration.slackTeamId ?? "Slack workspace";
 
+  const subtitle = useMemo(() => {
+    const count = config.channelIds.length;
+    if (count === 0) return "No channels selected";
+    return `${count} channel${count === 1 ? "" : "s"} monitored`;
+  }, [config.channelIds.length]);
+
   return (
-    <div className="rounded-lg border border-neutral-200 p-4 dark:border-neutral-800">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="font-medium">{workspaceName}</p>
-          <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-            Monitor @mentions in selected channels
-            {config.includeDms ? " and incoming DMs" : ""}.
+    <IntegrationWorkspaceAccordion
+      title={workspaceName}
+      subtitle={subtitle}
+      onDisconnect={onDisconnect}
+      disabled={disabled}
+      defaultOpen={defaultOpen}
+    >
+      <p className="text-sm text-neutral-600 dark:text-neutral-400">
+        Monitor @mentions, @channel, and @here in selected channels
+        {config.includeDms ? " and incoming DMs" : ""}.
+      </p>
+
+      <SettingToggleRow
+        label="Include direct messages"
+        checked={config.includeDms}
+        onChange={(includeDms) =>
+          setConfig((prev) => ({ ...prev, includeDms }))
+        }
+      />
+
+      <div>
+        <p className="text-sm font-medium">Channels</p>
+        {loadingChannels ? (
+          <p className="mt-2 text-sm text-neutral-500">Loading channels…</p>
+        ) : channels.length === 0 ? (
+          <p className="mt-2 text-sm text-neutral-500">
+            No channels available. Make sure the app can access your workspace
+            channels.
           </p>
-        </div>
-        <button
-          onClick={onDisconnect}
-          disabled={disabled}
-          className="flex shrink-0 items-center gap-2 rounded-md border border-red-500 px-3 py-1.5 text-xs text-red-500 hover:bg-neutral-100 disabled:opacity-50 dark:hover:bg-neutral-900"
-        >
-          <Unlink className="h-4 w-4" />
-          Disconnect
-        </button>
+        ) : (
+          <ChannelList>
+            {channels.map((channel) => (
+              <ToggleRow
+                key={channel.id}
+                label={channel.name}
+                checked={config.channelIds.includes(channel.id)}
+                isPrivate={channel.isPrivate}
+                onChange={() => toggleChannel(channel.id)}
+              />
+            ))}
+          </ChannelList>
+        )}
       </div>
 
-      <div className="mt-4 space-y-3">
-        <SettingToggleRow
-          label="Include direct messages"
-          checked={config.includeDms}
-          onChange={(includeDms) =>
-            setConfig((prev) => ({ ...prev, includeDms }))
-          }
-        />
-
-        <div>
-          <p className="text-sm font-medium">Channels</p>
-          {loadingChannels ? (
-            <p className="mt-2 text-sm text-neutral-500">Loading channels…</p>
-          ) : channels.length === 0 ? (
-            <p className="mt-2 text-sm text-neutral-500">
-              No channels available. Make sure the app can access your workspace
-              channels.
-            </p>
-          ) : (
-            <ChannelList>
-              {channels.map((channel) => (
-                <ToggleRow
-                  key={channel.id}
-                  label={channel.name}
-                  checked={config.channelIds.includes(channel.id)}
-                  isPrivate={channel.isPrivate}
-                  onChange={() => toggleChannel(channel.id)}
-                />
-              ))}
-            </ChannelList>
-          )}
-        </div>
-
-        <button
-          type="button"
-          onClick={() => void handleSave()}
-          disabled={saving || loadingChannels}
-          className="rounded-md bg-neutral-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-neutral-800 disabled:opacity-50 dark:bg-white dark:text-neutral-900"
-        >
-          {saving ? "Saving…" : "Save settings"}
-        </button>
-      </div>
-    </div>
+      <button
+        type="button"
+        onClick={() => void handleSave()}
+        disabled={saving || loadingChannels}
+        className="rounded-md bg-neutral-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-neutral-800 disabled:opacity-50 dark:bg-white dark:text-neutral-900"
+      >
+        {saving ? "Saving…" : "Save settings"}
+      </button>
+    </IntegrationWorkspaceAccordion>
   );
 }

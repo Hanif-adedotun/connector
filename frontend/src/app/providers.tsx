@@ -26,7 +26,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         defaultOptions: {
           queries: {
             staleTime: STALE_TIME_MS,
-            gcTime: 5 * 60_000,
+            gcTime: 24 * 60 * 60_000,
             refetchOnWindowFocus: true,
             networkMode: "offlineFirst",
           },
@@ -37,6 +37,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     void warmAuthSession();
     document.body.classList.add("brief-ready");
+    if ('storage' in navigator && 'persist' in navigator.storage) {
+      void navigator.storage.persist();
+    }
 
     const supabase = createClient();
     const {

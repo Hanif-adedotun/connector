@@ -51,3 +51,22 @@ export function timeZoneOptions(now = new Date()): Array<{
     label: formatTimeZoneLabel(value, now),
   }));
 }
+
+export function filterTimeZoneOptions(
+  options: Array<{ value: string; label: string }>,
+  query: string,
+  limit = 80,
+): Array<{ value: string; label: string }> {
+  const normalized = query.trim().toLowerCase();
+  if (!normalized) {
+    return options.slice(0, limit);
+  }
+
+  return options
+    .filter(
+      (option) =>
+        option.value.toLowerCase().includes(normalized) ||
+        option.label.toLowerCase().includes(normalized),
+    )
+    .slice(0, limit);
+}

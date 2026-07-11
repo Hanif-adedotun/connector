@@ -3,6 +3,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ClockIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
+import { TimezoneCombobox } from "@/components/settings/TimezoneCombobox";
 import { api } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import {
@@ -11,7 +13,6 @@ import {
   timeZoneOptions,
 } from "@/lib/timezone";
 import type { User } from "@/types";
-import { cn } from "@/lib/utils";
 
 async function updateUserTimezone(timezone: string) {
   return api<{ timezone: string | null }>("/api/user/timezone", {
@@ -55,36 +56,27 @@ export function SettingsTimezoneField({ user }: { user: User }) {
 
   function onChange(next: string) {
     setValue(next);
-    saveMutation.mutate(next);
+    saveMutation.mutate(next, {
+      onSuccess: () => {
+        toast.success("Time zone updated");
+      },
+    });
   }
 
   return (
     <div className="border-b border-neutral-200 px-4 py-3.5 dark:border-neutral-800">
-      <label className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <span className="flex items-center gap-2 text-sm">
           <ClockIcon className="h-4 w-4" />
           Time zone
         </span>
-        <select
+        <TimezoneCombobox
+          options={options}
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={onChange}
           disabled={saveMutation.isPending}
-          aria-label="Time zone"
-          className={cn(
-            "w-full max-w-xs rounded-md border border-neutral-300 bg-white px-2.5 py-1.5 text-sm dark:border-neutral-700 dark:bg-neutral-950",
-            saveMutation.isPending && "opacity-50",
-          )}
-        >
-          {options.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </label>
-      {/* <p className="mt-2 text-xs text-neutral-500">
-        Used for your morning digest. Defaults to your browser time zone.
-      </p> */}
+        />
+      </div>
       {error && (
         <p className="mt-2 text-xs text-red-600 dark:text-red-400">{error}</p>
       )}

@@ -5,6 +5,7 @@ import { NotFoundError } from "../../utils/errors";
 import { logger } from "../../utils/logger";
 import { pollGoogleCalendar } from "./google-calendar";
 import { pollGmail } from "./gmail";
+import { pollImap } from "./imap";
 import { pollSlack } from "./slack";
 import { pollJira } from "./jira";
 import { pollDiscord } from "./discord";
@@ -22,6 +23,7 @@ export interface PollResult {
 const POLLERS: Record<Provider, (ctx: PollContext) => Promise<PollResult>> = {
   google_calendar: pollGoogleCalendar,
   gmail: pollGmail,
+  imap: pollImap,
   slack: pollSlack,
   jira: pollJira,
   discord: pollDiscord,

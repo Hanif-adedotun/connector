@@ -15,6 +15,7 @@ const baseItem: FeedItemType = {
   createdAt: "2024-06-01",
   sourceUrl: null,
   contextLine: null,
+  groupLabel: null,
 };
 
 describe("FeedItem", () => {
@@ -80,5 +81,12 @@ describe("FeedItem", () => {
       />,
     );
     expect(screen.queryByText(/from Alex/)).not.toBeInTheDocument();
+  });
+
+  it("includes a desktop dismiss control", () => {
+    render(<FeedItem item={baseItem} onDismiss={jest.fn()} />);
+    expect(
+      screen.getByRole("button", { name: "Dismiss task" }),
+    ).toBeInTheDocument();
   });
 });

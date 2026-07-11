@@ -10,18 +10,12 @@ declare global {
 
 declare const self: ServiceWorkerGlobalScope;
 
-/** Never cache auth-sensitive navigations / RSC — avoids stale login redirects in the PWA. */
-const AUTH_SENSITIVE_PATH =
-  /^\/(login|settings|integrations|auth)(\/|$)/;
-
-const runtimeCaching: RuntimeCaching[] = [
-  {
-    matcher: ({ sameOrigin, url: { pathname } }) =>
-      sameOrigin && AUTH_SENSITIVE_PATH.test(pathname),
-    handler: new NetworkOnly(),
-  },
-  ...defaultCache,
-];
+const runtimeCaching = defaultCache.filter(
+  (entry) =>
+    !(typeof entry.matcher === "function"
+      ? entry.matcher.toString().includes("/api/")
+      : String(entry.matcher).includes("/api/")),
+);
 
 const serwist = new Serwist({
   precacheEntries: self.__SW_MANIFEST,

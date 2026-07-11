@@ -105,15 +105,15 @@ async function runExtractionWithFallback(
   event: ConnectorEvent,
 ): Promise<ExtractedSchema | null> {
   const isCalendar = event.source === "calendar";
-  const isGmail = event.source === "gmail";
+  const isEmail = event.source === "gmail" || event.source === "imap";
   const systemPrompt = isCalendar
     ? CALENDAR_EXTRACTION_SYSTEM_PROMPT
-    : isGmail
+    : isEmail
       ? GMAIL_EXTRACTION_SYSTEM_PROMPT
       : EXTRACTION_SYSTEM_PROMPT;
   const userPrompt = isCalendar
     ? buildCalendarExtractionUserPrompt(event)
-    : isGmail
+    : isEmail
       ? buildGmailExtractionUserPrompt(event)
       : buildExtractionUserPrompt(event);
 

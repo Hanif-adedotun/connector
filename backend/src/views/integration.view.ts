@@ -1,5 +1,6 @@
 import type { Integration } from "@prisma/client";
 import { parseDiscordConfig } from "../types/discord";
+import { parseImapConfig } from "../types/imap";
 import { parseSlackConfig } from "../types/slack";
 
 export interface IntegrationView {
@@ -23,6 +24,14 @@ export interface IntegrationView {
     }>;
     includeDms: boolean;
   } | null;
+  imapConfig?: {
+    host: string;
+    port: number;
+    secure: boolean;
+    username: string;
+    displayName?: string;
+  } | null;
+  imapMailboxId?: string | null;
 }
 
 export function serializeIntegration(i: Integration): IntegrationView {
@@ -51,6 +60,20 @@ export function serializeIntegration(i: Integration): IntegrationView {
       guilds: config.guilds,
       includeDms: config.includeDms,
     };
+  }
+
+  if (i.provider === "imap") {
+    const config = parseImapConfig(i.imapConfig);
+    if (config) {
+      base.imapMailboxId = i.imapMailboxId;
+      base.imapConfig = {
+        host: config.host,
+        port: config.port,
+        secure: config.secure,
+        username: config.username,
+        ...(config.displayName ? { displayName: config.displayName } : {}),
+      };
+    }
   }
 
   return base;

@@ -2,6 +2,7 @@
 
 import {
   effectiveTimezone,
+  filterTimeZoneOptions,
   formatTimeZoneLabel,
   getBrowserTimezone,
   listTimeZones,
@@ -32,5 +33,18 @@ describe("timezone helpers", () => {
 
   it("formatTimeZoneLabel includes zone name", () => {
     expect(formatTimeZoneLabel("UTC")).toContain("UTC");
+  });
+
+  it("filterTimeZoneOptions matches value and label", () => {
+    const options = [
+      { value: "America/New_York", label: "America/New York (GMT-5)" },
+      { value: "Europe/London", label: "Europe/London (GMT)" },
+    ];
+    expect(filterTimeZoneOptions(options, "london")).toEqual([
+      { value: "Europe/London", label: "Europe/London (GMT)" },
+    ]);
+    expect(filterTimeZoneOptions(options, "new york")).toEqual([
+      { value: "America/New_York", label: "America/New York (GMT-5)" },
+    ]);
   });
 });
