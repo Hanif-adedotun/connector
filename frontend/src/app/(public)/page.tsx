@@ -60,29 +60,31 @@ export default async function LandingPage() {
       <section className="brief-snap-panel relative flex w-full flex-col overflow-hidden md:px-12">
         <div className="relative flex min-h-0 flex-1 flex-col overflow-visible pt-14">
           <div className="relative z-20 flex min-h-0 flex-1 flex-col items-center justify-center px-6 text-center">
-            {/* Integration sources pill — icons only on narrow screens */}
+            {/* Integration sources — split on mobile; icons + caption in pill on sm+ */}
             <div
-              className="brief-reveal inline-flex max-w-full flex-wrap items-center justify-center gap-2 rounded-full border border-neutral-200/80 bg-white/70 py-1.5 pl-2 pr-3 shadow-sm backdrop-blur dark:border-neutral-700 dark:bg-neutral-800/80 sm:gap-2.5 sm:pr-4"
+              className="brief-reveal flex flex-col items-center gap-2.5 sm:inline-flex sm:flex-row sm:gap-2.5 sm:rounded-full sm:border sm:border-neutral-200/80 sm:bg-white/70 sm:py-1.5 sm:pl-2 sm:pr-4 sm:shadow-sm sm:backdrop-blur dark:sm:border-neutral-700 dark:sm:bg-neutral-800/80"
               style={{ animationDelay: "40ms" }}
             >
-              <div className="flex items-center -space-x-1.5 sm:-space-x-2">
-                {INTEGRATIONS.map(({ Icon, label, color }) => (
-                  <span
-                    key={label}
-                    className="grid h-5 w-5 place-items-center rounded-full bg-white ring-2 ring-neutral-100 dark:bg-neutral-900 dark:ring-neutral-800 sm:h-6 sm:w-6"
-                    title={label}
-                  >
-                    <Icon
-                      className="h-3 w-3 sm:h-3.5 sm:w-3.5"
-                      style={{ color }}
-                      aria-hidden
-                    />
-                  </span>
-                ))}
+              <div className="inline-flex items-center rounded-full border border-neutral-200/80 bg-white/70 py-1.5 pl-2 pr-2 shadow-sm backdrop-blur dark:border-neutral-700 dark:bg-neutral-800/80 sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none sm:backdrop-blur-none dark:sm:bg-transparent">
+                <div className="flex items-center -space-x-1.5 sm:-space-x-2">
+                  {INTEGRATIONS.map(({ Icon, label, color }) => (
+                    <span
+                      key={label}
+                      className="grid h-5 w-5 place-items-center rounded-full bg-white ring-2 ring-neutral-100 dark:bg-neutral-900 dark:ring-neutral-800 sm:h-6 sm:w-6"
+                      title={label}
+                    >
+                      <Icon
+                        className="h-3 w-3 sm:h-3.5 sm:w-3.5"
+                        style={{ color }}
+                        aria-hidden
+                      />
+                    </span>
+                  ))}
+                </div>
               </div>
-              <span className="text-xs font-medium text-neutral-600 dark:text-neutral-300">
+              <p className="text-[10px] font-medium text-neutral-600 dark:text-neutral-300 sm:text-xs">
                 Your most used work tools. In Sync.
-              </span>
+              </p>
             </div>
 
             <h1
