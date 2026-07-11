@@ -19,6 +19,17 @@ body {
   overflow-x: clip;
 }
 
+/* Landing owns the scrollport — prevent a second document scroll */
+body:has(.brief-landing) {
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
 @supports (-webkit-touch-callout: none) {
   html {
     height: -webkit-fill-available;
@@ -37,41 +48,108 @@ html.dark body {
   @apply bg-neutral-950 text-neutral-100;
 }
 
-/* Full-viewport landing — stable height on iOS Safari (URL bar, Dynamic Island) */
+/* Landing page — full-viewport snap pages */
 .brief-landing {
   height: var(--brief-vh);
-  min-height: 100svh;
-  overflow: hidden;
+  height: 100svh;
+  height: 100dvh;
+  overflow-x: clip;
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
 }
 
 @supports (-webkit-touch-callout: none) {
   .brief-landing {
     height: -webkit-fill-available;
-    min-height: -webkit-fill-available;
   }
 }
 
-/* Landing entrance + ambient motion. Static for reduced-motion users. */
+.brief-snap-panel {
+  box-sizing: border-box;
+  min-height: 100%;
+  min-height: 100svh;
+  min-height: 100dvh;
+  height: 100svh;
+  height: 100dvh;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+/* Display type — size-specific tracking + optical sizing */
+.brief-display {
+  letter-spacing: -0.02em;
+  line-height: 1.08;
+  font-optical-sizing: auto;
+}
+
+/* Floating translucent chrome */
+.brief-nav {
+  background: rgba(245, 245, 245, 0.72);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+html.dark .brief-nav {
+  background: rgba(10, 10, 10, 0.72);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .brief-nav {
+    background: rgb(245 245 245);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  html.dark .brief-nav {
+    background: rgb(10 10 10);
+  }
+}
+
+/* Press feedback — respond on pointer-down */
+.brief-press {
+  transition: transform 100ms ease-out, opacity 100ms ease-out;
+}
+
+.brief-press:active {
+  transform: scale(0.97);
+}
+
+/* Landing entrances — short, critically-damped feel. No idle float. */
 @media (prefers-reduced-motion: no-preference) {
   .brief-reveal {
     opacity: 0;
-    animation: brief-reveal 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: brief-reveal 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
   .brief-phone-in {
     opacity: 0;
-    animation: brief-phone-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.5s both;
+    animation: brief-phone-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.28s both;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brief-reveal,
+  .brief-phone-in {
+    opacity: 1;
+    animation: none;
   }
 
-  .brief-phone-float {
-    animation: brief-float 7s ease-in-out 1.6s infinite;
+  .brief-press {
+    transition: opacity 100ms ease-out;
+  }
+
+  .brief-press:active {
+    transform: none;
+    opacity: 0.85;
   }
 }
 
 @keyframes brief-reveal {
   from {
     opacity: 0;
-    transform: translateY(14px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
@@ -82,21 +160,11 @@ html.dark body {
 @keyframes brief-phone-in {
   from {
     opacity: 0;
-    transform: translateY(56px);
+    transform: translateY(28px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-@keyframes brief-float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-6px);
   }
 }
 
