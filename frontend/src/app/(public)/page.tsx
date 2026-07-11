@@ -8,13 +8,19 @@ import {
   SiJira,
   SiDiscord,
   SiGithub,
+  SiSlack,
 } from "react-icons/si";
-import { ChevronRight } from "lucide-react";
+import { PiMicrosoftOutlookLogo } from "react-icons/pi";
+import { ChevronRight, Inbox, Mail } from "lucide-react";
 import { TasksDemoGif } from "@/components/landing/TasksDemoGif";
 
 const INTEGRATIONS = [
   { Icon: SiGmail, label: "Gmail", color: "#EA4335" },
+  { Icon: PiMicrosoftOutlookLogo, label: "Outlook", color: "#0078D4" },
+  { Icon: Inbox, label: "Fastmail", color: "#C63E2C" },
+  { Icon: Mail, label: "Email", color: "#2563EB" },
   { Icon: SiGooglecalendar, label: "Google Calendar", color: "#4285F4" },
+  { Icon: SiSlack, label: "Slack", color: "#4A154B" },
   { Icon: SiJira, label: "Jira", color: "#2684FF" },
   { Icon: SiDiscord, label: "Discord", color: "#5865F2" },
 ];
@@ -54,19 +60,20 @@ export default async function LandingPage() {
       <section className="brief-snap-panel relative flex w-full flex-col overflow-hidden md:px-12">
         <div className="relative flex min-h-0 flex-1 flex-col overflow-visible pt-14">
           <div className="relative z-20 flex min-h-0 flex-1 flex-col items-center justify-center px-6 text-center">
-            {/* Integration sources pill */}
+            {/* Integration sources pill — icons only on narrow screens */}
             <div
-              className="brief-reveal inline-flex items-center gap-2.5 rounded-full border border-neutral-200/80 bg-white/70 py-1.5 pl-2 pr-4 shadow-sm backdrop-blur dark:border-neutral-700 dark:bg-neutral-800/80"
+              className="brief-reveal inline-flex max-w-full flex-wrap items-center justify-center gap-2 rounded-full border border-neutral-200/80 bg-white/70 py-1.5 pl-2 pr-3 shadow-sm backdrop-blur dark:border-neutral-700 dark:bg-neutral-800/80 sm:gap-2.5 sm:pr-4"
               style={{ animationDelay: "40ms" }}
             >
-              <div className="flex items-center -space-x-2">
+              <div className="flex items-center -space-x-1.5 sm:-space-x-2">
                 {INTEGRATIONS.map(({ Icon, label, color }) => (
                   <span
                     key={label}
-                    className="grid h-6 w-6 place-items-center rounded-full bg-white ring-2 ring-neutral-100 dark:bg-neutral-900 dark:ring-neutral-800"
+                    className="grid h-5 w-5 place-items-center rounded-full bg-white ring-2 ring-neutral-100 dark:bg-neutral-900 dark:ring-neutral-800 sm:h-6 sm:w-6"
+                    title={label}
                   >
                     <Icon
-                      className="h-3.5 w-3.5"
+                      className="h-3 w-3 sm:h-3.5 sm:w-3.5"
                       style={{ color }}
                       aria-hidden
                     />
@@ -157,27 +164,26 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* Page 2 — The briefing (phone story resolves) */}
+      {/* Page 2 — Explain + animate (hero already showed the product) */}
       <section
         id="briefing"
         className="brief-snap-panel relative flex w-full flex-col overflow-hidden"
       >
-        <div className="relative mx-auto flex h-full w-full max-w-3xl flex-col items-center px-6 pb-6 pt-20 text-center sm:px-10">
-          <div className="shrink-0">
+        <div className="relative mx-auto flex h-full w-full max-w-5xl flex-col items-center px-6 pb-6 pt-20 text-center md:flex-row md:items-center md:justify-between md:gap-12 md:px-10 md:pt-16 md:text-left lg:gap-16">
+          <div className="shrink-0 md:max-w-md lg:max-w-lg">
             <p className="text-xs font-medium uppercase tracking-[0.18em] text-neutral-400 dark:text-neutral-500">
               The briefing
             </p>
-            <h2 className="brief-display mt-4 max-w-xl text-balance text-[clamp(1.75rem,4vw,2.5rem)] font-semibold text-neutral-900 dark:text-white">
+            <h2 className="brief-display mt-4 text-balance text-[clamp(1.75rem,4vw,2.5rem)] font-semibold text-neutral-900 dark:text-white">
               Every follow-up, on one screen.
             </h2>
-            <p className="mt-5 max-w-lg text-[clamp(0.95rem,1.5vh,1.125rem)] leading-relaxed text-neutral-500 dark:text-neutral-400">
-              Brief reads across your tools and surfaces the tasks that need you —
-              not the noise. Open it once, know what matters, move on.
+            <p className="mt-4 max-w-md text-[clamp(0.95rem,1.5vh,1.125rem)] leading-relaxed text-neutral-500 dark:text-neutral-400 md:mx-0 mx-auto">
+              Open it once. See what needs you — not the noise.
             </p>
           </div>
 
-          <div className="mt-6 flex min-h-0 w-full flex-1 items-center justify-center">
-            <TasksDemoGif className="max-h-full w-auto max-w-[min(72vw,280px)] select-none object-contain drop-shadow-2xl" />
+          <div className="mt-6 flex min-h-0 w-full flex-1 items-center justify-center md:mt-0 md:max-w-[min(42vw,340px)] md:flex-none md:justify-end">
+            <TasksDemoGif className="max-h-full w-auto max-w-[min(72vw,280px)] select-none object-contain drop-shadow-2xl md:max-h-[min(78dvh,720px)] md:max-w-none md:w-full" />
           </div>
         </div>
       </section>
@@ -187,7 +193,7 @@ export default async function LandingPage() {
         id="works-with"
         className="brief-snap-panel flex w-full flex-col"
       >
-        <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center px-6 pt-14 text-center sm:px-10">
+        <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col items-center justify-center px-6 pt-14 text-center sm:px-10">
           <h2 className="brief-display max-w-xl text-balance text-[clamp(1.5rem,3.5vw,2rem)] font-semibold text-neutral-900 dark:text-white">
             Your tools. Your data. Still yours.
           </h2>
@@ -195,18 +201,18 @@ export default async function LandingPage() {
             Connect the accounts you already use. Brief reads them only to build
             your briefing — no ads, no resale.
           </p>
-          <ul className="mt-12 flex flex-wrap items-center justify-center gap-x-10 gap-y-8 sm:gap-x-14">
+          <ul className="mt-10 flex flex-wrap items-center justify-center gap-x-8 gap-y-7 sm:mt-12 sm:gap-x-10 sm:gap-y-8">
             {INTEGRATIONS.map(({ Icon, label, color }) => (
               <li
                 key={label}
-                className="flex flex-col items-center gap-3 text-neutral-600 dark:text-neutral-400"
+                className="flex w-[4.5rem] flex-col items-center gap-2.5 text-neutral-600 dark:text-neutral-400 sm:w-auto sm:gap-3"
               >
                 <Icon
-                  className="h-8 w-8 sm:h-9 sm:w-9"
+                  className="h-7 w-7 sm:h-9 sm:w-9"
                   style={{ color }}
                   aria-hidden
                 />
-                <span className="text-xs font-medium tracking-wide">
+                <span className="text-[11px] font-medium tracking-wide sm:text-xs">
                   {label}
                 </span>
               </li>
