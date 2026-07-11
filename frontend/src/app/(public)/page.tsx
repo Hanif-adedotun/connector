@@ -226,7 +226,14 @@ export default async function LandingPage() {
           </Link>
         </div>
 
-        <footer className="flex shrink-0 items-center justify-center gap-6 px-6 pb-10 pt-4 text-sm text-neutral-400 dark:text-neutral-500">
+        <footer className="flex shrink-0 flex-wrap items-center justify-center gap-x-6 gap-y-2 px-6 pb-10 pt-4 text-sm text-neutral-400 dark:text-neutral-500">
+          <a
+            href="mailto:hey@hanif.one"
+            className="transition-colors hover:text-neutral-700 dark:hover:text-neutral-300"
+          >
+            hey@hanif.one
+          </a>
+          <span aria-hidden>·</span>
           <Link
             href="/privacy"
             className="transition-colors hover:text-neutral-700 dark:hover:text-neutral-300"
