@@ -294,7 +294,7 @@ function BackLink() {
 }
 
 export default function IntegrationsPage() {
-  useAuthGate("/integrations");
+  // useAuthGate("/integrations");
 
   return (
     <main className="mx-auto min-h-screen max-w-3xl px-6 py-16">
