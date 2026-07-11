@@ -33,8 +33,14 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/integrations") ||
     pathname.startsWith("/settings");
-  /** Dashboard is client-gated so cached feed can render before server auth resolves. */
-  const isClientGated = pathname.startsWith("/dashboard");
+  /**
+   * Client-gated so PWA/cached navigations can render before middleware
+   * cookie auth resolves. Pages must call useAuthGate.
+   */
+  const isClientGated =
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/settings") ||
+    pathname.startsWith("/integrations");
   const isAuthPage = pathname === "/login";
 
   if (user && isAuthPage) {

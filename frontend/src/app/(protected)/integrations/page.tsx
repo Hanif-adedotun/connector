@@ -10,6 +10,7 @@ import { ReconnectGoogleBanner } from "@/components/integrations/ReconnectGoogle
 import { IntegrationsSkeleton } from "@/components/integrations/IntegrationsSkeleton";
 import { SlackWorkspaceCard } from "@/components/integrations/SlackWorkspaceCard";
 import { DiscordIntegrationCard } from "@/components/integrations/DiscordIntegrationCard";
+import { useAuthGate } from "@/hooks/useAuthGate";
 import { useIntegrations } from "@/hooks/useIntegrations";
 import { getOAuthStartUrl, type ApiError } from "@/lib/api-client";
 import { googleNeedsReconnect, isGoogleConnected } from "@/lib/integrations";
@@ -316,6 +317,8 @@ function BackLink() {
 }
 
 export default function IntegrationsPage() {
+  useAuthGate("/integrations");
+
   return (
     <main className="mx-auto min-h-screen max-w-3xl px-6 py-16">
       <div className="mb-8 flex items-center justify-between">
