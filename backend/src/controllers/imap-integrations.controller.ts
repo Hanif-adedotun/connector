@@ -49,11 +49,19 @@ export const ImapIntegrationsController = {
 
       res.json({ integration: serializeIntegration(integration) });
     } catch (err) {
+      if (err instanceof BadRequestError || err instanceof UnauthorizedError) {
+        next(err);
+        return;
+      }
       if (err instanceof Error && err.message.includes("Authentication")) {
         next(new BadRequestError("IMAP authentication failed"));
         return;
       }
-      next(err);
+      next(
+        new BadRequestError(
+          "Unable to connect to your mailbox, check your details and try again",
+        ),
+      );
     }
   },
 };
