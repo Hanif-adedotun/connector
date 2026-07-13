@@ -37,23 +37,55 @@ const serwist = new Serwist({
 
 serwist.addEventListeners();
 
+type PushPayload = {
+  title?: string;
+  body?: string;
+  url?: string;
+  tag?: string;
+  overdueCount?: number;
+};
+
+type BadgeRegistration = ServiceWorkerRegistration & {
+  setAppBadge?: (contents?: number) => Promise<void>;
+  clearAppBadge?: () => Promise<void>;
+};
+
+async function syncBadgeFromPush(overdueCount: number | undefined) {
+  if (typeof overdueCount !== "number" || !Number.isFinite(overdueCount)) {
+    return;
+  }
+  const reg = self.registration as BadgeRegistration;
+  try {
+    if (overdueCount > 0 && typeof reg.setAppBadge === "function") {
+      await reg.setAppBadge(overdueCount);
+    } else if (overdueCount <= 0 && typeof reg.clearAppBadge === "function") {
+      await reg.clearAppBadge();
+    }
+  } catch {
+    // Badging API unavailable or denied — ignore
+  }
+}
+
 self.addEventListener("push", (event) => {
   if (!event.data) return;
-  let payload: { title?: string; body?: string; url?: string; tag?: string };
+  let payload: PushPayload;
   try {
-    payload = event.data.json() as typeof payload;
+    payload = event.data.json() as PushPayload;
   } catch {
     payload = { title: "Brief", body: event.data.text() };
   }
 
   event.waitUntil(
-    self.registration.showNotification(payload.title ?? "Brief", {
-      body: payload.body ?? "You have new tasks",
-      icon: "/icons/icon-512.png",
-      badge: "/icons/icon-512.png",
-      tag: payload.tag ?? "new-tasks",
-      data: { url: payload.url ?? "/dashboard" },
-    }),
+    Promise.all([
+      self.registration.showNotification(payload.title ?? "Brief", {
+        body: payload.body ?? "You have new tasks",
+        icon: "/icons/icon-512.png",
+        badge: "/icons/icon-512.png",
+        tag: payload.tag ?? "new-tasks",
+        data: { url: payload.url ?? "/dashboard" },
+      }),
+      syncBadgeFromPush(payload.overdueCount),
+    ]),
   );
 });
 

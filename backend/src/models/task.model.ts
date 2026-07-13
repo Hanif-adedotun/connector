@@ -157,6 +157,14 @@ export const TaskModel = {
     });
   },
 
+  /** Open tasks that have a due date (for overdue badge counts). */
+  listOpenDueDates(userId: string) {
+    return prisma.extractedTask.findMany({
+      where: { userId, status: "open", dueDate: { not: null } },
+      select: { dueDate: true },
+    });
+  },
+
   updateStatus(id: string, userId: string, status: TaskStatus) {
     return prisma.extractedTask.update({
       where: { id, userId },

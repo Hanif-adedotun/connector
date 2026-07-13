@@ -8,6 +8,7 @@ import { FeedSkeleton } from "@/components/feed/FeedSkeleton";
 import { ReconnectGoogleBanner } from "@/components/integrations/ReconnectGoogleBanner";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 import { useAuthGate } from "@/hooks/useAuthGate";
+import { useAppBadge } from "@/hooks/useAppBadge";
 import { useFeed } from "@/hooks/useFeed";
 import { useHydrated } from "@/hooks/useHydrated";
 import { useIntegrations } from "@/hooks/useIntegrations";
@@ -35,6 +36,7 @@ export default function DashboardPage() {
   const hasIntegrations = hasAnyActiveIntegration(integrations);
 
   const showClientData = hydrated && !isRestoring;
+  useAppBadge(showClientData ? (data?.items ?? null) : null);
 
   const headerDate =
     showClientData && data?.date
