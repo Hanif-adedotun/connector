@@ -294,6 +294,8 @@ function BackLink() {
 }
 
 export default function IntegrationsPage() {
+  // useAuthGate("/integrations");
+
   return (
     <main className="mx-auto min-h-screen max-w-3xl px-6 py-16">
       <div className="mb-8 flex items-center justify-between">

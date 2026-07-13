@@ -1,4 +1,5 @@
 import type { QueryClient } from "@tanstack/react-query";
+import { syncAppBadge } from "@/lib/app-badge";
 import { resetAuthSession } from "@/lib/auth-session";
 import { clearPersistedQueryCache } from "@/lib/query-persister";
 
@@ -7,4 +8,5 @@ export async function clearLocalAppData(queryClient: QueryClient): Promise<void>
   resetAuthSession();
   queryClient.clear();
   await clearPersistedQueryCache();
+  void syncAppBadge(0);
 }

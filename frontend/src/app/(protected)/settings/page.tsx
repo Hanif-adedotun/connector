@@ -16,6 +16,7 @@ import { SettingsTimezoneField } from "@/components/settings/SettingsTimezoneFie
 import { useTheme } from "@/hooks/useTheme";
 import { useHydrated } from "@/hooks/useHydrated";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
+import { useAuthGate } from "@/hooks/useAuthGate";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { displayFirstName, useUser } from "@/hooks/useUser";
 import { createClient } from "@/lib/supabase/client";
@@ -25,6 +26,7 @@ import { APP_VERSION } from "@/lib/version";
 import { cn } from "@/lib/utils";
 
 export default function SettingsPage() {
+  useAuthGate("/settings");
   const router = useRouter();
   const queryClient = useQueryClient();
   const hydrated = useHydrated();

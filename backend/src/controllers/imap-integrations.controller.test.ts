@@ -72,4 +72,63 @@ describe("ImapIntegrationsController.connect", () => {
     );
     expect(res.json).toHaveBeenCalled();
   });
+
+  it("maps connection failures to a user-facing bad request", async () => {
+    const dnsError = Object.assign(new Error("getaddrinfo ENOTFOUND"), {
+      code: "ENOTFOUND",
+    });
+    (verifyImapConnection as jest.Mock).mockRejectedValue(dnsError);
+
+    await ImapIntegrationsController.connect(
+      {
+        userId: "u1",
+        body: {
+          host: "imap.bad-host.example",
+          port: 993,
+          secure: true,
+          username: "alice@example.com",
+          password: "secret",
+        },
+      } as never,
+      res as never,
+      next,
+    );
+
+    expect(next).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message:
+          "Unable to connect to your mailbox, check your details and try again",
+        statusCode: 400,
+      }),
+    );
+    expect(IntegrationModel.upsertImapCredentials).not.toHaveBeenCalled();
+  });
+
+  it("maps authentication failures specifically", async () => {
+    (verifyImapConnection as jest.Mock).mockRejectedValue(
+      new Error("Authentication failed"),
+    );
+
+    await ImapIntegrationsController.connect(
+      {
+        userId: "u1",
+        body: {
+          host: "imap.example.com",
+          port: 993,
+          secure: true,
+          username: "alice@example.com",
+          password: "wrong",
+        },
+      } as never,
+      res as never,
+      next,
+    );
+
+    expect(next).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: "IMAP authentication failed",
+        statusCode: 400,
+      }),
+    );
+  });
 });

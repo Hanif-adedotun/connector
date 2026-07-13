@@ -7,13 +7,54 @@ import { TaskModel } from "../../models/task.model";
 import { UserModel } from "../../models/user.model";
 import { schedulePushBatchFlush } from "../../queues/push-notify.queue";
 import { logger } from "../../utils/logger";
-import { buildMorningDigestMessage } from "./morning-digest.message";
+import {
+  buildMorningDigestMessage,
+  digestLocalTime,
+  resolveDigestTimeZone,
+} from "./morning-digest.message";
 
 const BATCH_KEY_PREFIX = "push-batch:";
 
 export interface PendingPushTask {
   title: string;
   provider: Provider;
+}
+
+export type PushPayload = {
+  title: string;
+  body: string;
+  url: string;
+  tag: string;
+  overdueCount?: number;
+};
+
+/** Count open tasks whose due calendar day (in `timeZone`) is before today. */
+export function countOverdueFromDueDates(
+  tasks: { dueDate: Date | null }[],
+  now: Date,
+  timeZone: string,
+): number {
+  const todayKey = digestLocalTime(now, timeZone).dateKey;
+  let overdueCount = 0;
+  for (const task of tasks) {
+    if (!task.dueDate) continue;
+    if (digestLocalTime(task.dueDate, timeZone).dateKey < todayKey) {
+      overdueCount += 1;
+    }
+  }
+  return overdueCount;
+}
+
+async function resolveOverdueCount(
+  userId: string,
+  timezone: string | null | undefined,
+): Promise<number> {
+  const timeZone = resolveDigestTimeZone(
+    timezone,
+    env.MORNING_DIGEST_TIMEZONE,
+  );
+  const dueDates = await TaskModel.listOpenDueDates(userId);
+  return countOverdueFromDueDates(dueDates, new Date(), timeZone);
 }
 
 function batchKey(userId: string) {
@@ -68,10 +109,7 @@ function buildSummaryMessage(tasks: PendingPushTask[]): {
   };
 }
 
-async function sendPushPayload(
-  userId: string,
-  payload: { title: string; body: string; url: string; tag: string },
-) {
+async function sendPushPayload(userId: string, payload: PushPayload) {
   if (!configureWebPush()) {
     logger.warn("push skipped: VAPID keys not configured");
     return;
@@ -135,11 +173,13 @@ export const PushNotificationService = {
     if (!user?.notificationsEnabled) return;
 
     const { title, body } = buildSummaryMessage(tasks);
+    const overdueCount = await resolveOverdueCount(userId, user.timezone);
     await sendPushPayload(userId, {
       title,
       body,
       url: "/dashboard",
       tag: "new-tasks",
+      overdueCount,
     });
   },
 
@@ -148,6 +188,7 @@ export const PushNotificationService = {
     if (!user?.notificationsEnabled) return;
 
     const openTaskCount = await TaskModel.countOpen(userId);
+    const overdueCount = await resolveOverdueCount(userId, user.timezone);
     const { title, body } = buildMorningDigestMessage({
       firstName: user.firstName,
       openTaskCount,
@@ -158,6 +199,7 @@ export const PushNotificationService = {
       body,
       url: "/dashboard",
       tag: "morning-digest",
+      overdueCount,
     });
   },
 };

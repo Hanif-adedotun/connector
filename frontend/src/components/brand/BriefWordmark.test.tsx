@@ -2,9 +2,14 @@
 
 import { render, screen } from "@testing-library/react";
 import { BriefWordmark } from "./BriefWordmark";
-import { APP_DOMAIN } from "@/lib/brand";
+import { APP_DOMAIN, APP_NAME } from "@/lib/brand";
 
 describe("BriefWordmark", () => {
+  it("always renders the product name", () => {
+    render(<BriefWordmark />);
+    expect(screen.getByText(APP_NAME)).toBeInTheDocument();
+  });
+
   it("renders domain when showDomain is true", () => {
     render(<BriefWordmark showDomain />);
     expect(screen.getByText(APP_DOMAIN)).toBeInTheDocument();
@@ -16,7 +21,7 @@ describe("BriefWordmark", () => {
   });
 
   it("renders icon when showIcon is true", () => {
-    render(<BriefWordmark showIcon showDomain />);
-    expect(screen.getAllByRole("img").length).toBeGreaterThan(0);
+    const { container } = render(<BriefWordmark showIcon showDomain />);
+    expect(container.querySelector("img")).toBeTruthy();
   });
 });

@@ -74,13 +74,18 @@ describe("updateSession", () => {
     expect(res.status).toBe(200);
   });
 
-  it("redirects unauthenticated users from server-protected routes", async () => {
+  it("allows unauthenticated settings through for client-side auth gate", async () => {
     mockGetUser.mockResolvedValue({ data: { user: null } });
     const req = new NextRequest("http://localhost:4001/settings");
     const res = await updateSession(req);
-    expect(res.status).toBe(307);
-    expect(res.headers.get("location")).toContain("/login");
-    expect(res.headers.get("location")).toContain("next=%2Fsettings");
+    expect(res.status).toBe(200);
+  });
+
+  it("allows unauthenticated integrations through for client-side auth gate", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: null } });
+    const req = new NextRequest("http://localhost:4001/integrations");
+    const res = await updateSession(req);
+    expect(res.status).toBe(200);
   });
 
   it("allows public landing page", async () => {
