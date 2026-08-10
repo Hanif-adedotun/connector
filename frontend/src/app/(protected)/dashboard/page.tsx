@@ -9,6 +9,7 @@ import { ReconnectGoogleBanner } from "@/components/integrations/ReconnectGoogle
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 import { useAuthGate } from "@/hooks/useAuthGate";
 import { useAppBadge } from "@/hooks/useAppBadge";
+import { useDismissOverdueTasks } from "@/hooks/useDismissOverdueTasks";
 import { useFeed } from "@/hooks/useFeed";
 import { useHydrated } from "@/hooks/useHydrated";
 import { useIntegrations } from "@/hooks/useIntegrations";
@@ -21,8 +22,11 @@ import {
   getTimeOfDay,
 } from "@/lib/feed-greeting";
 import { BriefWordmark } from "@/components/brand/BriefWordmark";
-import { RefreshCwIcon, SettingsIcon } from "lucide-react";
+import { ArchiveIcon, RefreshCwIcon, SettingsIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+const actionBtnClass =
+  "rounded-md border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-100 disabled:opacity-50 dark:border-neutral-700 dark:hover:bg-neutral-900";
 
 export default function DashboardPage() {
   useAuthGate("/dashboard");
@@ -32,6 +36,7 @@ export default function DashboardPage() {
   const { items: integrations } = useIntegrations();
   const { user } = useUser();
   const { isOnline } = useOnlineSync();
+  const { dismissOverdue, isDismissing } = useDismissOverdueTasks();
   const showGoogleReconnect = googleNeedsReconnect(integrations);
   const hasIntegrations = hasAnyActiveIntegration(integrations);
 
@@ -43,18 +48,19 @@ export default function DashboardPage() {
       ? data.date
       : format(new Date(), "yyyy-MM-dd");
 
-  const { salutation, summary } = useMemo(() => {
+  const { salutation, summary, overdueCount } = useMemo(() => {
     const firstName = showClientData ? displayFirstName(user) : "there";
     const timeOfDay = getTimeOfDay(new Date().getHours());
     const counts = countFeedDeadlines(
       showClientData ? (data?.items ?? []) : [],
     );
-    return buildFeedGreeting({
+    const greeting = buildFeedGreeting({
       firstName,
       timeOfDay,
       ...counts,
       hasIntegrations: showClientData ? hasIntegrations : true,
     });
+    return { ...greeting, overdueCount: counts.overdueCount };
   }, [showClientData, user, data?.items, hasIntegrations]);
 
   const showFeed = showClientData && data;
@@ -78,12 +84,12 @@ export default function DashboardPage() {
             {summary}
           </p>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-4">
           <button
             onClick={() => void reload()}
             disabled={isFetching}
             aria-label="Refresh feed"
-            className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-100 disabled:opacity-50 dark:border-neutral-700 dark:hover:bg-neutral-900"
+            className={cn(actionBtnClass, "flex w-full items-center justify-center")}
           >
             <RefreshCwIcon
               className={cn("h-4 w-4", isFetching && "animate-spin")}
@@ -92,10 +98,22 @@ export default function DashboardPage() {
           <Link
             href="/settings"
             aria-label="Settings"
-            className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-900"
+            className={cn(actionBtnClass, "flex w-full items-center justify-center")}
           >
             <SettingsIcon className="h-4 w-4" />
           </Link>
+          {overdueCount > 0 && (
+            <button
+              type="button"
+              onClick={() => dismissOverdue()}
+              disabled={isDismissing}
+              aria-busy={isDismissing}
+              aria-label="Delete overdue tasks"
+              className={cn(actionBtnClass, "col-span-2 whitespace-nowrap")}
+            >
+               <ArchiveIcon className="h-4 w-4 mr-1" /> Archive all overdue
+            </button>
+          )}
         </div>
       </header>
 
