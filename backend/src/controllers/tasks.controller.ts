@@ -1,6 +1,9 @@
 import type { NextFunction, Request, Response } from "express";
 import { z } from "zod";
+import { env } from "../config/env";
 import { TaskModel } from "../models/task.model";
+import { UserModel } from "../models/user.model";
+import { resolveDigestTimeZone } from "../services/notifications/morning-digest.message";
 import { BadRequestError, UnauthorizedError } from "../utils/errors";
 import { routeParam } from "../utils/route-param";
 import { serializeTask } from "../views/task.view";
@@ -21,6 +24,21 @@ export const TasksController = {
         parsed.data.status,
       );
       res.json(serializeTask(updated));
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async dismissOverdue(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.userId) throw new UnauthorizedError();
+      const user = await UserModel.findById(req.userId);
+      const timeZone = resolveDigestTimeZone(
+        user?.timezone,
+        env.MORNING_DIGEST_TIMEZONE,
+      );
+      const result = await TaskModel.dismissOverdue(req.userId, timeZone);
+      res.json(result);
     } catch (err) {
       next(err);
     }

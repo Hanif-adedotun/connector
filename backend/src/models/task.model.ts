@@ -1,5 +1,6 @@
 import type { ExtractedTask, Provider, TaskStatus } from "@prisma/client";
 import { prisma } from "../config/db";
+import { digestLocalTime } from "../services/notifications/morning-digest.message";
 import { PushNotificationService } from "../services/notifications/push.service";
 
 function openTaskMatchesExternalKey(externalKey: string) {
@@ -170,5 +171,39 @@ export const TaskModel = {
       where: { id, userId },
       data: { status },
     });
+  },
+
+  /**
+   * Soft-dismisses open tasks whose due calendar day (in `timeZone`) is before today.
+   */
+  async dismissOverdue(
+    userId: string,
+    timeZone: string,
+    now: Date = new Date(),
+  ): Promise<{ dismissedCount: number; ids: string[] }> {
+    const tasks = await prisma.extractedTask.findMany({
+      where: { userId, status: "open", dueDate: { not: null } },
+      select: { id: true, dueDate: true },
+    });
+
+    const todayKey = digestLocalTime(now, timeZone).dateKey;
+    const ids = tasks
+      .filter(
+        (t) =>
+          t.dueDate != null &&
+          digestLocalTime(t.dueDate, timeZone).dateKey < todayKey,
+      )
+      .map((t) => t.id);
+
+    if (ids.length === 0) {
+      return { dismissedCount: 0, ids: [] };
+    }
+
+    await prisma.extractedTask.updateMany({
+      where: { id: { in: ids }, userId },
+      data: { status: "dismissed" },
+    });
+
+    return { dismissedCount: ids.length, ids };
   },
 };

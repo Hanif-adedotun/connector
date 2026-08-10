@@ -60,4 +60,9 @@ integrationsRouter.patch(
 );
 
 // Task mutations live under their own router (mounted here for v1 simplicity).
+integrationsRouter.post(
+  "/tasks/dismiss-overdue",
+  requireAuth,
+  TasksController.dismissOverdue,
+);
 integrationsRouter.patch("/tasks/:id", requireAuth, TasksController.update);

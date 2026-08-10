@@ -108,6 +108,34 @@ describe("TasksController", () => {
     await TasksController.update(mockRequest(), mockResponse(), next);
     expect(next).toHaveBeenCalledWith(expect.any(UnauthorizedError));
   });
+
+  it("dismisses overdue tasks using user timezone", async () => {
+    (UserModel.findById as jest.Mock).mockResolvedValue({
+      id: "u1",
+      timezone: "America/New_York",
+    });
+    (TaskModel.dismissOverdue as jest.Mock).mockResolvedValue({
+      dismissedCount: 2,
+      ids: ["t1", "t2"],
+    });
+    const req = mockRequest({ userId: "u1" });
+    const res = mockResponse();
+    await TasksController.dismissOverdue(req, res, mockNext());
+    expect(TaskModel.dismissOverdue).toHaveBeenCalledWith(
+      "u1",
+      "America/New_York",
+    );
+    expect(res.json).toHaveBeenCalledWith({
+      dismissedCount: 2,
+      ids: ["t1", "t2"],
+    });
+  });
+
+  it("dismissOverdue requires auth", async () => {
+    const next = mockNext();
+    await TasksController.dismissOverdue(mockRequest(), mockResponse(), next);
+    expect(next).toHaveBeenCalledWith(expect.any(UnauthorizedError));
+  });
 });
 
 describe("IntegrationsController", () => {

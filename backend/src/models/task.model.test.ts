@@ -85,4 +85,36 @@ describe("TaskModel", () => {
     const dismissed = await TaskModel.dedupeAllOpenJiraTasks("u1");
     expect(dismissed).toBe(1);
   });
+
+  it("dismissOverdue dismisses only past-calendar-day tasks", async () => {
+    const now = new Date("2024-06-15T12:00:00.000Z");
+    (prisma.extractedTask.findMany as jest.Mock).mockResolvedValue([
+      { id: "overdue", dueDate: new Date("2024-06-14T12:00:00.000Z") },
+      { id: "today", dueDate: new Date("2024-06-15T18:00:00.000Z") },
+      { id: "future", dueDate: new Date("2024-06-16T12:00:00.000Z") },
+    ]);
+    (prisma.extractedTask.updateMany as jest.Mock).mockResolvedValue({
+      count: 1,
+    });
+
+    const result = await TaskModel.dismissOverdue("u1", "UTC", now);
+
+    expect(result).toEqual({ dismissedCount: 1, ids: ["overdue"] });
+    expect(prisma.extractedTask.updateMany).toHaveBeenCalledWith({
+      where: { id: { in: ["overdue"] }, userId: "u1" },
+      data: { status: "dismissed" },
+    });
+  });
+
+  it("dismissOverdue returns zero when nothing is overdue", async () => {
+    const now = new Date("2024-06-15T12:00:00.000Z");
+    (prisma.extractedTask.findMany as jest.Mock).mockResolvedValue([
+      { id: "today", dueDate: new Date("2024-06-15T18:00:00.000Z") },
+    ]);
+
+    const result = await TaskModel.dismissOverdue("u1", "UTC", now);
+
+    expect(result).toEqual({ dismissedCount: 0, ids: [] });
+    expect(prisma.extractedTask.updateMany).not.toHaveBeenCalled();
+  });
 });
