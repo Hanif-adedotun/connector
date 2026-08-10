@@ -22,7 +22,7 @@ import {
   getTimeOfDay,
 } from "@/lib/feed-greeting";
 import { BriefWordmark } from "@/components/brand/BriefWordmark";
-import { RefreshCwIcon, SettingsIcon } from "lucide-react";
+import { ArchiveIcon, RefreshCwIcon, SettingsIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const actionBtnClass =
@@ -111,7 +111,7 @@ export default function DashboardPage() {
               aria-label="Delete overdue tasks"
               className={cn(actionBtnClass, "col-span-2 whitespace-nowrap")}
             >
-              Delete overdue
+               <ArchiveIcon className="h-4 w-4 mr-1" /> Archive all overdue
             </button>
           )}
         </div>
